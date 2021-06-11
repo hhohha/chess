@@ -17,4 +17,5 @@ UP_RIGHT = 5
 DOWN_LEFT = 6
 DOWN_RIGHT = 7
 
-FEN_INIT = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+FEN_INIT = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0'
+FEN_CLEAN = '8/8/8/8/8/8/8/8 w - - 0 0'

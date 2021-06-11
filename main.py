@@ -11,11 +11,9 @@ def main():
     #board.reset()
     #board.placePiece('a8', ROOK, WHITE)
     
-    boardDisplay = [[sg.Button(image_data=empty_icon, button_color=('#FFBAB0', '#EDEAE0') if (i+j) % 2 == 0 else ('#FF9779', '#8F9779'), border_width=3, key='sqr'+str(i+(7-j)*7)) for i in range(8)] for j in range(8)]
+    boardDisplay = [[sg.Button(image_data=empty_icon, button_color=('#FFBAB0', '#EDEAE0') if (i+j) % 2 == 0 else ('#FF9779', '#8F9779'), border_width=3, key='sqr'+str(i+(7-j)*8)) for i in range(8)] for j in range(8)]
     
     layout = boardDisplay
-    
-    #layout = [[sg.Button(image_data=empty_icon, button_color=('#FFBAB0', '#EDEAE0') if (i+j) % 2 == 0 else ('#FF9779', '#8F9779'), border_width=3, key='sqr'+str(i)+str(j)) for i in range(8)] for j in range(8)]
     layout.append([sg.Button('New game', key='new'), sg.Button('Exit', key='exit')])
 
     board = cBoard(boardDisplay)
@@ -36,8 +34,6 @@ def main():
                 if window.Element(event).ImageData != empty_icon:
                     selected_button = event
             else:
-                print('sel', selected_button)
-                print('ev', event)
                 board.move((int(selected_button[3:]), int(event[3:])))
                 print (board)
                 #data = window.Element(selected_button).ImageData

@@ -81,18 +81,7 @@ class cBoard:
         self.calcAttackingSquares() # TODO - change to general init calculations
 
     def clear(self):
-        self.whitePieces.clear()
-        self.blackPieces.clear()
-        for square in self.board:
-            square.piece = None
-        self.history.clear()
-        self.castle_white_king = False
-        self.castle_black_king = False
-        self.castle_white_queen = False
-        self.castle_black_queen = False
-        self.en_passant = None
-        self.half_moves = 0
-        self.moves = 0
+        self.loadFEN(FEN_CLEAN)
             
     def getSquare(self, col, row = None):
         # getSquare('a1') == getSquare(0) == getSquare(0, 0) == getSquare('a', 1) == getSquare('a', '1')
@@ -135,8 +124,32 @@ class cBoard:
             self.blackPieces.append(self.getSquare(sqr).piece)
 
         col, row = self.getSquare(sqr).colIdx, self.getSquare(sqr).rowIdx
-        
         self.displayPiece(col, row, kind, color)
+        
+    def removePiece(self, sqr):
+        piece = self.getSquare(sqr).piece
+        if not piece:
+            raise ValueError
+        
+        if piece.color == WHITE:
+            self.whitePieces.remove(piece)
+        else:
+            self.blackPieces.remove(piece)
+            
+        col, row = self.getSquare(sqr).colIdx, self.getSquare(sqr).rowIdx
+        self.displayPiece(col, row, None, None)
+        
+        self.getSquare(sqr).piece = None
+        
+    def promotePiece(self, sqr, toKind):
+        piece = self.getSquare(sqr).piece 
+        if not piece:
+            raise ValueError
+        
+        piece.kind = toKind
+        
+        col, row = self.getSquare(sqr).colIdx, self.getSquare(sqr).rowIdx
+        self.displayPiece(col, row, piece.kind, piece.color)
 
     def displayPiece(self, col, row, kind, color):
         row = 7 - row
@@ -198,9 +211,14 @@ class cBoard:
             toSqr = move[3:5]
         elif type(move) == tuple:
             fromSqr, toSqr = move
-        
+
         movPiece = self.getSquare(fromSqr).piece
-        
+        col, row = self.getSquare(toSqr).colIdx, self.getSquare(toSqr).rowIdx
+        self.displayPiece(col, row, movPiece.kind, movPiece.color)
+
+        col, row = self.getSquare(fromSqr).colIdx, self.getSquare(fromSqr).rowIdx            
+        self.displayPiece(col, row, None, None)
+
         if self.getSquare(toSqr).piece is not None:
             if movPiece.color == WHITE:
                 self.blackPieces.remove(self.getSquare(toSqr).piece)
@@ -221,14 +239,6 @@ class cBoard:
         
         if not preview:
             self.history.append(move)
-            
-
-        col, row = self.getSquare(toSqr).colIdx, self.getSquare(toSqr).rowIdx
-        self.displayPiece(col, row, self.getSquare(fromSqr).piece.kind, self.getSquare(fromSqr).piece.color)
-
-        col, row = self.getSquare(fromSqr).colIdx, self.getSquare(fromSqr).rowIdx            
-        self.displayPiece(col, row, None)
-        
         
     def getPossibleMoves(self, color=None):
         retLst = []
