@@ -9,19 +9,19 @@ class cPawn (cPiece):
     def getPotentialMoves(self):
         resLst = []
         
-        square = self.square.board.getSquare(self.square.colIdx, self.square.rowIdx + self.d)
+        square = self.square.board.getSquare(self.square.rowIdx + self.d, self.square.colIdx)
         if square.piece is None:
             resLst.append(square)
             if self.movesCnt == 0:
-                square = self.square.board.getSquare(self.square.colIdx, self.square.rowIdx + 2*self.d)
+                square = self.square.board.getSquare(self.square.rowIdx + 2*self.d, self.square.colIdx)
                 if square.piece is None:
                     resLst.append(square)
                     
-        square = self.square.board.getSquare(self.square.colIdx + 1, self.square.rowIdx + self.d)
+        square = self.square.board.getSquare(self.square.rowIdx + self.d, self.square.colIdx + 1)
         if square is not None and square.piece is not None and square.piece.color != self.color:
             resLst.append(square)
             
-        square = self.square.board.getSquare(self.square.colIdx - 1, self.square.rowIdx + self.d)
+        square = self.square.board.getSquare(self.square.rowIdx + self.d, self.square.colIdx - 1)
         if square is not None and square.piece is not None and square.piece.color != self.color:
             resLst.append(square)
         

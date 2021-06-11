@@ -27,6 +27,7 @@ class cBoard:
         self.half_moves = 0
         self.moves = 0
         self.display = display
+        self.highlightedSquares = []
 
     def loadFEN(self, fenstr):
         self.whitePieces.clear()
@@ -355,4 +356,18 @@ class cBoard:
         if move:
             self.move(move[3:5] + '-' + move[0:2])    
         return retVal
+    
+    def highlightSquares(self, squareLst):
+        self.highlightedSquares = squareLst
+        for sqr in squareLst:
+            colors = (COLOR_BG_DARK_LIGHTED, COLOR_BG_DARK_LIGHTED) if (sqr.rowIdx + sqr.colIdx) % 2 == 0 else (COLOR_BG_LIGHT_LIGHTED, COLOR_BG_LIGHT_LIGHTED)
+            self.display[7-sqr.rowIdx][sqr.colIdx].Update(button_color=colors)
+            self.display[7-sqr.rowIdx][sqr.colIdx].ButtonColor = colors
+            
+    def unhighlightSquares(self):
+        for sqr in self.highlightedSquares:
+            colors = (COLOR_BG_DARK_SELECTED, COLOR_BG_DARK_BASIC) if (sqr.rowIdx + sqr.colIdx) % 2 == 0 else (COLOR_BG_LIGHT_SELECTED, COLOR_BG_LIGHT_BASIC)
+            self.display[7-sqr.rowIdx][sqr.colIdx].Update(button_color=colors)
+            self.display[7-sqr.rowIdx][sqr.colIdx].ButtonColor = colors
+        self.highlightedSquares = []
         

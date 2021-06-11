@@ -9,7 +9,7 @@ class cKnight (cPiece):
         resLst = []
         
         for (i, j) in [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]:
-            square = self.square.board.getSquare(self.square.colIdx + i, self.square.rowIdx + j)
+            square = self.square.board.getSquare(self.square.rowIdx + i, self.square.colIdx + j)
             if square is not None and (square.piece is None or square.piece.color != self.color or ownPieces):
                 resLst.append(square)
 

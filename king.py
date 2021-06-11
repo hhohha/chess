@@ -5,11 +5,12 @@ class cKing (cPiece):
     def __init__(self, color):
         super().__init__(KING, color)
         
+    # potential moves don't respect checks
     def getPotentialMoves(self):
         resLst = []
         
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
-            square = self.square.board.getSquare(self.square.colIdx + i, self.square.rowIdx + j)
+            square = self.square.board.getSquare(self.square.rowIdx + i, self.square.colIdx + j)
             if square is None:
                 continue
         

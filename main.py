@@ -11,10 +11,10 @@ def main():
     #board.reset()
     #board.placePiece('a8', ROOK, WHITE)
     
-    boardDisplay = [[sg.Button(image_data=empty_icon, button_color=('#FFBAB0', '#EDEAE0') if (i+j) % 2 == 0 else ('#FF9779', '#8F9779'), border_width=3, key='sqr'+str(i+(7-j)*8)) for i in range(8)] for j in range(8)]
+    boardDisplay = [[sg.Button(image_data=empty_icon, button_color=(COLOR_BG_LIGHT_SELECTED, COLOR_BG_LIGHT_BASIC) if (i+j) % 2 == 0 else (COLOR_BG_DARK_SELECTED, COLOR_BG_DARK_BASIC), border_width=3, key='sqr'+str(i+(7-j)*8)) for i in range(8)] for j in range(8)]
     
     layout = boardDisplay
-    layout.append([sg.Button('New game', key='new'), sg.Button('Exit', key='exit')])
+    layout.append([sg.Button('New game', key='new'), sg.Button('Exit', key='exit'), sg.Button('Test', key='test')])
 
     board = cBoard(boardDisplay)
     print(board)
@@ -27,12 +27,26 @@ def main():
 
         if event in (None, 'exit'): 
             break
+        elif event == 'test':
+            #window.Element('sqr30').Update(button_color=('#000000', '#FF00FF'))
+            window.Element('sqr30').Update(button_color='#FF00FF')
+            window.Element('sqr30').Update(mouseover_colors='#0000FF')
+            window.Element('sqr30').ButtonColor = ('#00FFFF', '#FF00FF')
+            window.Refresh()
         elif event == 'new':
             board.reset()
+            #board.clear()
+            #board.placePiece('d3', ROOK, BLACK)
         elif event[:3] == 'sqr':
+            board.unhighlightSquares()
             if selected_button == None:
                 if window.Element(event).ImageData != empty_icon:
                     selected_button = event
+                    potentialMoves = board.getSquare(int(selected_button[3:])).piece.getPotentialMoves()
+                    
+                    print(list(map(lambda x: x.getCoord(), potentialMoves)))
+                    board.highlightSquares(potentialMoves)
+                    
             else:
                 board.move((int(selected_button[3:]), int(event[3:])))
                 print (board)

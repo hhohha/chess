@@ -13,7 +13,7 @@ class cQueen (cPiece):
             i, j = 0, 0
             while True:
                 i, j = func(i, j)
-                square = self.square.board.getSquare(self.square.colIdx + i, self.square.rowIdx + j)
+                square = self.square.board.getSquare(self.square.rowIdx + i, self.square.colIdx + j)
                 if square is None:
                     break
                 
