@@ -1,0 +1,20 @@
+WHITE = 0
+BLACK = 1
+
+PAWN = 0
+KNIGHT = 1
+BISHOP = 2
+ROOK = 3
+QUEEN = 4
+KING = 5
+
+UP = 0
+DOWN = 1
+LEFT = 2
+RIGHT = 3
+UP_LEFT = 4
+UP_RIGHT = 5
+DOWN_LEFT = 6
+DOWN_RIGHT = 7
+
+FEN_INIT = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
