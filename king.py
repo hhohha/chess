@@ -29,7 +29,7 @@ class cKing (cPiece):
         resLst = []
         
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
-            square = self.square.board.getSquare(self.square.colIdx + i, self.square.rowIdx + j)
+            square = self.square.board.getSquare(self.square.rowIdx + j, self.square.colIdx + i)
             if square is not None:
                 resLst.append(square)
                 

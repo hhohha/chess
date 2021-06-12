@@ -5,10 +5,10 @@ class cSquare:
         self.colIdx = idx % 8
         self.piece = None
         self.board = board
-        self.attackedBy = []
+        self.attacked_by_whites = []
+        self.attacked_by_blacks = []
         
     def __str__(self):
-        #return str(self.rowIdx) + '/' + str(self.colIdx) + '  '
         if self.piece == None:
             return " ."
         else:

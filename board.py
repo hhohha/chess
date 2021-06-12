@@ -8,7 +8,83 @@ from queen import cQueen
 from king import cKing
 from square import cSquare
 from icons import *
+from lib import *
 import re
+
+class cDisplayer:
+    def __init__(self, display):
+        self.display = display
+        self.lighted_squares = []
+    
+    def clear(self):
+        for i in range(8):
+            for j in range(8):
+                if self.display[i][j].ImageData != empty_icon:
+                    self.display[i][j].Update(image_data=empty_icon)
+                    self.display[i][j].ImageData=empty_icon
+
+    def draw_square(self, sqr, piece):
+        icon = self._get_icon(piece)
+        self.display[7-sqr.rowIdx][sqr.colIdx].Update(image_data=icon)
+        self.display[7-sqr.rowIdx][sqr.colIdx].ImageData = icon
+    
+    def light_squares(self, squares, intensity=1):
+        self.lighted_squares += squares
+        for sqr in squares:
+            color = self._get_color(sqr, intensity)
+            self.display[7-sqr.rowIdx][sqr.colIdx].Update(button_color=color)
+            
+    def unlight_squares(self):
+        self.light_squares(self.lighted_squares, 0)
+        self.lighted_squares = []
+    
+    def _get_icon(self, piece):
+        if piece == None:
+            return empty_icon
+        elif piece.color == WHITE:
+            if piece.kind == PAWN:
+                return white_pawn_icon
+            elif piece.kind == KNIGHT:
+                return white_knight_icon
+            elif piece.kind == BISHOP:
+                return white_bishop_icon
+            elif piece.kind == ROOK:
+                return white_rook_icon
+            elif piece.kind == QUEEN:
+                return white_queen_icon
+            else:
+                return white_king_icon
+        else:
+            if piece.kind == PAWN:
+                return black_pawn_icon
+            elif piece.kind == KNIGHT:
+                return black_knight_icon
+            elif piece.kind == BISHOP:
+                return black_bishop_icon
+            elif piece.kind == ROOK:
+                return black_rook_icon
+            elif piece.kind == QUEEN:
+                return black_queen_icon
+            else:
+                return black_king_icon
+    
+    def _get_color(self, sqr, intensity):
+        if (sqr.rowIdx + sqr.colIdx) % 2 == 0:
+            #dark square
+            if intensity == 0:
+                return COLOR_BG_DARK_BASIC
+            elif intensity == 1:
+                return COLOR_BG_DARK_HLIGHTED_1
+            elif intensity == 2:
+                return COLOR_BG_DARK_HLIGHTED_2
+        else:
+            #light square
+            if intensity == 0:
+                return COLOR_BG_LIGHT_BASIC
+            elif intensity == 1:
+                return COLOR_BG_LIGHT_HLIGHTED_1
+            elif intensity == 2:
+                return COLOR_BG_LIGHT_HLIGHTED_2
 
 class cBoard:
     def __init__(self, display):
@@ -26,12 +102,10 @@ class cBoard:
         self.en_passant = None
         self.half_moves = 0
         self.moves = 0
-        self.display = display
-        self.highlightedSquares = []
+        self.displayer = cDisplayer(display)
 
     def loadFEN(self, fenstr):
-        self.whitePieces.clear()
-        self.blackPieces.clear()
+        self.clear()
         
         if not re.match(r'^([rnbqkpRNBQKP1-8]*/){7}[rnbqkpRNBQKP1-8]* [wb] (-|[KQkq]{1,4}) (-|[a-h][36]) [0-9]+ [0-9]+$', fenstr):
             raise ValueError('Invalid FEN position given')
@@ -50,21 +124,10 @@ class cBoard:
                 i, j = 0, j - 1
                 continue
 
-            if c.lower() == 'p':
-                piece = PAWN
-            elif c.lower() == 'n':
-                piece = KNIGHT
-            elif c.lower() == 'b':
-                piece = BISHOP
-            elif c.lower() == 'r':
-                piece = ROOK
-            elif c.lower() == 'q':
-                piece = QUEEN
-            elif c.lower() == 'k':
-                piece = KING
+            piece = letter_to_piece(c.lower())
 
             color = WHITE if c.isupper() else BLACK
-            self.placePiece(i + 8*j, piece, color)    
+            self.placePiece(i + 8*j, piece, color)
             i += 1
 
         self.turn = WHITE if turn == 'w' else BLACK
@@ -80,9 +143,19 @@ class cBoard:
         self.moves = int(fulls)
         
         self.calcAttackingSquares() # TODO - change to general init calculations
+        print (self)
 
     def clear(self):
-        self.loadFEN(FEN_CLEAN)
+        for sqr in self.board:
+            sqr.piece = None
+            
+        self.whitePieces = []
+        self.blackPieces = []
+        self.history = []
+        self.half_moves = 0
+        self.moves = 0
+        
+        self.displayer.clear()
             
     def getSquare(self, col, row = None):
         # getSquare('a1') == getSquare(0) == getSquare(0, 0) == getSquare('a', 1) == getSquare('a', '1')
@@ -110,81 +183,23 @@ class cBoard:
         
         
     def placePiece(self, sqr, kind, color):
-        if kind == PAWN: self.getSquare(sqr).piece = cPawn(color)
-        elif kind == KNIGHT: self.getSquare(sqr).piece = cKnight(color)
-        elif kind == BISHOP: self.getSquare(sqr).piece = cBishop(color)
-        elif kind == ROOK: self.getSquare(sqr).piece = cRook(color)
-        elif kind == QUEEN: self.getSquare(sqr).piece = cQueen(color)
-        elif kind == KING: self.getSquare(sqr).piece = cKing(color)
+        square = self.getSquare(sqr)
         
-        self.getSquare(sqr).piece.square = self.getSquare(sqr)
+        if kind == PAWN: square.piece = cPawn(color)
+        elif kind == KNIGHT: square.piece = cKnight(color)
+        elif kind == BISHOP: square.piece = cBishop(color)
+        elif kind == ROOK: square.piece = cRook(color)
+        elif kind == QUEEN: square.piece = cQueen(color)
+        elif kind == KING: square.piece = cKing(color)
+        
+        square.piece.square = square
         
         if color == WHITE:
-            self.whitePieces.append(self.getSquare(sqr).piece)
+            self.whitePieces.append(square.piece)
         else:
-            self.blackPieces.append(self.getSquare(sqr).piece)
+            self.blackPieces.append(square.piece)
 
-        col, row = self.getSquare(sqr).colIdx, self.getSquare(sqr).rowIdx
-        self.displayPiece(col, row, kind, color)
-        
-    def removePiece(self, sqr):
-        piece = self.getSquare(sqr).piece
-        if not piece:
-            raise ValueError
-        
-        if piece.color == WHITE:
-            self.whitePieces.remove(piece)
-        else:
-            self.blackPieces.remove(piece)
-            
-        col, row = self.getSquare(sqr).colIdx, self.getSquare(sqr).rowIdx
-        self.displayPiece(col, row, None, None)
-        
-        self.getSquare(sqr).piece = None
-        
-    def promotePiece(self, sqr, toKind):
-        piece = self.getSquare(sqr).piece 
-        if not piece:
-            raise ValueError
-        
-        piece.kind = toKind
-        
-        col, row = self.getSquare(sqr).colIdx, self.getSquare(sqr).rowIdx
-        self.displayPiece(col, row, piece.kind, piece.color)
-
-    def displayPiece(self, col, row, kind, color):
-        row = 7 - row
-        if kind == None:
-            icon = empty_icon
-        elif color == WHITE:
-            if kind == PAWN:
-                icon = white_pawn_icon
-            elif kind == KNIGHT:
-                icon = white_knight_icon
-            elif kind == BISHOP:
-                icon = white_bishop_icon
-            elif kind == ROOK:
-                icon = white_rook_icon
-            elif kind == QUEEN:
-                icon = white_queen_icon
-            else:
-                icon = white_king_icon
-        else:
-            if kind == PAWN:
-                icon = black_pawn_icon
-            elif kind == KNIGHT:
-                icon = black_knight_icon
-            elif kind == BISHOP:
-                icon = black_bishop_icon
-            elif kind == ROOK:
-                icon = black_rook_icon
-            elif kind == QUEEN:
-                icon = black_queen_icon
-            else:
-                icon = black_king_icon
-            
-        self.display[row][col].ImageData = icon
-        self.display[row][col].Update(image_data=icon)
+        self.displayer.draw_square(square, square.piece)
         
     def reset(self):
         self.loadFEN(FEN_INIT)
@@ -214,11 +229,9 @@ class cBoard:
             fromSqr, toSqr = move
 
         movPiece = self.getSquare(fromSqr).piece
-        col, row = self.getSquare(toSqr).colIdx, self.getSquare(toSqr).rowIdx
-        self.displayPiece(col, row, movPiece.kind, movPiece.color)
-
-        col, row = self.getSquare(fromSqr).colIdx, self.getSquare(fromSqr).rowIdx            
-        self.displayPiece(col, row, None, None)
+        
+        self.displayer.draw_square(self.getSquare(fromSqr), None)
+        self.displayer.draw_square(self.getSquare(toSqr), movPiece)
 
         if self.getSquare(toSqr).piece is not None:
             if movPiece.color == WHITE:
@@ -356,18 +369,3 @@ class cBoard:
         if move:
             self.move(move[3:5] + '-' + move[0:2])    
         return retVal
-    
-    def highlightSquares(self, squareLst):
-        self.highlightedSquares = squareLst
-        for sqr in squareLst:
-            colors = (COLOR_BG_DARK_LIGHTED, COLOR_BG_DARK_LIGHTED) if (sqr.rowIdx + sqr.colIdx) % 2 == 0 else (COLOR_BG_LIGHT_LIGHTED, COLOR_BG_LIGHT_LIGHTED)
-            self.display[7-sqr.rowIdx][sqr.colIdx].Update(button_color=colors)
-            self.display[7-sqr.rowIdx][sqr.colIdx].ButtonColor = colors
-            
-    def unhighlightSquares(self):
-        for sqr in self.highlightedSquares:
-            colors = (COLOR_BG_DARK_SELECTED, COLOR_BG_DARK_BASIC) if (sqr.rowIdx + sqr.colIdx) % 2 == 0 else (COLOR_BG_LIGHT_SELECTED, COLOR_BG_LIGHT_BASIC)
-            self.display[7-sqr.rowIdx][sqr.colIdx].Update(button_color=colors)
-            self.display[7-sqr.rowIdx][sqr.colIdx].ButtonColor = colors
-        self.highlightedSquares = []
-        

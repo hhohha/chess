@@ -4,7 +4,12 @@ from constants import *
 class cPawn (cPiece):
     def __init__(self, color):
         super().__init__(PAWN, color)
-        self.d = 1 if self.color == WHITE else -1
+        if self.color == WHITE:
+            self.d = 1
+            self.base_row = 1
+        else:
+            self.d = -1
+            self.base_row = 6
         
     def getPotentialMoves(self):
         resLst = []
@@ -12,31 +17,26 @@ class cPawn (cPiece):
         square = self.square.board.getSquare(self.square.rowIdx + self.d, self.square.colIdx)
         if square.piece is None:
             resLst.append(square)
-            if self.movesCnt == 0:
+            if self.square.rowIdx == self.base_row:
                 square = self.square.board.getSquare(self.square.rowIdx + 2*self.d, self.square.colIdx)
                 if square.piece is None:
                     resLst.append(square)
                     
-        square = self.square.board.getSquare(self.square.rowIdx + self.d, self.square.colIdx + 1)
-        if square is not None and square.piece is not None and square.piece.color != self.color:
-            resLst.append(square)
-            
-        square = self.square.board.getSquare(self.square.rowIdx + self.d, self.square.colIdx - 1)
-        if square is not None and square.piece is not None and square.piece.color != self.color:
-            resLst.append(square)
+        for i in [1, -1]:
+            square = self.square.board.getSquare(self.square.rowIdx + self.d, self.square.colIdx + i)
+            if square is not None and square.piece is not None and square.piece.color != self.color:
+                resLst.append(square)
         
         return resLst
     
     def getAttackedSquares(self):
         resLst = []
-        
-        square = self.square.board.getSquare(self.square.colIdx + 1, self.square.rowIdx + self.d)
-        if square is not None:
-            resLst.append(square)
-        square = self.square.board.getSquare(self.square.colIdx - 1, self.square.rowIdx + self.d)
-        if square is not None:
-            resLst.append(square)
-        
+
+        for i in [1, -1]:
+            square = self.square.board.getSquare(self.square.rowIdx + self.d, self.square.colIdx + i)
+            if square is not None:
+                resLst.append(square)
+
         return resLst
     
     def isAttackingSqr(self, colIdx, rowIdx):

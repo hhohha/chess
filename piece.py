@@ -1,3 +1,5 @@
+from lib import *
+
 class cPiece:
     def __init__(self, kind, color):
         self.kind = kind
@@ -10,12 +12,19 @@ class cPiece:
         
     def calcAttackingSquares(self):
         for sqr in self.attackingSquares:
-            sqr.attackedBy.remove(self)
+            if self.color == WHITE:
+                sqr.attacked_by_whites.remove(self)
+            else:
+                sqr.attacked_by_blacks.remove(self)
             
         self.attackingSquares = self.getAttackedSquares()
         
         for sqr in self.attackingSquares:
-            sqr.attackedBy.append(self)
+            if self.color == WHITE:
+                sqr.attacked_by_whites.append(self)
+            else:
+                sqr.attacked_by_blacks.append(self)
+                
             
     def getAttackedSquares(self):
         return self.getPotentialMoves(ownPieces=True)
@@ -23,6 +32,9 @@ class cPiece:
     def isPinned(self):
         kingColIdx, kingRowIdx = self.square.board.getKingIdxs(self.color)
         if kingColIdx is None or self.square.colIdx == kingColIdx and self.square.rowIdx == kingRowIdx:
+            return False
+        
+        if self.square.colIdx != kingColIdx and self.square.rowIdx != kingRowIdx and abs(kingColIdx - self.square.colIdx) != abs(kingRowIdx - self.square.rowIdx):
             return False
 
         if self.square.colIdx == kingColIdx and self.square.rowIdx > kingRowIdx:
@@ -39,10 +51,9 @@ class cPiece:
             kingDir, otherDir, attPiece = UP_RIGHT, DOWN_LEFT, BISHOP
         elif self.square.colIdx > kingColIdx and self.square.rowIdx < kingRowIdx:
             kingDir, otherDir, attPiece = UP_LEFT, DOWN_RIGHT, BISHOP
-        else:
+        else: #self.square.colIdx < kingColIdx and self.square.rowIdx > kingRowIdx
             kingDir, otherDir, attPiece = DOWN_RIGHT, UP_LEFT, BISHOP
-            
-    
+
         # check towards the king
         sqr = self.square.board.checkDirection(self.square.rowIdx, self.square.colIdx, kingDir)
         if sqr is None or sqr.piece.kind != KING or sqr.piece.color != self.color:
@@ -54,3 +65,6 @@ class cPiece:
             return False
         
         return sqr.piece.kind == QUEEN or sqr.piece.kind == attPiece
+
+    def pprint(self):
+        return kind_to_letter(self.kind) + self.square.getCoord()
