@@ -201,6 +201,8 @@ class cBoard:
         square.piece.square = square
         
         self.get_pieces(color).append(square.piece)
+        if square.piece.is_sliding:
+            self.get_pieces(color, sliding=True).append(square.piece)
             
         if kind == KING:
             if color == WHITE:
@@ -221,6 +223,23 @@ class cBoard:
             ret += "\n"
         return ret
     
+    def remove_piece(self, piece, display=False):
+        if piece.color == WHITE:
+            self.white_pieces.remove(piece)
+            if piece.is_sliding:
+                self.white_sliding_pieces.remove(piece)
+            for sqr in piece.attackingSquares:
+                sqr.attacked_by_whites.remove(piece)
+        else:
+            self.black_pieces.remove(piece)
+            if piece.is_sliding:
+                self.black_sliding_pieces.remove(piece)
+            for sqr in piece.attackingSquares:
+                sqr.attacked_by_blacks.remove(piece)
+    
+        if display:
+            self.displayer.draw_square(piece.square, None)
+    
     def move(self, move, preview=False):
         if type(move) == str:
             if len(move) < 5:
@@ -237,52 +256,49 @@ class cBoard:
         self.displayer.draw_square(fromSqr, None)
         self.displayer.draw_square(toSqr, movPiece)
 
-        # TODO get rid of WHITE/BLACK, remove from sliding if needed
         if toSqr.piece is not None:
-            if movPiece.color == WHITE:
-                self.black_pieces.remove(toSqr.piece)
-                for sqr in toSqr.piece.attackingSquares:
-                    sqr.attacked_by_blacks.remove(toSqr.piece)
-            else:
-                self.white_pieces.remove(toSqr.piece)
-                for sqr in toSqr.piece.attackingSquares:
-                    sqr.attacked_by_whites.remove(toSqr.piece)
-        
+            self.remove_piece(toSqr.piece)
+
         toSqr.piece = movPiece
         fromSqr.piece = None
         movPiece.square = toSqr
         movPiece.movesCnt += 1
-        
+
         self.turn = WHITE if self.turn == BLACK else BLACK
-        
+
         if movPiece.kind == KING:
-            if movPiece.color == WHITE:
-                self.white_king_sqr = toSqr
-            else:
-                self.black_king_sqr = toSqr
-        
+            self.get_king_sqr(color) = toSqr
+
         for piece in fromSqr.attacked_by_whites + fromSqr.attacked_by_blacks + toSqr.attacked_by_whites + toSqr.attacked_by_blacks:
             if piece.is_sliding:
                 piece.calcAttackingSquares()
-            
+
         movPiece.calcAttackingSquares()
-        
+
         if not preview:
             self.history.append(move)
-        
+
     def calcAttackingSquares(self):
         for piece in self.white_pieces + self.black_pieces:
             piece.calcAttackingSquares()
 
     def get_pinned_pieces(self, color):
+        kingSqr = self.get_king_sqr(color)
+        
         for piece self.get_pieces(not color, sliding=True):
-            pass
-        # TODO - continue
+            
+            if piece.kind == ROOK:
+                if isSameColOrRow(piece.sqr, kingSqr):
+                    pass
+            elif piece.kind == BISHOP:
+                if isSameDiag(piece.sqr, kingSqr):
+                    pass
+            elif piece.kind == QUEEN:
+                if isSameColOrRow(piece.sqr, kingSqr):
+                    pass
 
     def get_all_moves(self, color):
-        
         pieces = self.get_pieces(color)
-        
         pinned_pieces = self.get_pinned_pieces(color)
         
         moves = []
@@ -297,9 +313,17 @@ class cBoard:
         
         
         # TODO - continue        
-        
-            
-        
+
+    def get_pieces(self, color, sliding=False):
+        if color == WHITE and not sliding:
+            return self.white_pieces
+        elif color == WHITE:
+            return self.white_sliding_pieces
+        elif not sliding:
+            return self.black_pieces
+        else:
+            return self.black_slidigin_pieces
+
     def check_direction(rowIdx, colIdx, direction, includePath=False):
         ds = [(0, 0), (0, 1), (0, -1), (-1, 0), (1, 0), (-1, 1), (1, 1), (-1, -1), (1, -1)]
         colDiff, rowDiff = ds[direction]
