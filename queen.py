@@ -4,6 +4,7 @@ from constants import *
 class cQueen (cPiece):
     def __init__(self, color):
         super().__init__(QUEEN, color)
+        self.is_sliding = True
 
     def getPotentialMoves(self, ownPieces=False):
         resLst = []
@@ -28,7 +29,10 @@ class cQueen (cPiece):
                     break
 
         return resLst
-    
+
+    def get_potential_moves_pinned(self, direction):
+        return self.square.board.check_direction(self.square.rowIdx, self.square.colIdx, direction, includePath=True)
+
     def isAttackingSqr(self, colIdx, rowIdx):
         if self.square.colIdx == colIdx and self.square.rowIdx == rowIdx:
             return False

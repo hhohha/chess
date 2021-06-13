@@ -4,6 +4,7 @@ from constants import *
 class cBishop (cPiece):
     def __init__(self, color):
         super().__init__(BISHOP, color)
+        self.is_sliding = True
         
     def getPotentialMoves(self, ownPieces=False):
         resLst = []
@@ -28,6 +29,13 @@ class cBishop (cPiece):
 
         return resLst
     
+    def get_potential_moves_pinned(self, direction):
+        if direction <= RIGHT:
+            return []
+        moves = []
+        moves += self.square.board.check_direction(self.square.rowIdx, self.square.colIdx, direction, includePath=True)
+        moves += self.square.board.check_direction(self.square.rowIdx, self.square.colIdx, reverse_dir(direction), includePath=True, includeDest=False)
+
     def isAttackingSqr(self, colIdx, rowIdx):
         if self.square.colIdx == colIdx and self.square.rowIdx == rowIdx:
             return False

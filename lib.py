@@ -16,3 +16,6 @@ def letter_to_piece(letter):
     
 def kind_to_letter(kind):
     return 'pNBRQK'[kind]
+
+def reverse_dir(direction):
+    return [None, DOWN, UP, RIGHT, LEFT, DOWN_RIGHT, DOWN_LEFT, UP_RIGHT, UP_LEFT][direction]

@@ -4,6 +4,7 @@ from constants import *
 class cKing (cPiece):
     def __init__(self, color):
         super().__init__(KING, color)
+        self.is_sliding = False
         
     # potential moves don't respect checks
     def getPotentialMoves(self):
@@ -14,16 +15,13 @@ class cKing (cPiece):
             if square is None:
                 continue
         
-            if (square.piece == None or square.piece.color != self.color):
+            if (not square.is_attacked_by(not self.color) and (square.piece == None or square.piece.color != self.color)):
                 resLst.append(square)
-                
-        if self.square.board.isShortCastlePossible(self.color):
-            resLst.append(self.square.board.getSquare('g1'))
-            
-        if self.square.board.isLongCastlePossible(self.color):
-            resLst.append(self.square.board.getSquare('c1'))
-                
+
         return resLst
+    
+    def get_potential_moves_pinned(self, direction):
+        return []
     
     def getAttackedSquares(self):
         resLst = []

@@ -4,6 +4,7 @@ from constants import *
 class cPawn (cPiece):
     def __init__(self, color):
         super().__init__(PAWN, color)
+        self.is_sliding = False
         if self.color == WHITE:
             self.d = 1
             self.base_row = 1
@@ -28,6 +29,12 @@ class cPawn (cPiece):
                 resLst.append(square)
         
         return resLst
+    
+    def get_potential_moves_pinned(self, direction):
+        if direction <= RIGHT:
+            return []
+
+        return self.square.board.check_direction(self.square.rowIdx, self.square.colIdx, direction, includePath=True)
     
     def getAttackedSquares(self):
         resLst = []

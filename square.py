@@ -1,3 +1,5 @@
+from constants import *
+
 class cSquare:
     def __init__(self, idx, board):
         self.idx = idx
@@ -14,11 +16,19 @@ class cSquare:
         else:
             return str(self.piece)
         
+    def is_free(self):
+        return self.piece is None
+        
     def getCoord(self):
         return chr(self.colIdx + 97) + str(self.rowIdx + 1)
-        
-    def isInCheck(self, myColor):
-        return False
     
-    def isFree(self):
-        return self.piece is None
+    def is_attacked_by(self, color):
+        return len(self.get_attacked_by(color)) > 0
+
+    def get_attacked_by(self, color=None):
+        if color == WHITE:
+            return self.attacked_by_whites
+        if color == BLACK:
+            return self.attacked_by_blacks
+        return self.attacked_by_whites + self.attacked_by_blacks
+            

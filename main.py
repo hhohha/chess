@@ -22,6 +22,7 @@ def main():
     layout += [[sg.Button(image_data=icon, key=key) for key, icon in zip(white_keys, white_icons)]]
     layout += [[sg.Button(image_data=icon, key=key) for key, icon in zip(black_keys, black_icons)]]
     
+    #debug buttons
     layout += [[
         sg.Button('Is white in check', key='is_white_checked'),
         sg.Button('Is black in check', key='is_black_checked'),
@@ -46,6 +47,10 @@ def main():
             break
         elif event == 'show_attacking_pieces':
             showing_attacking_pieces = not showing_attacking_pieces
+        elif event == 'is_white_checked':
+            print(board.is_in_check(WHITE))
+        elif event == 'is_black_checked':
+            print(board.is_in_check(BLACK))
         elif event == 'new_game':
             board.reset()
         elif event == 'clear_board':

@@ -4,6 +4,7 @@ from constants import *
 class cKnight (cPiece):
     def __init__(self, color):
         super().__init__(KNIGHT, color)
+        self.is_sliding = False
         
     def getPotentialMoves(self, ownPieces=False):
         resLst = []
@@ -14,7 +15,10 @@ class cKnight (cPiece):
                 resLst.append(square)
 
         return resLst
-    
+
+    def get_potential_moves_pinned(self, direction):
+        return []
+
     def isAttackingSqr(self, colIdx, rowIdx):
         return abs(colIdx - self.square.colIdx) == 1 and abs(rowIdx - self.square.rowIdx) == 2 or \
             abs(colIdx - self.square.colIdx) == 2 and abs(rowIdx - self.square.rowIdx) == 1
