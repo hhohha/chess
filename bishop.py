@@ -32,9 +32,11 @@ class cBishop (cPiece):
     def get_potential_moves_pinned(self, direction):
         if direction <= RIGHT:
             return []
-        moves = []
-        moves += self.square.board.check_direction(self.square.rowIdx, self.square.colIdx, direction, includePath=True)
-        moves += self.square.board.check_direction(self.square.rowIdx, self.square.colIdx, reverse_dir(direction), includePath=True, includeDest=False)
+        moves = self.square.board.find_first_piece_in_dir(self.square, direction, includePath=True)
+        moves += self.square.board.find_first_piece_in_dir(self.square, reverse_dir(direction), includePath=True)
+        moves.pop() # the previous line acually would include the square with own king
+        
+        return moves
 
     def isAttackingSqr(self, colIdx, rowIdx):
         if self.square.colIdx == colIdx and self.square.rowIdx == rowIdx:

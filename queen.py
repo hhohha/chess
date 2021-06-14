@@ -31,7 +31,11 @@ class cQueen (cPiece):
         return resLst
 
     def get_potential_moves_pinned(self, direction):
-        return self.square.board.check_direction(self.square.rowIdx, self.square.colIdx, direction, includePath=True)
+        moves = self.square.board.find_first_piece_in_dir(self.square, direction, includePath=True)
+        moves += self.square.board.find_first_piece_in_dir(self.square, reverse_dir(direction), includePath=True)
+        moves.pop()
+
+        return moves
 
     def isAttackingSqr(self, colIdx, rowIdx):
         if self.square.colIdx == colIdx and self.square.rowIdx == rowIdx:

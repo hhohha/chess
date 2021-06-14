@@ -31,4 +31,6 @@ class cSquare:
         if color == BLACK:
             return self.attacked_by_blacks
         return self.attacked_by_whites + self.attacked_by_blacks
-            
+
+    def __eq__(self, other):
+        return self.idx == other.idx

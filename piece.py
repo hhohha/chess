@@ -56,12 +56,12 @@ class cPiece:
             kingDir, otherDir, attPiece = DOWN_RIGHT, UP_LEFT, BISHOP
 
         # check towards the king
-        sqr = self.square.board.check_direction(self.square.rowIdx, self.square.colIdx, kingDir)
+        sqr = self.square.board.find_first_piece_in_dir(self.square, kingDir)
         if sqr is None or sqr.piece.kind != KING or sqr.piece.color != self.color:
             return False
             
         # check the other direction            
-        sqr = self.square.board.check_direction(self.square.rowIdx, self.square.colIdx, otherDir)
+        sqr = self.square.board.find_first_piece_in_dir(self.square, otherDir)
         if sqr is None or sqr.piece.color == self.color:
             return False
         

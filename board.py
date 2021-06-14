@@ -282,21 +282,65 @@ class cBoard:
         for piece in self.white_pieces + self.black_pieces:
             piece.calcAttackingSquares()
 
-    def get_pinned_pieces(self, color):
-        kingSqr = self.get_king_sqr(color)
-        
-        for piece self.get_pieces(not color, sliding=True):
-            
-            if piece.kind == ROOK:
-                if isSameColOrRow(piece.sqr, kingSqr):
-                    pass
-            elif piece.kind == BISHOP:
-                if isSameDiag(piece.sqr, kingSqr):
-                    pass
-            elif piece.kind == QUEEN:
-                if isSameColOrRow(piece.sqr, kingSqr):
-                    pass
+    def get_direction(self, sqr1, sqr2):
+        if sqr1 == sqr2:
+            return None
 
+        if sqr1.colIdx == sqr2.colIdx:
+            if sqr1.rowIdx < sqr2.rowIdx:
+                return UP
+            else:
+                return DOWN
+            
+        if sqr1.rowIdx == sqr2.rowIdx:
+            if sqr1.colIdx < sqr2.colIdx:
+                return RIGHT
+            else:
+                return LEFT
+            
+        if sqr1.colIdx - sqr2.colIdx == sqr1.rowIdx - sqr2.rowIdx:
+            if sqr1.colIdx > sqr2.colIdx:
+                return DOWN_LEFT
+            else:
+                return UP_RIGHT
+            
+        if sqr1.colIdx - sqr2.colIdx == sqr2.rowIdx - sqr1.rowIdx:
+            if sqr1.colIdx > sqr2.colIdx:
+                return UP_LEFT
+            else:
+                return DOWN_RIGHT
+
+        return None
+        
+    def get_pinned_pieces(self, color):
+        pinned_pieces = []
+
+        kingSqr = self.get_king_sqr(color)
+
+        for piece self.get_pieces(not color, sliding=True):
+           if piece.kind == ROOK:
+                if not isSameColOrRow(piece.sqr, kingSqr):
+                    continue
+           elif piece.kind == BISHOP:
+                if not isSameDiag(piece.sqr, kingSqr):
+                    continue
+           else: #piece.kind == QUEEN
+                if not isSameColOrRow(piece.sqr, kingSqr):
+                    continue
+                
+            direction = self.get_direction(kingSqr, piece.square)
+            firstSquare = self.find_first_piece_in_dir(kingSqr, direction)
+            if firstSquare is None or firstSquare.piece.color != color:
+                continue
+            
+            secondSquare = self.find_first_piece_in_dir(firstSquare, direction)
+            if secondSquare.piece = piece:
+                pinned_pieces.append(firstSquare.piece)
+            
+            
+        #      - change params so that it takes square
+        #      - get pinned piece should return olso directions
+           
     def get_all_moves(self, color):
         pieces = self.get_pieces(color)
         pinned_pieces = self.get_pinned_pieces(color)
@@ -324,14 +368,14 @@ class cBoard:
         else:
             return self.black_slidigin_pieces
 
-    def check_direction(rowIdx, colIdx, direction, includePath=False):
-        ds = [(0, 0), (0, 1), (0, -1), (-1, 0), (1, 0), (-1, 1), (1, 1), (-1, -1), (1, -1)]
-        colDiff, rowDiff = ds[direction]
-        colIdx, rowIdx = colIdx + colDiff, rowIdx + rowDiff
+    def find_first_piece_in_dir(square, direction, includePath=False):
+        offsets = [(0, 0), (0, 1), (0, -1), (-1, 0), (1, 0), (-1, 1), (1, 1), (-1, -1), (1, -1)]
+        colDiff, rowDiff = offsets[direction]
+        colIdx, rowIdx = square.colIdx + colDiff, square.rowIdx + rowDiff
         path = []
 
         while True:
-            sqr = self.square.board.getSquare(colIdx, rowIdx)
+            sqr = self.getSquare(colIdx, rowIdx)
             if sqr is None or not sqr.is_free():
                 return path + [sqr] if includePath else sqr
             elif includePath:
