@@ -24,4 +24,7 @@ def isSameColOrRow(sqr1, sqr2):
     return sqr1.colIdx == sqr2.colIdx or sqr1.rowIdx == sqr2.rowIdx
 
 def isSameDiag(sqr1, sqr2):
-    return abs(sqr1.colIdx - sqr2.colIdx) != abs(sqr1.rowIdx - sqr2.rowIdx)
+    return abs(sqr1.colIdx - sqr2.colIdx) == abs(sqr1.rowIdx - sqr2.rowIdx)
+
+def move_in_direction(row, col, direction):
+    return [None, (row+1, col), (row-1, col), (row, col-1), (row, col+1), (row+1, col-1), (row+1, col+1), (row-1, col-1), (row-1, col+1)][direction]

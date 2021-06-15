@@ -74,10 +74,19 @@ def main():
             
             if selected_button == None:
                 if window.Element(event).ImageData != empty_icon:
-                    selected_button = event
-                    potential_moves = board.getSquare(int(selected_button[3:])).piece.getPotentialMoves()
-                    board.displayer.light_squares([board.getSquare(int(selected_button[3:]))], 2)
-                    board.displayer.light_squares(potential_moves, 1)
+                    if board.getSquare(int(event[3:])).piece.color == board.turn:
+                        selected_button = event
+                        potential_moves = board.getSquare(int(selected_button[3:])).piece.get_legal_moves()
+                        
+                        for move in potential_moves:
+                            print(move)
+                        print('---')
+                        # TODO - fix this
+                        potential_squares = list(map(lambda move: move.toSqr, potential_moves))
+                        for s in potential_squares:
+                            print(s)
+                        board.displayer.light_squares([board.getSquare(int(selected_button[3:]))], 2)
+                        board.displayer.light_squares(potential_squares, 1)
 
             elif selected_button == event:
                 board.displayer.unlight_squares()

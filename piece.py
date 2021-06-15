@@ -7,11 +7,8 @@ class cPiece:
         self.movesCnt = 0
         self.attackingSquares = []
         
-    def getPotentialMoves(self, ownPieces=False):
+    def get_potential_moves(self, ownPieces=False):
         return []
-    
-    def get_real_moves(self):
-        pass
         
     def calcAttackingSquares(self):
         for sqr in self.attackingSquares:
@@ -23,7 +20,7 @@ class cPiece:
             sqr.get_attacked_by(self.color).append(self)
             
     def getAttackedSquares(self):
-        return self.getPotentialMoves(ownPieces=True)
+        return map(lambda move: move.toSqr, self.get_potential_moves(ownPieces=True))
     
     def is_pinned(self):
         kingSqr = self.square.board.get_king_sqr(self.color)
@@ -71,3 +68,8 @@ class cPiece:
 
     def pprint(self):
         return kind_to_letter(self.kind) + self.square.getCoord()
+
+    def get_legal_moves(self):
+        if self.square.board.turn != self.color:
+            return []
+        return filter(lambda move: move.piece == self, self.square.board.legal_moves)

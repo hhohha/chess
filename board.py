@@ -107,6 +107,7 @@ class cBoard:
         self.displayer = cDisplayer(display)
         self.white_king_sqr = None
         self.black_king_sqr = None
+        self.legal_moves = {}
 
     def loadFEN(self, fenstr):
         self.clear()
@@ -146,6 +147,7 @@ class cBoard:
         self.half_moves = int(halves)
         self.moves = int(fulls)
         
+        self.legal_moves = self.get_all_moves()
         self.calcAttackingSquares()
         print (self)
 
@@ -267,7 +269,25 @@ class cBoard:
         self.turn = WHITE if self.turn == BLACK else BLACK
 
         if movPiece.kind == KING:
-            self.get_king_sqr(color) = toSqr
+            self.set_king_sqr(movPiece.color, toSqr)
+        
+        if movPiece in [KING, ROOK]:
+            self.handle_casteling_rights(movPiece)
+            
+        if movPiece == KING and abs(fromSqr.idx - toSqr.idx) == 2:
+            # the move is casteling, need to move the rook too
+            if toSqr.idx == 6:
+                rookFrom, rookTo = 7, 5
+            elif toSqr.idx == 2:
+                rookFrom, rookTo = 0, 3
+            elif toSqr.idx == 62:
+                rookFrom, rookTo = 63, 61
+            else:
+                rookFrom, rookTo = 56, 59
+            
+            self.getSquare(rookTo).piece = self.getSquare(rookFrom).piece
+            self.getSquare(rookFrom).piece = None
+            
 
         for piece in fromSqr.attacked_by_whites + fromSqr.attacked_by_blacks + toSqr.attacked_by_whites + toSqr.attacked_by_blacks:
             if piece.is_sliding:
@@ -277,6 +297,12 @@ class cBoard:
 
         if not preview:
             self.history.append(move)
+            
+        self.legal_moves = self.get_all_moves()
+
+        #for k, v in self.get_all_moves(self.turn).items():
+            #print(k.__repr__(), ' -> ', v)
+        #print('\n\n\n')
 
     def calcAttackingSquares(self):
         for piece in self.white_pieces + self.black_pieces:
@@ -314,34 +340,33 @@ class cBoard:
         
     def get_pinned_pieces(self, color):
         pinned_pieces = []
-
         kingSqr = self.get_king_sqr(color)
 
-        for piece self.get_pieces(not color, sliding=True):
-           if piece.kind == ROOK:
-                if not isSameColOrRow(piece.sqr, kingSqr):
+        for piece in self.get_pieces(not color, sliding=True):
+            if piece.kind == ROOK:
+                if not isSameColOrRow(piece.square, kingSqr):
                     continue
-           elif piece.kind == BISHOP:
-                if not isSameDiag(piece.sqr, kingSqr):
+            elif piece.kind == BISHOP:
+                if not isSameDiag(piece.square, kingSqr):
                     continue
-           else: #piece.kind == QUEEN
-                if not isSameColOrRow(piece.sqr, kingSqr):
+            else: #piece.kind == QUEEN
+                if not isSameColOrRow(piece.square, kingSqr):
                     continue
-                
+
             direction = self.get_direction(kingSqr, piece.square)
             firstSquare = self.find_first_piece_in_dir(kingSqr, direction)
+            
             if firstSquare is None or firstSquare.piece.color != color:
                 continue
             
             secondSquare = self.find_first_piece_in_dir(firstSquare, direction)
-            if secondSquare.piece = piece:
+            if secondSquare.piece == piece:
                 pinned_pieces.append(firstSquare.piece)
-            
-            
-        #      - change params so that it takes square
-        #      - get pinned piece should return olso directions
+                
+        return pinned_pieces
            
-    def get_all_moves(self, color):
+    def get_all_moves(self):
+        color = self.turn
         pieces = self.get_pieces(color)
         pinned_pieces = self.get_pinned_pieces(color)
         
@@ -351,12 +376,55 @@ class cBoard:
             for piece in pieces:
                 pinned = piece.is_pinned()
                 if not pinned:
-                    moves += piece.getPotentialMoves()
+                    moves += piece.get_potential_moves()
                 else:
                     moves += piece.get_potential_moves_pinned(pinned)
+                    
+            # TODO - write this better
+            if self.is_castle_possible(color, RIGHT):
+                if color == WHITE:
+                    moves.append(cMove(self.get_king_sqr(color).piece, self.getSquare(6)))
+                else:
+                    moves.append(cMove(self.get_king_sqr(color).piece, self.getSquare(62)))
+                    
+            if self.is_castle_possible(color, LEFT):
+                if color == WHITE:
+                    moves.append(cMove(self.get_king_sqr(color).piece, self.getSquare(2)))
+                else:
+                    moves.append(cMove(self.get_king_sqr(color).piece, self.getSquare(58)))
         
-        
-        # TODO - continue        
+        else:
+            # king is in check
+            kingSqr = self.get_king_sqr(color)
+            attackers = kingSqr.get_attacked_by(not color)
+            
+            # can always (attempt to) move the king
+            moves = kingSqr.piece.get_potential_moves()
+            
+            for piece in attackers:
+                if piece.is_sliding:
+                    # cannot just run from sliding piece in the direction of the attack
+                    direction = reverse_dir(self.get_direction(kingSqr, piece.square))
+                    row, col = move_in_direction(kingSqr.rowIdx, kingSqr.colIdx, direction)
+                    
+                    tmpMove = cMove(kingSqr.piece, self.getSquare(row, col))
+                    if tmpMove in moves:
+                        moves.remove(tmpMove)
+            
+            if len(attackers) == 1:
+                # not double check - can also capture the attacker
+                if attackers[0].is_sliding:
+                    # can also block the attacker
+                    direction = self.get_direction(kingSqr, attackers[0].square)
+                    target_squares = self.find_first_piece_in_dir(kingSqr, direction, includePath=True)
+                else:
+                    target_squares = [attackers[0].square]
+                    
+                for piece in pieces:
+                    if piece.kind != KING:
+                        moves += list(filter(lambda x: x in target_squares, piece.get_potential_moves()))
+
+        return moves
 
     def get_pieces(self, color, sliding=False):
         if color == WHITE and not sliding:
@@ -366,25 +434,33 @@ class cBoard:
         elif not sliding:
             return self.black_pieces
         else:
-            return self.black_slidigin_pieces
+            return self.black_sliding_pieces
 
-    def find_first_piece_in_dir(square, direction, includePath=False):
+    def find_first_piece_in_dir(self, square, direction, includePath=False):
         offsets = [(0, 0), (0, 1), (0, -1), (-1, 0), (1, 0), (-1, 1), (1, 1), (-1, -1), (1, -1)]
         colDiff, rowDiff = offsets[direction]
+        
         colIdx, rowIdx = square.colIdx + colDiff, square.rowIdx + rowDiff
         path = []
 
         while True:
-            sqr = self.getSquare(colIdx, rowIdx)
+            sqr = self.getSquare(rowIdx, colIdx)
             if sqr is None or not sqr.is_free():
                 return path + [sqr] if includePath else sqr
             elif includePath:
                 path.append(sqr)
+            colIdx, rowIdx = colIdx + colDiff, rowIdx + rowDiff
             
     def get_king_sqr(self, color):
         if color == WHITE:
             return self.white_king_sqr
         return self.black_king_sqr
+    
+    def set_king_sqr(self, color, sqr):
+        if color == WHITE:
+            self.white_king_sqr = sqr
+        else:
+            self.black_king_sqr = sqr
     
     def is_in_check(self, color):
         kingSqr = self.get_king_sqr(color)
@@ -392,3 +468,66 @@ class cBoard:
             return False
         
         return kingSqr.is_attacked_by(not color)
+    
+    def is_castle_possible(self, color, side):
+        if color == WHITE:
+            if side == RIGHT:
+                if not self.castle_white_king:
+                    return False
+                kingSqr = self.getSquare(4)
+                rookSqr = self.getSquare(7)
+                passingSqrs = [self.getSquare(5), self.getSquare(6)]
+            else:
+                if not self.castle_white_queen:
+                    return False
+                kingSqr = self.getSquare(4)
+                rookSqr = self.getSquare(0)
+                passingSqrs = [self.getSquare(2), self.getSquare(3)]
+        else:
+            if side == RIGHT:
+                if not self.castle_black_king:
+                    return False
+                kingSqr = self.getSquare(60)
+                rookSqr = self.getSquare(63)
+                passingSqrs = [self.getSquare(61), self.getSquare(62)]
+            else:
+                if not self.castle_black_queen:
+                    return False
+                kingSqr = self.getSquare(60)
+                rookSqr = self.getSquare(56)
+                passingSqrs = [self.getSquare(58), self.getSquare(59)]
+
+        if kingSqr.piece is None or kingSqr.piece.kind != KING or kingSqr.piece.color != color:
+            return False
+
+        if rookSqr.piece is None or rookSqr.piece.kind != ROOK or rookSqr.piece.color != color:
+            return False
+
+        if self.is_in_check(color):
+            return False
+
+        for sqr in passingSqrs:
+            if sqr.piece is not None or sqr.is_attacked_by(not color):
+                return False
+
+        return True
+
+    def handle_casteling_rights(self, piece):
+        if piece == KING:
+            if color == WHITE:
+                self.castle_white_king, self.castle_white_queen = False, False
+            else:
+                self.castle_black_king, self.castle_black_queen = False, False
+        if piece == ROOK:
+            if color == WHITE:
+                if self.getSquare(0).piece != ROOK:
+                    self.castle_white_queen = False
+                if self.getSquare(7).piece != ROOK:
+                    self.castle_white_king = False
+            else:
+                if self.getSquare(56).piece != ROOK:
+                    self.castle_black_queen = False
+                if self.getSquare(63).piece != ROOK:
+                    self.castle_black_king = False
+                
+            

@@ -1,5 +1,6 @@
 from piece import cPiece
 from constants import *
+from move import cMove
 
 class cKing (cPiece):
     def __init__(self, color):
@@ -7,8 +8,8 @@ class cKing (cPiece):
         self.is_sliding = False
         
     # potential moves don't respect checks
-    def getPotentialMoves(self):
-        resLst = []
+    def get_potential_moves(self):
+        moves = []
         
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
             square = self.square.board.getSquare(self.square.rowIdx + i, self.square.colIdx + j)
@@ -16,22 +17,22 @@ class cKing (cPiece):
                 continue
         
             if (not square.is_attacked_by(not self.color) and (square.piece == None or square.piece.color != self.color)):
-                resLst.append(square)
+                moves.append(cMove(self, square))
 
-        return resLst
+        return moves
     
     def get_potential_moves_pinned(self, direction):
         return []
     
     def getAttackedSquares(self):
-        resLst = []
+        moves = []
         
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
             square = self.square.board.getSquare(self.square.rowIdx + j, self.square.colIdx + i)
             if square is not None:
-                resLst.append(square)
+                moves.append(square)
                 
-        return resLst
+        return moves
     
     def isAttackingSqr(self, colIdx, rowIdx):
         if self.square.colIdx == colIdx and self.square.rowIdx == rowIdx:
@@ -40,3 +41,6 @@ class cKing (cPiece):
     
     def __str__(self):
         return ' K' if self.color == WHITE else '*K' 
+
+    def __repr__(self):
+        return 'K' + self.square.getCoord()

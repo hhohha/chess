@@ -1,13 +1,15 @@
 from piece import cPiece
 from constants import *
+from lib import *
+from move import cMove
 
 class cBishop (cPiece):
     def __init__(self, color):
         super().__init__(BISHOP, color)
         self.is_sliding = True
         
-    def getPotentialMoves(self, ownPieces=False):
-        resLst = []
+    def get_potential_moves(self, ownPieces=False):
+        moves = []
         
         for func in [lambda x, y: (x + 1, y + 1), lambda x, y: (x - 1, y - 1), lambda x, y: (x - 1, y + 1), lambda x, y: (x + 1, y - 1)]:
             i, j = 0, 0
@@ -18,16 +20,16 @@ class cBishop (cPiece):
                     break
                 
                 if square.piece is None:
-                    resLst.append(square)
+                    moves.append(cMove(self, square))
                 elif square.piece.color != self.color:
-                    resLst.append(square)
+                    moves.append(cMove(self, square))
                     break
                 else:
                     if ownPieces:
-                        resLst.append(square)
+                        moves.append(cMove(self, square))
                     break
 
-        return resLst
+        return moves
     
     def get_potential_moves_pinned(self, direction):
         if direction <= RIGHT:
@@ -36,7 +38,7 @@ class cBishop (cPiece):
         moves += self.square.board.find_first_piece_in_dir(self.square, reverse_dir(direction), includePath=True)
         moves.pop() # the previous line acually would include the square with own king
         
-        return moves
+        return list(map(lambda sqr: cMove(self, sqr), moves))
 
     def isAttackingSqr(self, colIdx, rowIdx):
         if self.square.colIdx == colIdx and self.square.rowIdx == rowIdx:
@@ -57,3 +59,6 @@ class cBishop (cPiece):
         
     def __str__(self):
         return ' B' if self.color == WHITE else '*B'
+
+    def __repr__(self):
+        return 'B' + self.square.getCoord()
