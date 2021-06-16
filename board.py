@@ -7,6 +7,7 @@ from rook import cRook
 from queen import cQueen
 from king import cKing
 from square import cSquare
+from move import cMove
 from icons import *
 from lib import *
 import re
@@ -148,8 +149,9 @@ class cBoard:
         self.moves = int(fulls)
         
         self.legal_moves = self.get_all_moves()
-        self.calcAttackingSquares()
-        print (self)
+        for piece in self.white_pieces + self.black_pieces:
+            piece.calcAttackingSquares()
+        #print (self)
 
     def clear(self):
         for sqr in self.board:
@@ -271,10 +273,11 @@ class cBoard:
         if movPiece.kind == KING:
             self.set_king_sqr(movPiece.color, toSqr)
         
-        if movPiece in [KING, ROOK]:
+        if movPiece.kind in [KING, ROOK]:
             self.handle_casteling_rights(movPiece)
+        
+        if movPiece.kind == KING and abs(fromSqr.idx - toSqr.idx) == 2:
             
-        if movPiece == KING and abs(fromSqr.idx - toSqr.idx) == 2:
             # the move is casteling, need to move the rook too
             if toSqr.idx == 6:
                 rookFrom, rookTo = 7, 5
@@ -287,14 +290,16 @@ class cBoard:
             
             self.getSquare(rookTo).piece = self.getSquare(rookFrom).piece
             self.getSquare(rookFrom).piece = None
+            self.getSquare(rookTo).piece.square = self.getSquare(rookTo)
+            self.displayer.draw_square(self.getSquare(rookFrom), None)
+            self.displayer.draw_square(self.getSquare(rookTo), self.getSquare(rookTo).piece)
             
-
+        #TODO refactor - one piece can be recalculated several times
         for piece in fromSqr.attacked_by_whites + fromSqr.attacked_by_blacks + toSqr.attacked_by_whites + toSqr.attacked_by_blacks:
             if piece.is_sliding:
                 piece.calcAttackingSquares()
 
         movPiece.calcAttackingSquares()
-
         if not preview:
             self.history.append(move)
             
@@ -303,10 +308,11 @@ class cBoard:
         #for k, v in self.get_all_moves(self.turn).items():
             #print(k.__repr__(), ' -> ', v)
         #print('\n\n\n')
-
-    def calcAttackingSquares(self):
-        for piece in self.white_pieces + self.black_pieces:
-            piece.calcAttackingSquares()
+        
+    def find_white_queen(self):
+        for piece in self.white_pieces:
+            if piece.kind == QUEEN:
+                return piece
 
     def get_direction(self, sqr1, sqr2):
         if sqr1 == sqr2:
@@ -406,12 +412,14 @@ class cBoard:
                     # cannot just run from sliding piece in the direction of the attack
                     direction = reverse_dir(self.get_direction(kingSqr, piece.square))
                     row, col = move_in_direction(kingSqr.rowIdx, kingSqr.colIdx, direction)
-                    
-                    tmpMove = cMove(kingSqr.piece, self.getSquare(row, col))
-                    if tmpMove in moves:
-                        moves.remove(tmpMove)
+                    if self.getSquare(row, col) is not None:
+                        tmpMove = cMove(kingSqr.piece, self.getSquare(row, col))
+                        if tmpMove in moves:
+                            moves.remove(tmpMove)
             
             if len(attackers) == 1:
+                #TODO - fix this
+
                 # not double check - can also capture the attacker
                 if attackers[0].is_sliding:
                     # can also block the attacker
@@ -513,21 +521,21 @@ class cBoard:
         return True
 
     def handle_casteling_rights(self, piece):
-        if piece == KING:
-            if color == WHITE:
+        if piece.kind == KING:
+            if piece.color == WHITE:
                 self.castle_white_king, self.castle_white_queen = False, False
             else:
                 self.castle_black_king, self.castle_black_queen = False, False
-        if piece == ROOK:
-            if color == WHITE:
-                if self.getSquare(0).piece != ROOK:
+        if piece.kind == ROOK:
+            if piece.color == WHITE:
+                if self.getSquare(0).piece is not None and self.getSquare(0).piece.kind != ROOK:
                     self.castle_white_queen = False
-                if self.getSquare(7).piece != ROOK:
+                if self.getSquare(7).piece is not None and self.getSquare(7).piece.kind != ROOK:
                     self.castle_white_king = False
             else:
-                if self.getSquare(56).piece != ROOK:
+                if self.getSquare(56).piece is not None and self.getSquare(56).piece.kind != ROOK:
                     self.castle_black_queen = False
-                if self.getSquare(63).piece != ROOK:
+                if self.getSquare(63).piece is not None and self.getSquare(63).piece.kind != ROOK:
                     self.castle_black_king = False
                 
             

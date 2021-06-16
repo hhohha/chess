@@ -50,15 +50,15 @@ class cPawn (cPiece):
                 return []
 
         if direction == UP_RIGHT or direction == DOWN_LEFT:
-            sqr = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx + 1)
-            if sqr.piece is None:
+            sqr = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx + self.move_offset)
+            if sqr is not None and sqr.piece is not None and sqr.piece.color != self.color:
                 return [cMove(self, sqr)]
             else:
                 return []
         
         # direction is LEFT_UP or RIGHT_DOWN
-        sqr = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx - 1)
-        if sqr.piece is None:
+        sqr = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx - self.move_offset)
+        if sqr is not None and sqr.piece is not None and sqr.piece.color != self.color:
             return [cMove(self, sqr)]
         else:
             return []

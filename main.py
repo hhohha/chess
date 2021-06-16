@@ -39,7 +39,7 @@ def main():
     new_piece, selected_button = None, None
     showing_attacking_pieces = False
     
-    potential_moves = []
+    potential_squares = []
     while True:
         event, values = window.read()
 
@@ -77,14 +77,7 @@ def main():
                     if board.getSquare(int(event[3:])).piece.color == board.turn:
                         selected_button = event
                         potential_moves = board.getSquare(int(selected_button[3:])).piece.get_legal_moves()
-                        
-                        for move in potential_moves:
-                            print(move)
-                        print('---')
-                        # TODO - fix this
-                        potential_squares = list(map(lambda move: move.toSqr, potential_moves))
-                        for s in potential_squares:
-                            print(s)
+                        potential_squares = list(map(lambda mv: mv.toSqr, potential_moves))
                         board.displayer.light_squares([board.getSquare(int(selected_button[3:]))], 2)
                         board.displayer.light_squares(potential_squares, 1)
 
@@ -92,7 +85,7 @@ def main():
                 board.displayer.unlight_squares()
                 selected_button = None
             else:
-                if not board.getSquare(int(event[3:])) in potential_moves:
+                if not board.getSquare(int(event[3:])) in potential_squares:
                     continue
                    
                 board.displayer.unlight_squares()

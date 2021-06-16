@@ -4,7 +4,7 @@ class cMove:
     def __init__(self, piece, toSqr, newPiece=None):
         self.piece = piece
         self.toSqr = toSqr
-        self.fromSqr = piece.square
+        #self.fromSqr = piece.square
         self.newPiece = newPiece
         
     def __str__(self):
