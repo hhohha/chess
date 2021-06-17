@@ -4,8 +4,8 @@ from lib import *
 from move import cMove
 
 class cRook (cPiece):
-    def __init__(self, color):
-        super().__init__(ROOK, color)
+    def __init__(self, color, square):
+        super().__init__(ROOK, color, square)
         self.is_sliding = True
         
     def get_potential_moves(self, ownPieces=False):

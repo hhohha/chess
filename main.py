@@ -4,9 +4,43 @@ import PySimpleGUI as sg
 from icons import *
 from board import cBoard
 from constants import *
+from move import cMove
 from lib import *
 
-import inspect
+# TO FIX
+# - f4, e6, Nf3, Qh4, Nxh4 crashes
+# - new game/clear board after selecting a piece
+
+# RULES TO IMPLEMENT
+# - en passant
+# - draw by 50 moves
+# - draw by repetition
+# - draw by material
+# - stale mate
+# - mate
+#
+# UI FEATURES TO IMPLEMENT
+# - display history
+# - go back/forward in history
+# - clock (less prio)
+# - display coordinates
+#
+# OTHER IMPLEMENTATIONS
+# - replace lists with other structures (sets) where appropriate
+# - unit tests
+# - consider some automatic tests
+#
+# ENGINE IMPLAMENTATION
+# - search (iterative deepening)
+# - evaluate function
+# - move ordering
+# - alpha-beta pruning
+# - reordering of search
+# - search all captures
+# - opening database
+# - position maps
+# - ...
+
 
 def main():
     boardDisplay = [[sg.Button(image_data=empty_icon, button_color=(COLOR_BG_LIGHT_BASIC, COLOR_BG_LIGHT_BASIC) if (i+j) % 2 == 0 else (COLOR_BG_DARK_BASIC, COLOR_BG_DARK_BASIC), border_width=3, key='sqr'+str(i+(7-j)*8)) for i in range(8)] for j in range(8)]
@@ -22,20 +56,11 @@ def main():
     layout += [[sg.Button(image_data=icon, key=key) for key, icon in zip(white_keys, white_icons)]]
     layout += [[sg.Button(image_data=icon, key=key) for key, icon in zip(black_keys, black_icons)]]
     
-    #debug buttons
-    layout += [[
-        sg.Button('Is white in check', key='is_white_checked'),
-        sg.Button('Is black in check', key='is_black_checked'),
-        sg.Button('Show white pinned', key='show_white_pinned'),
-        sg.Button('Show black pinned', key='show_black_pinned'),
-        sg.Button('Show attacking pieces', key='show_attacking_pieces')
-    ]]
-               
     board = cBoard(boardDisplay)
 
     # Create the window and show it
     window = sg.Window('Welcome to chessify', layout, default_element_size=(12,1), element_padding=(1,1), return_keyboard_events=True)
-
+    
     new_piece, selected_button = None, None
     showing_attacking_pieces = False
     
@@ -45,12 +70,6 @@ def main():
 
         if event in (None, 'exit'): 
             break
-        elif event == 'show_attacking_pieces':
-            showing_attacking_pieces = not showing_attacking_pieces
-        elif event == 'is_white_checked':
-            print(board.is_in_check(WHITE))
-        elif event == 'is_black_checked':
-            print(board.is_in_check(BLACK))
         elif event == 'new_game':
             board.reset()
         elif event == 'clear_board':
@@ -58,38 +77,41 @@ def main():
         elif event[:4] == 'new_':
             new_piece = event[4:]
         elif event[:3] == 'sqr':
-            if showing_attacking_pieces:
-                lst = board.getSquare(int(event[3:])).attacked_by_whites
-                print('whites:', list(map(lambda x: x.pprint(), lst)))
-                lst = board.getSquare(int(event[3:])).attacked_by_blacks
-                print('blacks:', list(map(lambda x: x.pprint(), lst)))
-                continue
+            event_sqr = int(event[3:])
             
-            if new_piece != None:
+            if new_piece is not None:
                 color = WHITE if new_piece[0] == 'w' else BLACK
                 kind = letter_to_piece(new_piece[1])
-                board.placePiece(int(event[3:]), kind, color)
+                board.placePiece(event_sqr, kind, color)
                 new_piece = None
                 continue
             
-            if selected_button == None:
+            if selected_button is None:
                 if window.Element(event).ImageData != empty_icon:
-                    if board.getSquare(int(event[3:])).piece.color == board.turn:
-                        selected_button = event
-                        potential_moves = board.getSquare(int(selected_button[3:])).piece.get_legal_moves()
+                    if board.getSquare(event_sqr).piece.color == board.turn:
+                        selected_button = event_sqr
+                        potential_moves = board.getSquare(selected_button).piece.get_legal_moves()
                         potential_squares = list(map(lambda mv: mv.toSqr, potential_moves))
-                        board.displayer.light_squares([board.getSquare(int(selected_button[3:]))], 2)
+                        board.displayer.light_squares([board.getSquare(selected_button)], 2)
                         board.displayer.light_squares(potential_squares, 1)
 
-            elif selected_button == event:
+            elif selected_button == event_sqr:
                 board.displayer.unlight_squares()
                 selected_button = None
+            elif board.getSquare(event_sqr).piece and board.getSquare(selected_button).piece.color == board.getSquare(event_sqr).piece.color:
+                board.displayer.unlight_squares()
+                selected_button = event_sqr
+                potential_moves = board.getSquare(selected_button).piece.get_legal_moves()
+                potential_squares = list(map(lambda mv: mv.toSqr, potential_moves))
+                board.displayer.light_squares([board.getSquare(selected_button)], 2)
+                board.displayer.light_squares(potential_squares, 1)
             else:
-                if not board.getSquare(int(event[3:])) in potential_squares:
+                if not board.getSquare(event_sqr) in potential_squares:
                     continue
                    
                 board.displayer.unlight_squares()
-                board.move((int(selected_button[3:]), int(event[3:])))
+                move = cMove(board.getSquare(selected_button).piece, board.getSquare(event_sqr))
+                board.perform_move(move)
                 selected_button = None
 
 if __name__ == '__main__':

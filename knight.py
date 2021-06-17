@@ -3,8 +3,8 @@ from constants import *
 from move import cMove
 
 class cKnight (cPiece):
-    def __init__(self, color):
-        super().__init__(KNIGHT, color)
+    def __init__(self, color, square):
+        super().__init__(KNIGHT, color, square)
         self.is_sliding = False
         
     def get_potential_moves(self, ownPieces=False):

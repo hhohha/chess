@@ -8,90 +8,14 @@ from queen import cQueen
 from king import cKing
 from square import cSquare
 from move import cMove
+from displayer import cDisplayer
 from icons import *
 from lib import *
 import re
 
-class cDisplayer:
-    def __init__(self, display):
-        self.display = display
-        self.lighted_squares = []
-    
-    def clear(self):
-        for i in range(8):
-            for j in range(8):
-                if self.display[i][j].ImageData != empty_icon:
-                    self.display[i][j].Update(image_data=empty_icon)
-                    self.display[i][j].ImageData=empty_icon
-
-    def draw_square(self, sqr, piece):
-        icon = self._get_icon(piece)
-        self.display[7-sqr.rowIdx][sqr.colIdx].Update(image_data=icon)
-        self.display[7-sqr.rowIdx][sqr.colIdx].ImageData = icon
-    
-    def light_squares(self, squares, intensity=1):
-        self.lighted_squares += squares
-        for sqr in squares:
-            color = self._get_color(sqr, intensity)
-            self.display[7-sqr.rowIdx][sqr.colIdx].Update(button_color=color)
-            
-    def unlight_squares(self):
-        self.light_squares(self.lighted_squares, 0)
-        self.lighted_squares = []
-    
-    def _get_icon(self, piece):
-        if piece == None:
-            return empty_icon
-        elif piece.color == WHITE:
-            if piece.kind == PAWN:
-                return white_pawn_icon
-            elif piece.kind == KNIGHT:
-                return white_knight_icon
-            elif piece.kind == BISHOP:
-                return white_bishop_icon
-            elif piece.kind == ROOK:
-                return white_rook_icon
-            elif piece.kind == QUEEN:
-                return white_queen_icon
-            else:
-                return white_king_icon
-        else:
-            if piece.kind == PAWN:
-                return black_pawn_icon
-            elif piece.kind == KNIGHT:
-                return black_knight_icon
-            elif piece.kind == BISHOP:
-                return black_bishop_icon
-            elif piece.kind == ROOK:
-                return black_rook_icon
-            elif piece.kind == QUEEN:
-                return black_queen_icon
-            else:
-                return black_king_icon
-    
-    def _get_color(self, sqr, intensity):
-        if (sqr.rowIdx + sqr.colIdx) % 2 == 0:
-            #dark square
-            if intensity == 0:
-                return COLOR_BG_DARK_BASIC
-            elif intensity == 1:
-                return COLOR_BG_DARK_HLIGHTED_1
-            elif intensity == 2:
-                return COLOR_BG_DARK_HLIGHTED_2
-        else:
-            #light square
-            if intensity == 0:
-                return COLOR_BG_LIGHT_BASIC
-            elif intensity == 1:
-                return COLOR_BG_LIGHT_HLIGHTED_1
-            elif intensity == 2:
-                return COLOR_BG_LIGHT_HLIGHTED_2
-
 class cBoard:
     def __init__(self, display):
-        self.board = []
-        for i in range(64):
-            self.board.append(cSquare(i, self))
+        self.board = [cSquare(i, self) for i in range(64)]
         self.turn = WHITE
         self.white_pieces = []
         self.black_pieces = []
@@ -108,7 +32,7 @@ class cBoard:
         self.displayer = cDisplayer(display)
         self.white_king_sqr = None
         self.black_king_sqr = None
-        self.legal_moves = {}
+        self.legal_moves = []
 
     def loadFEN(self, fenstr):
         self.clear()
@@ -148,14 +72,13 @@ class cBoard:
         self.half_moves = int(halves)
         self.moves = int(fulls)
         
-        self.legal_moves = self.get_all_moves()
         for piece in self.white_pieces + self.black_pieces:
-            piece.calcAttackingSquares()
-        #print (self)
+            piece.calculate_attacking_squares()
+        self.legal_moves = self.get_all_moves()
 
     def clear(self):
         for sqr in self.board:
-            sqr.piece = None
+            sqr.clear()
             
         self.white_pieces = []
         self.black_pieces = []
@@ -178,12 +101,12 @@ class cBoard:
                 return None
             return self.board[col*8 + row]
         
-        if type(col) == int and row == None:
+        if type(col) == int and row is None:
             if col < 0 or col > 63:
                 return None
             return self.board[col]
         
-        if type(col) == str and row == None:
+        if type(col) == str and row is None:
             row, col = int(col[1]), col[0]
         
         #row = int(row)
@@ -195,12 +118,12 @@ class cBoard:
     def placePiece(self, sqr, kind, color):
         square = self.getSquare(sqr)
         
-        if kind == PAWN: square.piece = cPawn(color)
-        elif kind == KNIGHT: square.piece = cKnight(color)
-        elif kind == BISHOP: square.piece = cBishop(color)
-        elif kind == ROOK: square.piece = cRook(color)
-        elif kind == QUEEN: square.piece = cQueen(color)
-        elif kind == KING: square.piece = cKing(color)
+        if kind == PAWN: square.piece = cPawn(color, square)
+        elif kind == KNIGHT: square.piece = cKnight(color, square)
+        elif kind == BISHOP: square.piece = cBishop(color, square)
+        elif kind == ROOK: square.piece = cRook(color, square)
+        elif kind == QUEEN: square.piece = cQueen(color, square)
+        elif kind == KING: square.piece = cKing(color, square)
         
         square.piece.square = square
         
@@ -244,18 +167,8 @@ class cBoard:
         if display:
             self.displayer.draw_square(piece.square, None)
     
-    def move(self, move, preview=False):
-        if type(move) == str:
-            if len(move) < 5:
-                raise IndexError
-            fr = move[0:2]
-            to = move[3:5]
-        elif type(move) == tuple:
-            fr, to = move
-
-        fromSqr = self.getSquare(fr)
-        toSqr = self.getSquare(to)
-        movPiece = fromSqr.piece
+    def perform_move(self, move):
+        fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
         
         self.displayer.draw_square(fromSqr, None)
         self.displayer.draw_square(toSqr, movPiece)
@@ -268,16 +181,13 @@ class cBoard:
         movPiece.square = toSqr
         movPiece.movesCnt += 1
 
-        self.turn = WHITE if self.turn == BLACK else BLACK
-
         if movPiece.kind == KING:
             self.set_king_sqr(movPiece.color, toSqr)
         
         if movPiece.kind in [KING, ROOK]:
             self.handle_casteling_rights(movPiece)
-        
-        if movPiece.kind == KING and abs(fromSqr.idx - toSqr.idx) == 2:
             
+        if move.is_castling():
             # the move is casteling, need to move the rook too
             if toSqr.idx == 6:
                 rookFrom, rookTo = 7, 5
@@ -294,20 +204,26 @@ class cBoard:
             self.displayer.draw_square(self.getSquare(rookFrom), None)
             self.displayer.draw_square(self.getSquare(rookTo), self.getSquare(rookTo).piece)
             
-        #TODO refactor - one piece can be recalculated several times
-        for piece in fromSqr.attacked_by_whites + fromSqr.attacked_by_blacks + toSqr.attacked_by_whites + toSqr.attacked_by_blacks:
-            if piece.is_sliding:
-                piece.calcAttackingSquares()
+        if move.is_promotion():
+            promotion_choice = self.displayer.get_promoted_piece_from_diaog()
+            old_id, old_move_cnt = toSqr.piece.id, toSqr.piece.movesCnt
+            self.remove_piece(toSqr.piece)
+            self.placePiece(toSqr.idx, promotion_choice, self.turn)
+            movPiece = toSqr.piece
+            movPiece.id = old_id
+            movPiece.movesCnt = old_move_cnt
+            self.displayer.draw_square(toSqr, movPiece)
 
-        movPiece.calcAttackingSquares()
-        if not preview:
-            self.history.append(move)
+        self.turn = WHITE if self.turn == BLACK else BLACK
+
+        for piece in fromSqr.get_attacked_by().union(toSqr.get_attacked_by()):
+            if piece.is_sliding:
+                piece.calculate_attacking_squares()
+
+        movPiece.calculate_attacking_squares()
+        self.history.append(move)
             
         self.legal_moves = self.get_all_moves()
-
-        #for k, v in self.get_all_moves(self.turn).items():
-            #print(k.__repr__(), ' -> ', v)
-        #print('\n\n\n')
         
     def find_white_queen(self):
         for piece in self.white_pieces:
@@ -418,19 +334,18 @@ class cBoard:
                             moves.remove(tmpMove)
             
             if len(attackers) == 1:
-                #TODO - fix this
-
+                attacker = attackers.pop()
                 # not double check - can also capture the attacker
-                if attackers[0].is_sliding:
+                if attacker.is_sliding:
                     # can also block the attacker
-                    direction = self.get_direction(kingSqr, attackers[0].square)
+                    direction = self.get_direction(kingSqr, attacker.square)
                     target_squares = self.find_first_piece_in_dir(kingSqr, direction, includePath=True)
                 else:
-                    target_squares = [attackers[0].square]
+                    target_squares = [attacker.square]
                     
                 for piece in pieces:
                     if piece.kind != KING:
-                        moves += list(filter(lambda x: x in target_squares, piece.get_potential_moves()))
+                        moves += list(filter(lambda x: x.toSqr in target_squares, piece.get_potential_moves()))
 
         return moves
 

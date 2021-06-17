@@ -7,11 +7,11 @@ class cSquare:
         self.colIdx = idx % 8
         self.piece = None
         self.board = board
-        self.attacked_by_whites = []
-        self.attacked_by_blacks = []
+        self.attacked_by_whites = set()
+        self.attacked_by_blacks = set()
         
     def __str__(self):
-        if self.piece == None:
+        if self.piece is None:
             return " ."
         else:
             return str(self.piece)
@@ -30,10 +30,18 @@ class cSquare:
             return self.attacked_by_whites
         if color == BLACK:
             return self.attacked_by_blacks
-        return self.attacked_by_whites + self.attacked_by_blacks
+        return self.attacked_by_whites.union(self.attacked_by_blacks)
 
     def __eq__(self, other):
         return self.idx == other.idx
-
+    
+    def __hash__(self):
+        return hash(self.idx)
+        
     def __repr__(self):
         return self.getCoord()
+
+    def clear(self):
+        self.piece = None
+        self.attacked_by_blacks.clear()
+        self.attacked_by_whites.clear()

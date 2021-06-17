@@ -3,22 +3,24 @@ from move import cMove
 from constants import *
 
 class cPawn (cPiece):
-    def __init__(self, color):
-        super().__init__(PAWN, color)
+    def __init__(self, color, square):
+        super().__init__(PAWN, color, square)
         self.is_sliding = False
         if self.color == WHITE:
             self.move_offset = 1
             self.base_row = 1
+            self.promote_row = 7
         else:
             self.move_offset = -1
             self.base_row = 6
+            self.promote_row = 0
         
     def get_potential_moves(self):
         moves = []
         
         square = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx)
         if square.piece is None:
-            moves.append(cMove(self, square))
+            moves += self.generate_pawn_move(square)
             if self.square.rowIdx == self.base_row:
                 square = self.square.board.getSquare(self.square.rowIdx + 2*self.move_offset, self.square.colIdx)
                 if square.piece is None:
@@ -27,7 +29,7 @@ class cPawn (cPiece):
         for i in [1, -1]:
             square = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx + i)
             if square is not None and square.piece is not None and square.piece.color != self.color:
-                moves.append(cMove(self, square))
+                moves += self.generate_pawn_move(square)
         
         return moves
     
@@ -62,6 +64,13 @@ class cPawn (cPiece):
             return [cMove(self, sqr)]
         else:
             return []
+
+    def generate_pawn_move(self, square):
+        if square.rowIdx != self.promote_row:
+            return [cMove(self, square)]
+        
+        else:
+            return [cMove(self, square, KNIGHT), cMove(self, square, BISHOP), cMove(self, square, ROOK), cMove(self, square, QUEEN)]
     
     def getAttackedSquares(self):
         resLst = []

@@ -3,8 +3,8 @@ from constants import *
 from move import cMove
 
 class cKing (cPiece):
-    def __init__(self, color):
-        super().__init__(KING, color)
+    def __init__(self, color, square):
+        super().__init__(KING, color, square)
         self.is_sliding = False
         
     # potential moves don't respect checks
@@ -16,7 +16,7 @@ class cKing (cPiece):
             if square is None:
                 continue
         
-            if (not square.is_attacked_by(not self.color) and (square.piece == None or square.piece.color != self.color)):
+            if (not square.is_attacked_by(not self.color) and (square.piece is None or square.piece.color != self.color)):
                 moves.append(cMove(self, square))
 
         return moves

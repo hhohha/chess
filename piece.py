@@ -1,23 +1,25 @@
 from lib import *
 
 class cPiece:
-    def __init__(self, kind, color):
+    def __init__(self, kind, color, square):
+        self.id = square.idx
         self.kind = kind
         self.color = color
         self.movesCnt = 0
         self.attackingSquares = []
+        self.square = square
         
     def get_potential_moves(self, ownPieces=False):
         return []
         
-    def calcAttackingSquares(self):
+    def calculate_attacking_squares(self):
         for sqr in self.attackingSquares:
             sqr.get_attacked_by(self.color).remove(self)
             
         self.attackingSquares = self.getAttackedSquares()
         
         for sqr in self.attackingSquares:
-            sqr.get_attacked_by(self.color).append(self)
+            sqr.get_attacked_by(self.color).add(self)
             
     def getAttackedSquares(self):
         return list(map(lambda move: move.toSqr, self.get_potential_moves(ownPieces=True)))
@@ -73,3 +75,9 @@ class cPiece:
         if self.square.board.turn != self.color:
             return []
         return list(filter(lambda move: move.piece == self, self.square.board.legal_moves))
+
+    def __eq__(self, other):
+        return self.id == other.id
+    
+    def __hash__(self):
+        return hash(self.id)
