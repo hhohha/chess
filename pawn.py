@@ -6,14 +6,17 @@ class cPawn (cPiece):
     def __init__(self, color, square):
         super().__init__(PAWN, color, square)
         self.is_sliding = False
+        self.is_light = False
         if self.color == WHITE:
             self.move_offset = 1
             self.base_row = 1
             self.promote_row = 7
+            self.en_passant_row = 4
         else:
             self.move_offset = -1
             self.base_row = 6
             self.promote_row = 0
+            self.en_passant_row = 3
         
     def get_potential_moves(self):
         moves = []
@@ -30,6 +33,12 @@ class cPawn (cPiece):
             square = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx + i)
             if square is not None and square.piece is not None and square.piece.color != self.color:
                 moves += self.generate_pawn_move(square)
+        
+        en_passant = self.square.board.en_passant
+        if en_passant is not None and self.square.rowIdx == self.en_passant_row:
+            if abs(self.square.idx - en_passant.idx) == 1:
+                # TODO - need to check double pin here
+                moves.append(cMove(self, self.square.board.getSquare(en_passant.rowIdx + self.move_offset, en_passant.colIdx)))
         
         return moves
     
@@ -82,11 +91,11 @@ class cPawn (cPiece):
 
         return resLst
     
-    def isAttackingSqr(self, colIdx, rowIdx):
-        return abs(colIdx - self.square.colIdx) == 1 and rowIdx == self.square.rowIdx + self.move_offset
+    #def isAttackingSqr(self, colIdx, rowIdx):
+        #return abs(colIdx - self.square.colIdx) == 1 and rowIdx == self.square.rowIdx + self.move_offset
         
     def __str__(self):
-        return ' p' if self.color == WHITE else '*p'
+        return 'p' + self.square.getCoord()
 
     def __repr__(self):
         return 'p' + self.square.getCoord()

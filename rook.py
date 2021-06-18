@@ -7,7 +7,8 @@ class cRook (cPiece):
     def __init__(self, color, square):
         super().__init__(ROOK, color, square)
         self.is_sliding = True
-        
+        self.is_light = False
+
     def get_potential_moves(self, ownPieces=False):
         moves = []
         
@@ -41,31 +42,31 @@ class cRook (cPiece):
     
         return list(map(lambda sqr: cMove(self, sqr), moves))
 
-    def isAttackingSqr(self, colIdx, rowIdx):
-        if self.square.colIdx == colIdx and self.square.rowIdx == rowIdx:
-            return False
-        if self.square.colIdx != colIdx and self.square.rowIdx != rowIdx:
-            return False
+    #def isAttackingSqr(self, colIdx, rowIdx):
+        #if self.square.colIdx == colIdx and self.square.rowIdx == rowIdx:
+            #return False
+        #if self.square.colIdx != colIdx and self.square.rowIdx != rowIdx:
+            #return False
         
-        if colIdx == self.square.colIdx and rowIdx > self.square.rowIdx:
-            colDiff, rowDiff = 0, 1
-        elif colIdx == self.square.colIdx:
-            colDiff, rowDiff = 0, -1
-        elif colIdx > self.square.colIdx:
-            colDiff, rowDiff = 1, 0
-        else:
-            colDiff, rowDiff = -1, 0
+        #if colIdx == self.square.colIdx and rowIdx > self.square.rowIdx:
+            #colDiff, rowDiff = 0, 1
+        #elif colIdx == self.square.colIdx:
+            #colDiff, rowDiff = 0, -1
+        #elif colIdx > self.square.colIdx:
+            #colDiff, rowDiff = 1, 0
+        #else:
+            #colDiff, rowDiff = -1, 0
         
-        col, row = self.square.colIdx + colDiff, self.square.rowIdx + rowDiff
-        while True:
-            if col == colIdx and row == rowIdx:
-                return True
-            if self.board.getSquare(col, row).piece is not None:
-                return False
-            col, row = col + colDiff, row + rowDiff
+        #col, row = self.square.colIdx + colDiff, self.square.rowIdx + rowDiff
+        #while True:
+            #if col == colIdx and row == rowIdx:
+                #return True
+            #if self.board.getSquare(col, row).piece is not None:
+                #return False
+            #col, row = col + colDiff, row + rowDiff
         
     def __str__(self):
-        return 'R' if self.color == WHITE else '*R'
+        return 'R' + self.square.getCoord()
     
     def __repr__(self):
         return 'R' + self.square.getCoord()

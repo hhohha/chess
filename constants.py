@@ -17,8 +17,14 @@ UP_RIGHT = 6
 DOWN_LEFT = 7
 DOWN_RIGHT = 8
 
+GAME_WON_BLACK = 'Black has won!'
+GAME_WON_WHITE = 'White has won!'
+GAME_DRAW_STALEMATE = 'Draw (stalemate)!'
+GAME_DRAW_MATERIAL = 'Draw!'
+GAME_DRAW_50_MOVES = 'Draw (50 moves rule)!'
+                
 FEN_INIT = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0'
-FEN_CLEAN = '8/8/8/8/8/8/8/8 w - - 0 0'
+#FEN_INIT = 'k7/8/8/8/8/8/3p4/7K w - - 98 0'
 
 
 COLOR_BG_LIGHT_BASIC =      '#EDEAE0'

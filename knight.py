@@ -6,7 +6,8 @@ class cKnight (cPiece):
     def __init__(self, color, square):
         super().__init__(KNIGHT, color, square)
         self.is_sliding = False
-        
+        self.is_light = True
+
     def get_potential_moves(self, ownPieces=False):
         moves = []
         
@@ -20,12 +21,12 @@ class cKnight (cPiece):
     def get_potential_moves_pinned(self, direction):
         return []
 
-    def isAttackingSqr(self, colIdx, rowIdx):
-        return abs(colIdx - self.square.colIdx) == 1 and abs(rowIdx - self.square.rowIdx) == 2 or \
-            abs(colIdx - self.square.colIdx) == 2 and abs(rowIdx - self.square.rowIdx) == 1
+    #def isAttackingSqr(self, colIdx, rowIdx):
+        #return abs(colIdx - self.square.colIdx) == 1 and abs(rowIdx - self.square.rowIdx) == 2 or \
+            #abs(colIdx - self.square.colIdx) == 2 and abs(rowIdx - self.square.rowIdx) == 1
         
     def __str__(self):
-        return ' N' if self.color == WHITE else '*N'
+        return 'N' + self.square.getCoord()
 
     def __repr__(self):
         return 'N' + self.square.getCoord()

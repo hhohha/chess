@@ -5,19 +5,15 @@ from icons import *
 from board import cBoard
 from constants import *
 from move import cMove
+from displayer import cDisplayer
 from lib import *
 
 # TO FIX
-# - f4, e6, Nf3, Qh4, Nxh4 crashes
 # - new game/clear board after selecting a piece
 
 # RULES TO IMPLEMENT
 # - en passant
-# - draw by 50 moves
 # - draw by repetition
-# - draw by material
-# - stale mate
-# - mate
 #
 # UI FEATURES TO IMPLEMENT
 # - display history
@@ -56,9 +52,9 @@ def main():
     layout += [[sg.Button(image_data=icon, key=key) for key, icon in zip(white_keys, white_icons)]]
     layout += [[sg.Button(image_data=icon, key=key) for key, icon in zip(black_keys, black_icons)]]
     
-    board = cBoard(boardDisplay)
+    displayer = cDisplayer(boardDisplay)
+    board = cBoard(displayer)
 
-    # Create the window and show it
     window = sg.Window('Welcome to chessify', layout, default_element_size=(12,1), element_padding=(1,1), return_keyboard_events=True)
     
     new_piece, selected_button = None, None

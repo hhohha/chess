@@ -89,3 +89,6 @@ class cDisplayer:
             return BISHOP
         else:
             return KNIGHT
+        
+    def inform(self, msg):
+        sg.popup(msg)

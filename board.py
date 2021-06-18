@@ -1,5 +1,4 @@
 from square import cSquare
-from constants import *
 from pawn import cPawn
 from knight import cKnight
 from bishop import cBishop
@@ -9,6 +8,7 @@ from king import cKing
 from square import cSquare
 from move import cMove
 from displayer import cDisplayer
+from constants import *
 from icons import *
 from lib import *
 import re
@@ -29,7 +29,7 @@ class cBoard:
         self.en_passant = None
         self.half_moves = 0
         self.moves = 0
-        self.displayer = cDisplayer(display)
+        self.displayer = display
         self.white_king_sqr = None
         self.black_king_sqr = None
         self.legal_moves = []
@@ -173,8 +173,20 @@ class cBoard:
         self.displayer.draw_square(fromSqr, None)
         self.displayer.draw_square(toSqr, movPiece)
 
+        if toSqr.piece is not None or movPiece.kind == PAWN:
+            self.half_moves = 0
+        else:
+            self.half_moves += 1
+            
+        if self.turn == BLACK:
+            self.moves += 1
+    
         if toSqr.piece is not None:
             self.remove_piece(toSqr.piece)
+
+        if move.is_en_passant():
+            self.remove_piece(self.en_passant.piece, display=True)
+            self.en_passant.piece = None
 
         toSqr.piece = movPiece
         fromSqr.piece = None
@@ -204,6 +216,8 @@ class cBoard:
             self.displayer.draw_square(self.getSquare(rookFrom), None)
             self.displayer.draw_square(self.getSquare(rookTo), self.getSquare(rookTo).piece)
             
+        self.handle_en_passant_rights(move)
+            
         if move.is_promotion():
             promotion_choice = self.displayer.get_promoted_piece_from_diaog()
             old_id, old_move_cnt = toSqr.piece.id, toSqr.piece.movesCnt
@@ -216,19 +230,38 @@ class cBoard:
 
         self.turn = WHITE if self.turn == BLACK else BLACK
 
-        for piece in fromSqr.get_attacked_by().union(toSqr.get_attacked_by()):
-            if piece.is_sliding:
+        for piece in fromSqr.get_attacked_by().union(toSqr.get_attacked_by()).union({movPiece}):
+            if piece.is_sliding or piece == movPiece:
                 piece.calculate_attacking_squares()
-
-        movPiece.calculate_attacking_squares()
         self.history.append(move)
-            
         self.legal_moves = self.get_all_moves()
+        self.check_game_end()
+
+    def handle_en_passant_rights(self, move):
+        if move.piece.kind == PAWN and abs(move.toSqr.rowIdx - move.fromSqr.rowIdx) == 2:
+            self.en_passant = move.toSqr
+        else:
+            self.en_passant = None
+
+    def check_game_end(self):
+        if len(self.legal_moves) == 0:
+            if self.is_in_check(self.turn):
+                if self.turn == WHITE:
+                    self.displayer.inform(GAME_WON_BLACK)
+                else:
+                    self.displayer.inform(GAME_WON_WHITE)
+            else:
+                self.displayer.inform(GAME_DRAW_STALEMATE)
+
+            return
         
-    def find_white_queen(self):
-        for piece in self.white_pieces:
-            if piece.kind == QUEEN:
-                return piece
+        pieces = self.get_pieces()
+        if len(pieces) == 2 or (len(pieces) == 3 and any(map(lambda p: p.is_light, pieces))):
+            self.displayer.inform(GAME_DRAW_MATERIAL)
+            
+        if self.half_moves == 100:
+            self.displayer.inform(GAME_DRAW_50_MOVES)
+        
 
     def get_direction(self, sqr1, sqr2):
         if sqr1 == sqr2:
@@ -322,7 +355,6 @@ class cBoard:
             
             # can always (attempt to) move the king
             moves = kingSqr.piece.get_potential_moves()
-            
             for piece in attackers:
                 if piece.is_sliding:
                     # cannot just run from sliding piece in the direction of the attack
@@ -332,9 +364,10 @@ class cBoard:
                         tmpMove = cMove(kingSqr.piece, self.getSquare(row, col))
                         if tmpMove in moves:
                             moves.remove(tmpMove)
-            
             if len(attackers) == 1:
                 attacker = attackers.pop()
+                attackers.add(attacker)
+
                 # not double check - can also capture the attacker
                 if attacker.is_sliding:
                     # can also block the attacker
@@ -346,18 +379,24 @@ class cBoard:
                 for piece in pieces:
                     if piece.kind != KING:
                         moves += list(filter(lambda x: x.toSqr in target_squares, piece.get_potential_moves()))
-
         return moves
 
-    def get_pieces(self, color, sliding=False):
-        if color == WHITE and not sliding:
-            return self.white_pieces
-        elif color == WHITE:
-            return self.white_sliding_pieces
-        elif not sliding:
-            return self.black_pieces
+    def get_pieces(self, color=None, sliding=False):
+        if color == WHITE:
+            if sliding:
+                return self.white_sliding_pieces
+            else:
+                return self.white_pieces
+        elif color == BLACK:
+            if sliding:
+                return self.black_sliding_pieces
+            else:
+                return self.black_pieces
         else:
-            return self.black_sliding_pieces
+            if sliding:
+                return self.white_sliding_pieces + self.black_sliding_pieces
+            else:
+                return self.white_pieces + self.black_pieces
 
     def find_first_piece_in_dir(self, square, direction, includePath=False):
         offsets = [(0, 0), (0, 1), (0, -1), (-1, 0), (1, 0), (-1, 1), (1, 1), (-1, -1), (1, -1)]

@@ -7,6 +7,7 @@ class cBishop (cPiece):
     def __init__(self, color, square):
         super().__init__(BISHOP, color, square)
         self.is_sliding = True
+        self.is_light = True
         
     def get_potential_moves(self, ownPieces=False):
         moves = []
@@ -30,7 +31,7 @@ class cBishop (cPiece):
                     break
 
         return moves
-    
+        
     def get_potential_moves_pinned(self, direction):
         if direction <= RIGHT:
             return []
@@ -40,25 +41,25 @@ class cBishop (cPiece):
         
         return list(map(lambda sqr: cMove(self, sqr), moves))
 
-    def isAttackingSqr(self, colIdx, rowIdx):
-        if self.square.colIdx == colIdx and self.square.rowIdx == rowIdx:
-            return False
-        if abs(colIdx - self.square.colIdx) != abs(rowIdx - self.square.rowIdx):
-            return False
+    #def isAttackingSqr(self, colIdx, rowIdx):
+        #if self.square.colIdx == colIdx and self.square.rowIdx == rowIdx:
+            #return False
+        #if abs(colIdx - self.square.colIdx) != abs(rowIdx - self.square.rowIdx):
+            #return False
         
-        colDiff = 1 if self.square.colIdx < colIdx else -1
-        rowDiff = 1 if self.square.rowIdx < rowIdx else -1
-        col, row = self.square.colIdx + colDiff, self.square.rowIdx + rowDiff
+        #colDiff = 1 if self.square.colIdx < colIdx else -1
+        #rowDiff = 1 if self.square.rowIdx < rowIdx else -1
+        #col, row = self.square.colIdx + colDiff, self.square.rowIdx + rowDiff
         
-        while True:
-            if col == colIdx and row == rowIdx:
-                return True
-            if self.square.board.getSquare(col, row).piece is not None:
-                return False
-            col, row = col + colDiff, row + rowDiff
+        #while True:
+            #if col == colIdx and row == rowIdx:
+                #return True
+            #if self.square.board.getSquare(col, row).piece is not None:
+                #return False
+            #col, row = col + colDiff, row + rowDiff
         
     def __str__(self):
-        return ' B' if self.color == WHITE else '*B'
+        return 'B' + self.square.getCoord()
 
     def __repr__(self):
         return 'B' + self.square.getCoord()

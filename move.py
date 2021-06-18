@@ -22,5 +22,7 @@ class cMove:
         return self.piece.kind == PAWN and self.piece.promote_row == self.toSqr.rowIdx
     
     def is_en_passant(self):
-        # TODO
-        return False
+        return self.piece.kind == PAWN and self.fromSqr.colIdx != self.toSqr.colIdx and self.toSqr.piece is None
+
+    def __repr__(self):
+        return self.__str__()
