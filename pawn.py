@@ -37,8 +37,8 @@ class cPawn (cPiece):
         en_passant = self.square.board.en_passant
         if en_passant is not None and self.square.rowIdx == self.en_passant_row:
             if abs(self.square.idx - en_passant.idx) == 1:
-                # TODO - need to check double pin here
-                moves.append(cMove(self, self.square.board.getSquare(en_passant.rowIdx + self.move_offset, en_passant.colIdx)))
+                if not self.is_en_passant_pin(en_passant):
+                    moves.append(cMove(self, self.square.board.getSquare(en_passant.rowIdx + self.move_offset, en_passant.colIdx)))
         
         return moves
     
@@ -94,6 +94,34 @@ class cPawn (cPiece):
     #def isAttackingSqr(self, colIdx, rowIdx):
         #return abs(colIdx - self.square.colIdx) == 1 and rowIdx == self.square.rowIdx + self.move_offset
         
+    def is_en_passant_pin(self, en_passant):
+        kingSqr = self.square.board.get_king_sqr(self.color)
+        if kingSqr.rowIdx != en_passant.rowIdx:
+            return False
+        
+        direction = LEFT if kingSqr.colIdx > en_passant.colIdx else RIGHT
+        firstSquare = self.square.board.find_first_piece_in_dir(kingSqr, direction)
+        
+        if firstSquare is None or (firstSquare != en_passant and firstSquare.piece != self):
+            return False
+        
+        secondSquare = self.square.board.getSquare(firstSquare.rowIdx, firstSquare.colIdx + (1 if direction == RIGHT else -1))
+        if secondSquare is None or secondSquare.piece is None:
+            return False
+        
+        if not (firstSquare == en_passant and secondSquare.piece == self or firstSquare.piece == self and secondSquare == en_passant):
+            return False
+        
+        thirdSquare = self.square.board.find_first_piece_in_dir(secondSquare, direction)
+        
+        if thirdSquare is None or thirdSquare.piece.color == self.color or thirdSquare.piece.kind not in [QUEEN, ROOK]:
+            return False
+        
+        return True
+        
+    
+        
+    
     def __str__(self):
         return 'p' + self.square.getCoord()
 

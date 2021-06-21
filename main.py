@@ -10,9 +10,9 @@ from lib import *
 
 # TO FIX
 # - new game/clear board after selecting a piece
+# - place empty square
 
 # RULES TO IMPLEMENT
-# - en passant
 # - draw by repetition
 #
 # UI FEATURES TO IMPLEMENT
@@ -25,8 +25,10 @@ from lib import *
 # - replace lists with other structures (sets) where appropriate
 # - unit tests
 # - consider some automatic tests
+# - in color_pieces - first is always the king (instead of special variable)
 #
 # ENGINE IMPLAMENTATION
+# - probably break cBoard to cGame and cPosition??
 # - search (iterative deepening)
 # - evaluate function
 # - move ordering
