@@ -5,8 +5,9 @@ from move import cMove
 class cKnight (cPiece):
     def __init__(self, color, square):
         super().__init__(KNIGHT, color, square)
-        self.is_sliding = False
-        self.is_light = True
+
+    def is_light(self):
+        return True
 
     def get_potential_moves(self, ownPieces=False):
         moves = []

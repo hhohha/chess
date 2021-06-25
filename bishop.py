@@ -6,9 +6,13 @@ from move import cMove
 class cBishop (cPiece):
     def __init__(self, color, square):
         super().__init__(BISHOP, color, square)
-        self.is_sliding = True
-        self.is_light = True
-        
+
+    def is_sliding(self):
+        return True
+
+    def is_light(self):
+        return True
+
     def get_potential_moves(self, ownPieces=False):
         moves = []
         

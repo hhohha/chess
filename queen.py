@@ -6,8 +6,9 @@ from move import cMove
 class cQueen (cPiece):
     def __init__(self, color, square):
         super().__init__(QUEEN, color, square)
-        self.is_sliding = True
-        self.is_light = False
+
+    def is_sliding(self):
+        return True
 
     def get_potential_moves(self, ownPieces=False):
         moves = []

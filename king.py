@@ -5,8 +5,6 @@ from move import cMove
 class cKing (cPiece):
     def __init__(self, color, square):
         super().__init__(KING, color, square)
-        self.is_sliding = False
-        self.is_light = False
         
     # potential moves don't respect checks
     def get_potential_moves(self):

@@ -6,8 +6,9 @@ from move import cMove
 class cRook (cPiece):
     def __init__(self, color, square):
         super().__init__(ROOK, color, square)
-        self.is_sliding = True
-        self.is_light = False
+
+    def is_sliding(self):
+        return True
 
     def get_potential_moves(self, ownPieces=False):
         moves = []

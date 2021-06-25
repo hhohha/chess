@@ -5,8 +5,6 @@ from constants import *
 class cPawn (cPiece):
     def __init__(self, color, square):
         super().__init__(PAWN, color, square)
-        self.is_sliding = False
-        self.is_light = False
         if self.color == WHITE:
             self.move_offset = 1
             self.base_row = 1

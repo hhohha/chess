@@ -80,7 +80,7 @@ def main():
             if new_piece is not None:
                 color = WHITE if new_piece[0] == 'w' else BLACK
                 kind = letter_to_piece(new_piece[1])
-                board.placePiece(event_sqr, kind, color)
+                board.place_piece(event_sqr, kind, color)
                 new_piece = None
                 continue
             

@@ -9,6 +9,13 @@ class cPiece:
         self.attackingSquares = []
         self.square = square
         
+        
+    def is_sliding(self):
+        return False
+
+    def is_light(self):
+        return False
+
     def get_potential_moves(self, ownPieces=False):
         return []
         

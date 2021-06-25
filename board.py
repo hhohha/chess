@@ -15,13 +15,12 @@ import re
 
 class cBoard:
     def __init__(self, display):
-        self.board = [cSquare(i, self) for i in range(64)]
+        self.squares = [cSquare(i, self) for i in range(64)]
         self.turn = WHITE
         self.white_pieces = []
         self.black_pieces = []
         self.white_sliding_pieces = []
         self.black_sliding_pieces = []
-        self.history = []
         self.castle_white_king = False
         self.castle_black_king = False
         self.castle_white_queen = False
@@ -29,10 +28,6 @@ class cBoard:
         self.en_passant = None
         self.half_moves = 0
         self.moves = 0
-        self.displayer = display
-        self.white_king_sqr = None
-        self.black_king_sqr = None
-        self.legal_moves = []
 
     def loadFEN(self, fenstr):
         self.clear()
@@ -57,7 +52,7 @@ class cBoard:
             piece = letter_to_piece(c.lower())
 
             color = WHITE if c.isupper() else BLACK
-            self.placePiece(i + 8*j, piece, color)
+            self.place_piece(i + 8*j, piece, color)
             i += 1
 
         self.turn = WHITE if turn == 'w' else BLACK
@@ -77,7 +72,7 @@ class cBoard:
         self.legal_moves = self.get_all_moves()
 
     def clear(self):
-        for sqr in self.board:
+        for sqr in self.squares:
             sqr.clear()
             
         self.white_pieces = []
@@ -90,32 +85,30 @@ class cBoard:
         
         self.displayer.clear()
             
-    def getSquare(self, col, row = None):
+    def getSquare(self, col, row=None):
         # getSquare('a1') == getSquare(0) == getSquare(0, 0) == getSquare('a', 1) == getSquare('a', '1')
         # getSquare('h1') == getSquare(7) == getSquare(7, 0) == getSquare('a', 1) == getSquare('a', '1')
         # getSquare('a8') == getSquare(56) == getSquare(0, 7) == getSquare('a', 8) == getSquare('a', '8')
         # getSquare('h8') == getSquare(63) == getSquare(7, 7) == getSquare('h', 8) == getSquare('h', '8')
+        if type(col) == int and row is None:
+            if col < 0 or col > 63:
+                return None
+            return self.squares[col]
 
         if type(col) == int and type(row) == int:
             if col < 0 or col > 7 or row < 0 or row > 7:
                 return None
-            return self.board[col*8 + row]
-        
-        if type(col) == int and row is None:
-            if col < 0 or col > 63:
-                return None
-            return self.board[col]
+            return self.squares[col*8 + row]
         
         if type(col) == str and row is None:
             row, col = int(col[1]), col[0]
-        
-        #row = int(row)
+
         if col < 'a' or col > 'h' or row < 1 or row > 8:
             return None
-        return self.board[(ord(col) - 97) + (row - 1)*8]
+        return self.squares[(ord(col) - 97) + (row - 1)*8]
         
         
-    def placePiece(self, sqr, kind, color):
+    def place_piece(self, sqr, kind, color):
         square = self.getSquare(sqr)
         
         if kind == PAWN: square.piece = cPawn(color, square)
@@ -127,51 +120,22 @@ class cBoard:
         
         square.piece.square = square
         
-        self.get_pieces(color).append(square.piece)
-        if square.piece.is_sliding:
-            self.get_pieces(color, sliding=True).append(square.piece)
-            
         if kind == KING:
-            if color == WHITE:
-                self.white_king_sqr = square
-            else:
-                self.black_king_sqr = square
-
-        self.displayer.draw_square(square, square.piece)
-        
-    def reset(self):
-        self.loadFEN(FEN_INIT)
-        
-    def __str__(self):
-        ret = ""
-        for row in range(7, -1, -1):
-            for col in range(8):
-                ret +=  str(self.board[row * 8 + col]) + " " 
-            ret += "\n"
-        return ret
-    
-    def remove_piece(self, piece, display=False):
-        if piece.color == WHITE:
-            self.white_pieces.remove(piece)
-            if piece.is_sliding:
-                self.white_sliding_pieces.remove(piece)
-            for sqr in piece.attackingSquares:
-                sqr.attacked_by_whites.remove(piece)
+            self.get_pieces(color).insert(0, square.piece)
         else:
-            self.black_pieces.remove(piece)
-            if piece.is_sliding:
-                self.black_sliding_pieces.remove(piece)
+            self.get_pieces(color).append(square.piece)
+            if square.piece.is_sliding:
+                self.get_pieces(color, sliding=True).append(square.piece)
+        
+    def remove_piece(self, piece):
+        self.get_pieces(piece.color).remove.(piece)
+        if piece.is_sliding:
+            self.get_pieces(piece.color, sliding=True).remove.(piece)
             for sqr in piece.attackingSquares:
-                sqr.attacked_by_blacks.remove(piece)
-    
-        if display:
-            self.displayer.draw_square(piece.square, None)
+                sqr.get_attacked_by(piece.color).remove(piece)
     
     def perform_move(self, move):
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
-        
-        self.displayer.draw_square(fromSqr, None)
-        self.displayer.draw_square(toSqr, movPiece)
 
         if toSqr.piece is not None or movPiece.kind == PAWN:
             self.half_moves = 0
@@ -188,80 +152,72 @@ class cBoard:
             self.remove_piece(self.en_passant.piece, display=True)
             self.en_passant.piece = None
 
-        toSqr.piece = movPiece
-        fromSqr.piece = None
-        movPiece.square = toSqr
+        toSqr.piece, fromSqr.piece, movPiece.square = movPiece, None, toSqr
         movPiece.movesCnt += 1
-
-        if movPiece.kind == KING:
-            self.set_king_sqr(movPiece.color, toSqr)
         
         if movPiece.kind in [KING, ROOK]:
-            self.handle_casteling_rights(movPiece)
-            
+            self._update_casteling_rights(movPiece)
+        
         if move.is_castling():
-            # the move is casteling, need to move the rook too
-            if toSqr.idx == 6:
-                rookFrom, rookTo = 7, 5
-            elif toSqr.idx == 2:
-                rookFrom, rookTo = 0, 3
-            elif toSqr.idx == 62:
-                rookFrom, rookTo = 63, 61
-            else:
-                rookFrom, rookTo = 56, 59
+            self._handle_castling(move)
             
-            self.getSquare(rookTo).piece = self.getSquare(rookFrom).piece
-            self.getSquare(rookFrom).piece = None
-            self.getSquare(rookTo).piece.square = self.getSquare(rookTo)
-            self.displayer.draw_square(self.getSquare(rookFrom), None)
-            self.displayer.draw_square(self.getSquare(rookTo), self.getSquare(rookTo).piece)
-            
-        self.handle_en_passant_rights(move)
+        self._update_en_passant_rights(move)
             
         if move.is_promotion():
-            promotion_choice = self.displayer.get_promoted_piece_from_diaog()
-            old_id, old_move_cnt = toSqr.piece.id, toSqr.piece.movesCnt
-            self.remove_piece(toSqr.piece)
-            self.placePiece(toSqr.idx, promotion_choice, self.turn)
-            movPiece = toSqr.piece
-            movPiece.id = old_id
-            movPiece.movesCnt = old_move_cnt
-            self.displayer.draw_square(toSqr, movPiece)
+            _handle_pawn_promotion()
 
         self.turn = WHITE if self.turn == BLACK else BLACK
 
         for piece in fromSqr.get_attacked_by().union(toSqr.get_attacked_by()).union({movPiece}):
             if piece.is_sliding or piece == movPiece:
                 piece.calculate_attacking_squares()
-        self.history.append(move)
-        self.legal_moves = self.get_all_moves()
-        self.check_game_end()
 
-    def handle_en_passant_rights(self, move):
+    def _handle_castling(self, move):
+        # the move is casteling, need to move the rook too
+        if toSqr.idx == 6:
+            rookFrom, rookTo = 7, 5
+        elif toSqr.idx == 2:
+            rookFrom, rookTo = 0, 3
+        elif toSqr.idx == 62:
+            rookFrom, rookTo = 63, 61
+        else:
+            rookFrom, rookTo = 56, 59
+        
+        self.getSquare(rookTo).piece = self.getSquare(rookFrom).piece
+        self.getSquare(rookFrom).piece = None
+        self.getSquare(rookTo).piece.square = self.getSquare(rookTo)
+
+    def _handle_pawn_promotion(self, move):
+            toSqr = move.toSqr
+            old_id, old_move_cnt = toSqr.piece.id, toSqr.piece.movesCnt
+            self.remove_piece(toSqr.piece)
+            self.place_piece(toSqr.idx, move.newPiece, self.turn)
+            move.piece = toSqr.piece
+            move.piece.id, move.piece.movesCnt = old_id, old_move_cnts
+
+    def _update_en_passant_rights(self, move):
         if move.piece.kind == PAWN and abs(move.toSqr.rowIdx - move.fromSqr.rowIdx) == 2:
             self.en_passant = move.toSqr
         else:
             self.en_passant = None
 
-    def check_game_end(self):
-        if len(self.legal_moves) == 0:
-            if self.is_in_check(self.turn):
-                if self.turn == WHITE:
-                    self.displayer.inform(GAME_WON_BLACK)
-                else:
-                    self.displayer.inform(GAME_WON_WHITE)
+    def _update_casteling_rights(self, piece):
+        if piece.kind == KING:
+            if piece.color == WHITE:
+                self.castle_white_king, self.castle_white_queen = False, False
             else:
-                self.displayer.inform(GAME_DRAW_STALEMATE)
-
-            return
-        
-        pieces = self.get_pieces()
-        if len(pieces) == 2 or (len(pieces) == 3 and any(map(lambda p: p.is_light, pieces))):
-            self.displayer.inform(GAME_DRAW_MATERIAL)
-            
-        if self.half_moves == 100:
-            self.displayer.inform(GAME_DRAW_50_MOVES)
-        
+                self.castle_black_king, self.castle_black_queen = False, False
+        if piece.kind == ROOK:
+            if piece.color == WHITE:
+                if self.getSquare(0).piece is not None and self.getSquare(0).piece.kind != ROOK:
+                    self.castle_white_queen = False
+                if self.getSquare(7).piece is not None and self.getSquare(7).piece.kind != ROOK:
+                    self.castle_white_king = False
+            else:
+                if self.getSquare(56).piece is not None and self.getSquare(56).piece.kind != ROOK:
+                    self.castle_black_queen = False
+                if self.getSquare(63).piece is not None and self.getSquare(63).piece.kind != ROOK:
+                    self.castle_black_king = False
 
     def get_direction(self, sqr1, sqr2):
         if sqr1 == sqr2:
@@ -415,15 +371,9 @@ class cBoard:
             
     def get_king_sqr(self, color):
         if color == WHITE:
-            return self.white_king_sqr
-        return self.black_king_sqr
-    
-    def set_king_sqr(self, color, sqr):
-        if color == WHITE:
-            self.white_king_sqr = sqr
-        else:
-            self.black_king_sqr = sqr
-    
+            return self.white_pieces[0]
+        return self.black_pieces[0]
+
     def is_in_check(self, color):
         kingSqr = self.get_king_sqr(color)
         if not kingSqr:
@@ -473,23 +423,3 @@ class cBoard:
                 return False
 
         return True
-
-    def handle_casteling_rights(self, piece):
-        if piece.kind == KING:
-            if piece.color == WHITE:
-                self.castle_white_king, self.castle_white_queen = False, False
-            else:
-                self.castle_black_king, self.castle_black_queen = False, False
-        if piece.kind == ROOK:
-            if piece.color == WHITE:
-                if self.getSquare(0).piece is not None and self.getSquare(0).piece.kind != ROOK:
-                    self.castle_white_queen = False
-                if self.getSquare(7).piece is not None and self.getSquare(7).piece.kind != ROOK:
-                    self.castle_white_king = False
-            else:
-                if self.getSquare(56).piece is not None and self.getSquare(56).piece.kind != ROOK:
-                    self.castle_black_queen = False
-                if self.getSquare(63).piece is not None and self.getSquare(63).piece.kind != ROOK:
-                    self.castle_black_king = False
-                
-            
