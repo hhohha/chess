@@ -1,5 +1,9 @@
+from board import cBoard
+from constants import *
+from copy import deepcopy
+
 class cGame:
-    def __init__(self):
+    def __init__(self, display):
         self.history = []
         self.displayer = display
         self.legal_moves = []
@@ -16,7 +20,12 @@ class cGame:
         
     def reset(self):
         self.board.loadFEN(FEN_INIT)
+        self.displayer.load(self.board)
         
+    def clear(self):
+        self.board.clear()
+        self.displayer.load(self.board)
+
     def check_game_end(self):
         if len(self.legal_moves) == 0:
             if self.is_in_check(self.turn):
@@ -40,16 +49,42 @@ class cGame:
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
         
         if move.is_promotion():
-            move.newPiece = self.displayer.get_promoted_piece_from_diaog()
-            self.displayer.draw_square(toSqr, movPiece)
+            move.newPiece = self.displayer.get_promoted_piece_from_dialog()
+            #self.displayer.draw_square(toSqr, movPiece)
 
+        if move.is_en_passant():
+            self.displayer.draw_square(self.board.en_passant, None)
+
+        self.board.perform_move(move)
         self.displayer.draw_square(fromSqr, None)
-        self.displayer.draw_square(toSqr, movPiece)
+        self.displayer.draw_square(toSqr, toSqr.piece)
         
         if move.is_castling():
-            self.displayer.draw_square(self.getSquare(rookFrom), None)
-            self.displayer.draw_square(self.getSquare(rookTo), self.getSquare(rookTo).piece)
-            
+            if toSqr.idx == 6:
+                rookFromIdx, rookToIdx = 7, 5
+            elif toSqr.idx == 2:
+                rookFromIdx, rookToIdx = 0, 3
+            elif toSqr.idx == 62:
+                rookFromIdx, rookToIdx = 63, 61
+            else:
+                rookFromIdx, rookToIdx = 56, 59
+
+            rookFromSqr = movPiece.square.board.getSquare(rookFromIdx)
+            rookToSqr = movPiece.square.board.getSquare(rookToIdx)
+            self.displayer.draw_square(rookFromSqr, None)
+            self.displayer.draw_square(rookToSqr, rookToSqr.piece)
+
         self.history.append(move)
-        self.legal_moves = self.get_all_moves()
-        self.legal_moves = self.get_all_moves()
+        self.legal_moves = self.board.legal_moves
+
+    def generate_positions(self, board):
+
+        positions = []
+        for move in board.get_all_moves():
+            print('moving', move)
+            #b = deepcopy(board)
+            b = cBoard()
+            b.load_position(board)
+            b.perform_move(move)
+            positions.append(b)
+        return positions

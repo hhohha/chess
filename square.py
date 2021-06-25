@@ -11,10 +11,7 @@ class cSquare:
         self.attacked_by_blacks = set()
         
     def __str__(self):
-        if self.piece is None:
-            return " ."
-        else:
-            return str(self.piece)
+        return self.getCoord()
         
     def is_free(self):
         return self.piece is None

@@ -5,6 +5,7 @@ from icons import *
 from board import cBoard
 from constants import *
 from move import cMove
+from game import cGame
 from displayer import cDisplayer
 from lib import *
 
@@ -44,7 +45,7 @@ def main():
     boardDisplay = [[sg.Button(image_data=empty_icon, button_color=(COLOR_BG_LIGHT_BASIC, COLOR_BG_LIGHT_BASIC) if (i+j) % 2 == 0 else (COLOR_BG_DARK_BASIC, COLOR_BG_DARK_BASIC), border_width=3, key='sqr'+str(i+(7-j)*8)) for i in range(8)] for j in range(8)]
     
     layout = boardDisplay
-    layout.append([sg.Button('New game', key='new_game'),  sg.Button('Clear board', key='clear_board'), sg.Button('Exit', key='exit')])
+    layout.append([sg.Button('New game', key='new_game'),  sg.Button('Clear board', key='clear_board'), sg.Button('Exit', key='exit'), sg.Button('Generate', key='generate')])
     
     white_icons = [white_pawn_icon, white_knight_icon, white_bishop_icon, white_rook_icon, white_queen_icon, white_king_icon, empty_icon]
     white_keys = ['new_wp', 'new_wn', 'new_wb', 'new_wr', 'new_wq', 'new_wk', 'new_empty']
@@ -55,23 +56,25 @@ def main():
     layout += [[sg.Button(image_data=icon, key=key) for key, icon in zip(black_keys, black_icons)]]
     
     displayer = cDisplayer(boardDisplay)
-    board = cBoard(displayer)
+    game = cGame(displayer)
 
     window = sg.Window('Welcome to chessify', layout, default_element_size=(12,1), element_padding=(1,1), return_keyboard_events=True)
     
     new_piece, selected_button = None, None
-    showing_attacking_pieces = False
-    
     potential_squares = []
     while True:
         event, values = window.read()
 
         if event in (None, 'exit'): 
             break
+
+        elif event in (None, 'generate'):
+            positions = game.generate_positions(game.board)
+            #print(len(positions))
         elif event == 'new_game':
-            board.reset()
+            game.reset()
         elif event == 'clear_board':
-            board.clear()
+            game.clear()
         elif event[:4] == 'new_':
             new_piece = event[4:]
         elif event[:3] == 'sqr':
@@ -80,36 +83,36 @@ def main():
             if new_piece is not None:
                 color = WHITE if new_piece[0] == 'w' else BLACK
                 kind = letter_to_piece(new_piece[1])
-                board.place_piece(event_sqr, kind, color)
+                game.place_piece(event_sqr, kind, color)
                 new_piece = None
                 continue
             
             if selected_button is None:
                 if window.Element(event).ImageData != empty_icon:
-                    if board.getSquare(event_sqr).piece.color == board.turn:
+                    if game.board.getSquare(event_sqr).piece.color == game.board.turn:
                         selected_button = event_sqr
-                        potential_moves = board.getSquare(selected_button).piece.get_legal_moves()
+                        potential_moves = game.board.getSquare(selected_button).piece.get_legal_moves()
                         potential_squares = list(map(lambda mv: mv.toSqr, potential_moves))
-                        board.displayer.light_squares([board.getSquare(selected_button)], 2)
-                        board.displayer.light_squares(potential_squares, 1)
+                        game.displayer.light_squares([game.board.getSquare(selected_button)], 2)
+                        game.displayer.light_squares(potential_squares, 1)
 
             elif selected_button == event_sqr:
-                board.displayer.unlight_squares()
+                game.displayer.unlight_squares()
                 selected_button = None
-            elif board.getSquare(event_sqr).piece and board.getSquare(selected_button).piece.color == board.getSquare(event_sqr).piece.color:
-                board.displayer.unlight_squares()
+            elif game.board.getSquare(event_sqr).piece and game.board.getSquare(selected_button).piece.color == game.board.getSquare(event_sqr).piece.color:
+                game.displayer.unlight_squares()
                 selected_button = event_sqr
-                potential_moves = board.getSquare(selected_button).piece.get_legal_moves()
+                potential_moves = game.board.getSquare(selected_button).piece.get_legal_moves()
                 potential_squares = list(map(lambda mv: mv.toSqr, potential_moves))
-                board.displayer.light_squares([board.getSquare(selected_button)], 2)
-                board.displayer.light_squares(potential_squares, 1)
+                game.displayer.light_squares([game.board.getSquare(selected_button)], 2)
+                game.displayer.light_squares(potential_squares, 1)
             else:
-                if not board.getSquare(event_sqr) in potential_squares:
+                if not game.board.getSquare(event_sqr) in potential_squares:
                     continue
                    
-                board.displayer.unlight_squares()
-                move = cMove(board.getSquare(selected_button).piece, board.getSquare(event_sqr))
-                board.perform_move(move)
+                game.displayer.unlight_squares()
+                move = cMove(game.board.getSquare(selected_button).piece, game.board.getSquare(event_sqr))
+                game.perform_move(move)
                 selected_button = None
 
 if __name__ == '__main__':

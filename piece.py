@@ -8,7 +8,7 @@ class cPiece:
         self.movesCnt = 0
         self.attackingSquares = []
         self.square = square
-        
+        print ('new piece', self.__str__())
         
     def is_sliding(self):
         return False

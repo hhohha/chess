@@ -14,6 +14,13 @@ class cDisplayer:
                     self.display[i][j].Update(image_data=empty_icon)
                     self.display[i][j].ImageData=empty_icon
 
+    def load(self, board):
+        self.clear()
+        for sqr in board.squares.values():
+            icon = self._get_icon(sqr.piece)
+            self.display[7-sqr.rowIdx][sqr.colIdx].Update(image_data=icon)
+            self.display[7-sqr.rowIdx][sqr.colIdx].ImageData = icon
+
     def draw_square(self, sqr, piece):
         icon = self._get_icon(piece)
         self.display[7-sqr.rowIdx][sqr.colIdx].Update(image_data=icon)
@@ -77,7 +84,7 @@ class cDisplayer:
             elif intensity == 2:
                 return COLOR_BG_LIGHT_HLIGHTED_2
 
-    def get_promoted_piece_from_diaog(self):
+    def get_promoted_piece_from_dialog(self):
         promote_window = sg.Window('what piece do you want', [[sg.Button('Queen'), sg.Button('Rook'), sg.Button('Bishop'), sg.Button('Knight')]])
         piece, _  = promote_window.read()
         promote_window.close()
