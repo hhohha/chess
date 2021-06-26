@@ -40,8 +40,9 @@ from lib import *
 # - position maps
 # - ...
 
-
+# TODO - generate by YEALDING !!!
 def main():
+
     boardDisplay = [[sg.Button(image_data=empty_icon, button_color=(COLOR_BG_LIGHT_BASIC, COLOR_BG_LIGHT_BASIC) if (i+j) % 2 == 0 else (COLOR_BG_DARK_BASIC, COLOR_BG_DARK_BASIC), border_width=3, key='sqr'+str(i+(7-j)*8)) for i in range(8)] for j in range(8)]
     
     layout = boardDisplay
@@ -69,8 +70,7 @@ def main():
             break
 
         elif event in (None, 'generate'):
-            positions = game.generate_positions(game.board)
-            #print(len(positions))
+            game.generate_positions(game.board)
         elif event == 'new_game':
             game.reset()
         elif event == 'clear_board':
@@ -92,7 +92,7 @@ def main():
                     if game.board.getSquare(event_sqr).piece.color == game.board.turn:
                         selected_button = event_sqr
                         potential_moves = game.board.getSquare(selected_button).piece.get_legal_moves()
-                        potential_squares = list(map(lambda mv: mv.toSqr, potential_moves))
+                        potential_squares = list(map(lambda mv: game.board.getSquare(mv.toSqr), potential_moves))
                         game.displayer.light_squares([game.board.getSquare(selected_button)], 2)
                         game.displayer.light_squares(potential_squares, 1)
 
@@ -103,7 +103,7 @@ def main():
                 game.displayer.unlight_squares()
                 selected_button = event_sqr
                 potential_moves = game.board.getSquare(selected_button).piece.get_legal_moves()
-                potential_squares = list(map(lambda mv: mv.toSqr, potential_moves))
+                potential_squares = list(map(lambda mv: game.board.getSquare(mv.toSqr), potential_moves))
                 game.displayer.light_squares([game.board.getSquare(selected_button)], 2)
                 game.displayer.light_squares(potential_squares, 1)
             else:

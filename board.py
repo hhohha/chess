@@ -28,6 +28,7 @@ class cBoard:
         self.en_passant = None
         self.half_moves = 0
         self.moves = 0
+        self.successors = []
 
     def load_position(self, board):
         self.squares = {}#[cSquare(idx, self) for idx in range(64)]
@@ -147,19 +148,21 @@ class cBoard:
             self.get_pieces(color).insert(0, square.piece)
         else:
             self.get_pieces(color).append(square.piece)
-            if square.piece.is_sliding:
+            if square.piece.is_sliding():
                 self.get_pieces(color, sliding=True).append(square.piece)
         
     def remove_piece(self, piece):
         self.get_pieces(piece.color).remove(piece)
-        if piece.is_sliding:
+        if piece.is_sliding():
             self.get_pieces(piece.color, sliding=True).remove(piece)
             for sqr in piece.attackingSquares:
                 sqr.get_attacked_by(piece.color).remove(piece)
         piece.attackingSquares.clear()
     
     def perform_move(self, move):
-        fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
+        fromSqr = self.getSquare(move.fromSqr)
+        toSqr = self.getSquare(move.toSqr)
+        movPiece = fromSqr.piece
 
         if toSqr.piece is not None or movPiece.kind == PAWN:
             self.half_moves = 0
@@ -172,7 +175,8 @@ class cBoard:
         if toSqr.piece is not None:
             self.remove_piece(toSqr.piece)
 
-        if move.is_en_passant():
+        # is move en passant?
+        if movPiece.kind == PAWN and fromSqr.colIdx != toSqr.colIdx and toSqr.piece is None:
             self.remove_piece(self.en_passant.piece)
             self.en_passant.piece = None
 
@@ -188,22 +192,22 @@ class cBoard:
         self._update_en_passant_rights(move)
 
         if move.is_promotion():
-            self._handle_pawn_promotion(move)
+            self._handle_pawn_promotion(movPiece, toSqr, move.newPiece)
 
         self.turn = WHITE if self.turn == BLACK else BLACK
 
         for piece in fromSqr.get_attacked_by().union(toSqr.get_attacked_by()).union({movPiece}):
-            if piece.is_sliding or piece == movPiece:
+            if piece.is_sliding() or piece == movPiece:
                 piece.calculate_attacking_squares()
         self.legal_moves = self.get_all_moves()
 
     def _handle_castling(self, move):
         # the move is casteling, need to move the rook too
-        if move.toSqr.idx == 6:
+        if move.toSqr == 6:
             rookFrom, rookTo = 7, 5
-        elif move.toSqr.idx == 2:
+        elif move.toSqr == 2:
             rookFrom, rookTo = 0, 3
-        elif move.toSqr.idx == 62:
+        elif move.toSqr == 62:
             rookFrom, rookTo = 63, 61
         else:
             rookFrom, rookTo = 56, 59
@@ -212,17 +216,16 @@ class cBoard:
         self.getSquare(rookFrom).piece = None
         self.getSquare(rookTo).piece.square = self.getSquare(rookTo)
 
-    def _handle_pawn_promotion(self, move):
-            toSqr = move.toSqr
+    def _handle_pawn_promotion(self, movPiece, toSqr, newPiece):
             old_id, old_move_cnt = toSqr.piece.id, toSqr.piece.movesCnt
             self.remove_piece(toSqr.piece)
-            self.place_piece(toSqr.idx, move.newPiece, self.turn)
-            move.piece = toSqr.piece
-            move.piece.id, move.piece.movesCnt = old_id, old_move_cnt
+            self.place_piece(toSqr.idx, newPiece, movPiece.color)
+            #move.piece = toSqr.piece.kind
+            movPiece.id, movPiece.movesCnt = old_id, old_move_cnt
 
     def _update_en_passant_rights(self, move):
-        if move.piece.kind == PAWN and abs(move.toSqr.rowIdx - move.fromSqr.rowIdx) == 2:
-            self.en_passant = move.toSqr
+        if move.piece == PAWN and abs(move.toSqr - move.fromSqr) == 16:
+            self.en_passant = self.getSquare(move.toSqr)
         else:
             self.en_passant = None
 
@@ -286,7 +289,7 @@ class cBoard:
                 if not isSameDiag(piece.square, kingSqr):
                     continue
             else: #piece.kind == QUEEN
-                if not isSameColOrRow(piece.square, kingSqr):
+                if not isSameColOrRow(piece.square, kingSqr) and not isSameDiag(piece.square, kingSqr):
                     continue
 
             direction = self.get_direction(kingSqr, piece.square)
@@ -304,13 +307,14 @@ class cBoard:
     def get_all_moves(self):
         color = self.turn
         pieces = self.get_pieces(color)
-        pinned_pieces = self.get_pinned_pieces(color)
+        #pinned_pieces = self.get_pinned_pieces(color) # TODO - use this instead of piece.is_pinned()
         
         moves = []
         
         if not self.is_in_check(color):
             for piece in pieces:
                 pinned = piece.is_pinned()
+                #pinned = piece in pinned_pieces
                 if not pinned:
                     moves += piece.get_potential_moves()
                 else:
@@ -337,7 +341,7 @@ class cBoard:
             # can always (attempt to) move the king
             moves = kingSqr.piece.get_potential_moves()
             for piece in attackers:
-                if piece.is_sliding:
+                if piece.is_sliding():
                     # cannot just run from sliding piece in the direction of the attack
                     direction = reverse_dir(self.get_direction(kingSqr, piece.square))
                     row, col = move_in_direction(kingSqr.rowIdx, kingSqr.colIdx, direction)
@@ -350,16 +354,21 @@ class cBoard:
                 attackers.add(attacker)
 
                 # not double check - can also capture the attacker
-                if attacker.is_sliding:
+                if attacker.is_sliding():
                     # can also block the attacker
                     direction = self.get_direction(kingSqr, attacker.square)
-                    target_squares = self.find_first_piece_in_dir(kingSqr, direction, includePath=True)
+                    target_squares = list(map(lambda sqr: sqr.idx, self.find_first_piece_in_dir(kingSqr, direction, includePath=True)))
                 else:
-                    target_squares = [attacker.square]
+                    target_squares = [attacker.square.idx]
                     
                 for piece in pieces:
                     if piece.kind != KING:
-                        moves += list(filter(lambda x: x.toSqr in target_squares, piece.get_potential_moves()))
+                        pinned = piece.is_pinned()
+                        if not pinned:
+                            moves += list(filter(lambda x: x.toSqr in target_squares, piece.get_potential_moves()))
+                        else:
+                            moves += list(filter(lambda x: x.toSqr in target_squares, piece.get_potential_moves_pinned(pinned)))
+        #print('moves', moves)
         return moves
 
     def get_pieces(self, color=None, sliding=False):
@@ -448,3 +457,18 @@ class cBoard:
                 return False
 
         return True
+
+    def generate_successors(self, depth):
+        if depth == 0:
+            return 1
+
+        total = 0
+        for move in self.legal_moves:
+            b = cBoard()
+            b.load_position(self)
+            b.perform_move(move)
+            self.successors.append(b)
+            total += b.generate_successors(depth - 1)
+
+        return total
+

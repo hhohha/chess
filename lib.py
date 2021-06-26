@@ -28,3 +28,6 @@ def isSameDiag(sqr1, sqr2):
 
 def move_in_direction(row, col, direction):
     return [None, (row+1, col), (row-1, col), (row, col-1), (row, col+1), (row+1, col-1), (row+1, col+1), (row-1, col-1), (row-1, col+1)][direction]
+
+def squareIdx_to_coord(idx):
+    return chr(idx % 8 + 97) + str(idx // 8 + 1)
