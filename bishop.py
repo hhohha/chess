@@ -20,7 +20,7 @@ class cBishop (cPiece):
             i, j = 0, 0
             while True:
                 i, j = func(i, j)
-                square = self.square.board.getSquare(self.square.rowIdx + i, self.square.colIdx + j)
+                square = self.square.board.getSquareGen(self.square.rowIdx + i, self.square.colIdx + j)
                 if square is None:
                     break
                 
@@ -58,7 +58,7 @@ class cBishop (cPiece):
         #while True:
             #if col == colIdx and row == rowIdx:
                 #return True
-            #if self.square.board.getSquare(col, row).piece is not None:
+            #if self.square.board.getSquareGen(col, row).piece is not None:
                 #return False
             #col, row = col + colDiff, row + rowDiff
         

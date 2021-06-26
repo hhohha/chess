@@ -19,16 +19,16 @@ class cPawn (cPiece):
     def get_potential_moves(self):
         moves = []
         
-        square = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx)
+        square = self.square.board.getSquareGen(self.square.rowIdx + self.move_offset, self.square.colIdx)
         if square.piece is None:
             moves += self.generate_pawn_move(square)
             if self.square.rowIdx == self.base_row:
-                square = self.square.board.getSquare(self.square.rowIdx + 2*self.move_offset, self.square.colIdx)
+                square = self.square.board.getSquareGen(self.square.rowIdx + 2*self.move_offset, self.square.colIdx)
                 if square.piece is None:
                     moves.append(cMove(self, square))
                     
         for i in [1, -1]:
-            square = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx + i)
+            square = self.square.board.getSquareGen(self.square.rowIdx + self.move_offset, self.square.colIdx + i)
             if square is not None and square.piece is not None and square.piece.color != self.color:
                 moves += self.generate_pawn_move(square)
         
@@ -36,7 +36,7 @@ class cPawn (cPiece):
         if en_passant is not None and self.square.rowIdx == self.en_passant_row:
             if abs(self.square.idx - en_passant.idx) == 1:
                 if not self.is_en_passant_pin(en_passant):
-                    moves.append(cMove(self, self.square.board.getSquare(en_passant.rowIdx + self.move_offset, en_passant.colIdx)))
+                    moves.append(cMove(self, self.square.board.getSquareGen(en_passant.rowIdx + self.move_offset, en_passant.colIdx)))
         
         return moves
     
@@ -45,12 +45,12 @@ class cPawn (cPiece):
             return []
 
         if direction == UP or direction == DOWN:
-            sqrFront = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx)
+            sqrFront = self.square.board.getSquareGen(self.square.rowIdx + self.move_offset, self.square.colIdx)
             if sqrFront.piece is None:
                 if self.square.rowIdx == self.base_row:
                     return [cMove(self, sqrFront)]
                 
-                sqrFront2 = self.square.board.getSquare(self.square.rowIdx + 2*self.move_offset, self.square.colIdx)
+                sqrFront2 = self.square.board.getSquareGen(self.square.rowIdx + 2*self.move_offset, self.square.colIdx)
                 if sqrFront2.piece is None:
                     return [cMove(self, sqrFront), cMove(self, sqrFront2)]
                 else:
@@ -59,14 +59,14 @@ class cPawn (cPiece):
                 return []
 
         if direction == UP_RIGHT or direction == DOWN_LEFT:
-            sqr = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx + self.move_offset)
+            sqr = self.square.board.getSquareGen(self.square.rowIdx + self.move_offset, self.square.colIdx + self.move_offset)
             if sqr is not None and sqr.piece is not None and sqr.piece.color != self.color:
                 return [cMove(self, sqr)]
             else:
                 return []
         
         # direction is LEFT_UP or RIGHT_DOWN
-        sqr = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx - self.move_offset)
+        sqr = self.square.board.getSquareGen(self.square.rowIdx + self.move_offset, self.square.colIdx - self.move_offset)
         if sqr is not None and sqr.piece is not None and sqr.piece.color != self.color:
             return [cMove(self, sqr)]
         else:
@@ -83,7 +83,7 @@ class cPawn (cPiece):
         resLst = []
 
         for i in [1, -1]:
-            square = self.square.board.getSquare(self.square.rowIdx + self.move_offset, self.square.colIdx + i)
+            square = self.square.board.getSquareGen(self.square.rowIdx + self.move_offset, self.square.colIdx + i)
             if square is not None:
                 resLst.append(square)
 
@@ -103,7 +103,7 @@ class cPawn (cPiece):
         if firstSquare is None or (firstSquare != en_passant and firstSquare.piece != self):
             return False
         
-        secondSquare = self.square.board.getSquare(firstSquare.rowIdx, firstSquare.colIdx + (1 if direction == RIGHT else -1))
+        secondSquare = self.square.board.getSquareGen(firstSquare.rowIdx, firstSquare.colIdx + (1 if direction == RIGHT else -1))
         if secondSquare is None or secondSquare.piece is None:
             return False
         

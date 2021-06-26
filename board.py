@@ -15,7 +15,7 @@ import re
 
 class cBoard:
     def __init__(self):
-        self.squares = {}#[cSquare(idx, self) for idx in range(64)]
+        self.squares = [cSquare(idx, self) for idx in range(64)]
         self.turn = WHITE
         self.white_pieces = []
         self.black_pieces = []
@@ -31,7 +31,7 @@ class cBoard:
         self.successors = []
 
     def load_position(self, board):
-        self.squares = {}#[cSquare(idx, self) for idx in range(64)]
+        self.squares = [cSquare(idx, self) for idx in range(64)]
         self.turn = board.turn
         self.castle_white_king = board.castle_white_king
         self.castle_black_king = board.castle_black_king
@@ -84,7 +84,7 @@ class cBoard:
         self.castle_black_queen = 'q' in castling
         
         if en_passant != '-':
-            self.en_passant = self.getSquare(en_passant)
+            self.en_passant = self.getSquare(en_passant.idx)
         
         self.half_moves = int(halves)
         self.moves = int(fulls)
@@ -95,7 +95,7 @@ class cBoard:
         self.legal_moves = self.get_all_moves()
 
     def clear(self):
-        self.squares.clear()
+        self.squares = [cSquare(idx, self) for idx in range(64)]
         self.white_pieces = []
         self.black_pieces = []
         self.white_sliding_pieces = []
@@ -103,8 +103,18 @@ class cBoard:
         self.history = []
         self.half_moves = 0
         self.moves = 0
+
+    def getSquare(self, idx):
+        if idx < 0 or idx > 63:
+            return None
+        return self.squares[idx]
+
+    def getSquareGen(self, col, row):
+        if col < 0 or col > 7 or row < 0 or row > 7:
+            return None
+        return self.squares[col*8 + row]
             
-    def getSquare(self, col, row=None):
+    def getSquareGen2(self, col, row=None):
         # getSquare('a1') == getSquare(0) == getSquare(0, 0) == getSquare('a', 1) == getSquare('a', '1')
         # getSquare('h1') == getSquare(7) == getSquare(7, 0) == getSquare('a', 1) == getSquare('a', '1')
         # getSquare('a8') == getSquare(56) == getSquare(0, 7) == getSquare('a', 8) == getSquare('a', '8')
@@ -113,7 +123,7 @@ class cBoard:
         if type(col) == int and row is None:
             if col < 0 or col > 63:
                 return None
-            idx = col
+            return self.squares[col]
 
         elif type(col) == int and type(row) == int:
             if col < 0 or col > 7 or row < 0 or row > 7:
@@ -128,8 +138,6 @@ class cBoard:
                 return None
             idx = (ord(col) - 97) + (row - 1)*8
 
-        if idx not in self.squares:
-            self.squares[idx] = cSquare(idx, self)
         return self.squares[idx]
         
     def place_piece(self, sqr, kind, color):
@@ -345,8 +353,8 @@ class cBoard:
                     # cannot just run from sliding piece in the direction of the attack
                     direction = reverse_dir(self.get_direction(kingSqr, piece.square))
                     row, col = move_in_direction(kingSqr.rowIdx, kingSqr.colIdx, direction)
-                    if self.getSquare(row, col) is not None:
-                        tmpMove = cMove(kingSqr.piece, self.getSquare(row, col))
+                    if self.getSquareGen(row, col) is not None:
+                        tmpMove = cMove(kingSqr.piece, self.getSquareGen(row, col))
                         if tmpMove in moves:
                             moves.remove(tmpMove)
             if len(attackers) == 1:
@@ -396,7 +404,7 @@ class cBoard:
         path = []
 
         while True:
-            sqr = self.getSquare(rowIdx, colIdx)
+            sqr = self.getSquareGen(rowIdx, colIdx)
             if sqr is None or not sqr.is_free():
                 return path + [sqr] if includePath else sqr
             elif includePath:

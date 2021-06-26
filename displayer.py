@@ -16,7 +16,7 @@ class cDisplayer:
 
     def load(self, board):
         self.clear()
-        for sqr in board.squares.values():
+        for sqr in board.squares:
             icon = self._get_icon(sqr.piece)
             self.display[7-sqr.rowIdx][sqr.colIdx].Update(image_data=icon)
             self.display[7-sqr.rowIdx][sqr.colIdx].ImageData = icon
