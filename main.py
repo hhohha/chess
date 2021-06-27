@@ -41,6 +41,7 @@ from lib import *
 # - ...
 
 # TODO - generate by YEALDING !!!
+# TODO - sliding pieces as first indexes in pieces list (after king)
 def main():
 
     boardDisplay = [[sg.Button(image_data=empty_icon, button_color=(COLOR_BG_LIGHT_BASIC, COLOR_BG_LIGHT_BASIC) if (i+j) % 2 == 0 else (COLOR_BG_DARK_BASIC, COLOR_BG_DARK_BASIC), border_width=3, key='sqr'+str(i+(7-j)*8)) for i in range(8)] for j in range(8)]

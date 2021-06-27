@@ -28,27 +28,6 @@ class cBoard:
         self.en_passant = None
         self.half_moves = 0
         self.moves = 0
-        self.successors = []
-
-    def load_position(self, board):
-        self.squares = [cSquare(idx, self) for idx in range(64)]
-        self.turn = board.turn
-        self.castle_white_king = board.castle_white_king
-        self.castle_black_king = board.castle_black_king
-        self.castle_white_queen = board.castle_white_queen
-        self.castle_black_queen = board.castle_black_queen
-        if board.en_passant is not None:
-            self.en_passant = self.getSquare(board.en_passant.idx)
-        else:
-            self.en_passant = None
-        self.half_moves = board.half_moves
-        self.moves = board.moves
-
-        for piece in board.get_pieces():
-            self.place_piece(piece.square.idx, piece.kind, piece.color)
-
-        for piece in self.get_pieces():
-            piece.calculate_attacking_squares()
 
     def loadFEN(self, fenstr):
         self.clear()
@@ -168,9 +147,7 @@ class cBoard:
         piece.attackingSquares.clear()
     
     def perform_move(self, move):
-        fromSqr = self.getSquare(move.fromSqr)
-        toSqr = self.getSquare(move.toSqr)
-        movPiece = fromSqr.piece
+        fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
 
         if toSqr.piece is not None or movPiece.kind == PAWN:
             self.half_moves = 0
@@ -184,7 +161,7 @@ class cBoard:
             self.remove_piece(toSqr.piece)
 
         # is move en passant?
-        if movPiece.kind == PAWN and fromSqr.colIdx != toSqr.colIdx and toSqr.piece is None:
+        if move.is_en_passant():
             self.remove_piece(self.en_passant.piece)
             self.en_passant.piece = None
 
@@ -200,14 +177,39 @@ class cBoard:
         self._update_en_passant_rights(move)
 
         if move.is_promotion():
-            self._handle_pawn_promotion(movPiece, toSqr, move.newPiece)
+            self.change_piece_kind(movPiece, move.newPiece)
+            #self._handle_pawn_promotion(movPiece, toSqr, move.newPiece)
 
-        self.turn = WHITE if self.turn == BLACK else BLACK
+        self.turn = not self.turn
 
         for piece in fromSqr.get_attacked_by().union(toSqr.get_attacked_by()).union({movPiece}):
             if piece.is_sliding() or piece == movPiece:
                 piece.calculate_attacking_squares()
         self.legal_moves = self.get_all_moves()
+
+    def undo_move(self, move):
+        fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
+
+        # TODO - move counters
+
+        if move.pieceTaken:
+            toSqr.piece = move.pieceTaken
+            pieceTaken.square = toSqr
+            self.get_pieces(move.pieceTaken.color).append(move.pieceTaken)
+            if move.pieceTaken.is_sliding():
+                self.get_pieces(move.pieceTaken.color, sliding=True).append(move.pieceTaken)
+
+        fromSqr.piece = movPiece
+        movPiece.square = fromSqr
+
+        if move.is_promotion():
+            self.change_piece_kind(movPiece, PAWN)
+
+        # TODO handle castling
+        # TODO handle en passant
+        # TODO handle castling rights
+        # TODO recalculations
+        self.turn = not self.turn
 
     def _handle_castling(self, move):
         # the move is casteling, need to move the rook too
@@ -224,12 +226,9 @@ class cBoard:
         self.getSquare(rookFrom).piece = None
         self.getSquare(rookTo).piece.square = self.getSquare(rookTo)
 
-    def _handle_pawn_promotion(self, movPiece, toSqr, newPiece):
-            old_id, old_move_cnt = toSqr.piece.id, toSqr.piece.movesCnt
-            self.remove_piece(toSqr.piece)
-            self.place_piece(toSqr.idx, newPiece, movPiece.color)
-            #move.piece = toSqr.piece.kind
-            movPiece.id, movPiece.movesCnt = old_id, old_move_cnt
+    def change_piece_kind(self, piece, newKind):
+        piece.kind = newKind
+        piece.__class__ = kind_to_class(newKind)
 
     def _update_en_passant_rights(self, move):
         if move.piece == PAWN and abs(move.toSqr - move.fromSqr) == 16:
@@ -472,11 +471,9 @@ class cBoard:
 
         total = 0
         for move in self.legal_moves:
-            b = cBoard()
-            b.load_position(self)
             b.perform_move(move)
-            self.successors.append(b)
             total += b.generate_successors(depth - 1)
+            b.undo_move(move)
 
         return total
 

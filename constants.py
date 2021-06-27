@@ -1,5 +1,5 @@
-WHITE = 0
-BLACK = 1
+WHITE = False
+BLACK = True
 
 PAWN = 0
 KNIGHT = 1
