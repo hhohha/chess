@@ -12,8 +12,7 @@ from lib import *
 # TO FIX
 # - new game/clear board after selecting a piece
 # - place empty square
-# -
-# - pinned pawn can take en passant
+#
 # - en passant can stop check
 
 # RULES TO IMPLEMENT
@@ -43,7 +42,6 @@ from lib import *
 # - position maps
 # - ...
 
-# TODO - generate by YEALDING !!!
 # TODO - sliding pieces as first indexes in pieces list (after king)
 def main():
 
@@ -76,7 +74,7 @@ def main():
         elif event == 'unmove':
             game.undo_move()
         elif event == 'generate':
-            game.generate_positions(game.board)
+            game.generate_positions()
         elif event == 'new_game':
             game.displayer.unlight_squares()
             game.reset()

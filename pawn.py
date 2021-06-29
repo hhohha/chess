@@ -101,8 +101,6 @@ class cPawn (cPiece):
         return True
         
     
-        
-    
     def __str__(self):
         return 'p' + self.square.getCoord()
 

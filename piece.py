@@ -24,7 +24,7 @@ class cPiece:
         for sqr in self.attackingSquares:
             sqr.get_attacked_by(self.color).remove(self)
             
-        self.attackingSquares = self.getAttackedSquares()
+        self.attackingSquares = list(self.getAttackedSquares())
         
         for sqr in self.attackingSquares:
             sqr.get_attacked_by(self.color).add(self)

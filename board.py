@@ -13,6 +13,12 @@ from icons import *
 from lib import *
 import re
 
+captures = 0
+ep = 0
+castles = 0
+promotions = 0
+checks = 0
+
 class cBoard:
     def __init__(self):
         self.squares = [cSquare(idx, self) for idx in range(64)]
@@ -161,7 +167,8 @@ class cBoard:
             #self.half_moves = 0
         #else:
             #self.half_moves += 1
-            
+        if self.en_passant:
+            move.pastEP = self.en_passant
         if self.turn == BLACK:
             self.moves += 1
 
@@ -199,10 +206,11 @@ class cBoard:
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
 
         # TODO - move counters
+        if move.pastEP:
+            self.en_passant = move.pastEP
 
         if move.pieceTaken is not None:
             if move.isEnPassant:
-                self.en_passant = self.get_square_by_coords(move.toSqr.rowIdx + (-1 if move.piece.color == WHITE else 1), move.toSqr.colIdx)
                 # restore the taken piece
                 self.en_passant.piece = move.pieceTaken
                 move.pieceTaken.square = self.en_passant  # TODO - this line is probably not necessary
@@ -241,6 +249,8 @@ class cBoard:
         for piece in fromSqr.get_attacked_by().union(toSqr.get_attacked_by()).union({movPiece}):
             if piece.is_sliding() or piece == movPiece:
                 piece.calculate_attacking_squares()
+        if move.pieceTaken:
+            move.pieceTaken.calculate_attacking_squares()
 
         self.turn = not self.turn
         self.legal_moves = list(self.get_all_moves())
@@ -344,16 +354,10 @@ class cBoard:
                     
             # TODO - write this better
             if self.is_castle_possible(color, RIGHT):
-                if color == WHITE:
-                    yield cMove(self.get_king_sqr(color).piece, self.get_square_by_idx(6))
-                else:
-                    yield cMove(self.get_king_sqr(color).piece, self.get_square_by_idx(62))
+                yield cMove(self.get_king_sqr(color).piece, self.get_square_by_idx(6 if color == WHITE else 62))
                     
             if self.is_castle_possible(color, LEFT):
-                if color == WHITE:
-                    yield cMove(self.get_king_sqr(color).piece, self.get_square_by_idx(2))
-                else:
-                    yield cMove(self.get_king_sqr(color).piece, self.get_square_by_idx(58))
+                yield cMove(self.get_king_sqr(color).piece, self.get_square_by_idx(2 if color == WHITE else 58))
         
         else:
             # king is in check
@@ -371,7 +375,6 @@ class cBoard:
                     invalidSqr = self.get_square_by_coords(row, col)
                     if invalidSqr is not None:
                         invalidSquares.append(invalidSqr)
-
             yield from filter(lambda move: move.toSqr not in invalidSquares, kingMoves)
 
             if len(attackers) == 1:
@@ -387,10 +390,12 @@ class cBoard:
                     target_squares = [attacker.square]
                     
                 for piece in pieces:
-                    if piece.kind != KING and not piece.is_pinned():
+                    pinned = piece.is_pinned()
+                    if piece.kind != KING and not pinned:
                         yield from filter(lambda x: x.toSqr in target_squares, piece.get_potential_moves())
 
-                        #if self.en_passant is not None and attacker.square == en_passant and piece.kind == PAWN and piece.square.rowIdx == self.en_passant.rowIdx and abs(piece.square.idx - self.en_passant.idx) == 1 and pinned not in [UP, DOWN]:
+                    if self.en_passant is not None and attacker.square == self.en_passant and piece.kind == PAWN and piece.square.rowIdx == self.en_passant.rowIdx and abs(piece.square.idx - self.en_passant.idx) == 1 and pinned not in [UP, DOWN]:
+                        yield cMove(piece, self.get_square_by_coords(self.en_passant.rowIdx + (1 if piece.color == WHITE else -1), self.en_passant.colIdx), isEnPassant=True)
 
     def get_pieces(self, color=None, sliding=False):
         if color == WHITE:
@@ -445,6 +450,7 @@ class cBoard:
             else:
                 rookSqr = self.get_square_by_idx(0)
                 passingSqrs = [self.get_square_by_idx(2), self.get_square_by_idx(3)]
+                rookPassSqr = self.get_square_by_idx(1)
         else:
             kingSqr = self.get_square_by_idx(60)
             if side == RIGHT:
@@ -453,6 +459,7 @@ class cBoard:
             else:
                 rookSqr = self.get_square_by_idx(56)
                 passingSqrs = [self.get_square_by_idx(58), self.get_square_by_idx(59)]
+                rookPassSqr = self.get_square_by_idx(57)
 
         if kingSqr.piece is None or kingSqr.piece.kind != KING or kingSqr.piece.color != color or kingSqr.piece.movesCnt > 0:
             return False
@@ -461,6 +468,9 @@ class cBoard:
             return False
 
         if self.is_in_check(color):
+            return False
+
+        if side == LEFT and rookPassSqr.piece is not None:
             return False
 
         for sqr in passingSqrs:
@@ -475,9 +485,8 @@ class cBoard:
 
         total = 0
         for move in self.legal_moves:
-            b.perform_move(move)
-            total += b.generate_successors(depth - 1)
-            b.undo_move(move)
-
+            self.perform_move(move)
+            total += self.generate_successors(depth - 1)
+            self.undo_move(move)
         return total
 

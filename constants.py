@@ -25,7 +25,9 @@ GAME_DRAW_50_MOVES = 'Draw (50 moves rule)!'
                 
 FEN_INIT = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0'
 #FEN_INIT = 'k7/8/8/8/8/8/3p4/7K w - - 98 0'
-#FEN_INIT = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
+#FEN_INIT = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'zz
+
+FEN_INIT = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0'
 
 
 COLOR_BG_LIGHT_BASIC =      '#EDEAE0'
@@ -35,3 +37,7 @@ COLOR_BG_LIGHT_HLIGHTED_2 = '#6DFA60'
 COLOR_BG_DARK_BASIC =       '#8F9779'
 COLOR_BG_DARK_HLIGHTED_1 =  '#5F9749'
 COLOR_BG_DARK_HLIGHTED_2 =  '#2FA719'
+
+COLOR_RED = '\033[91m'
+COLOR_GREEN = '\033[92m'
+COLOR_WHITE = '\x1b[0m'
