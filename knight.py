@@ -10,17 +10,15 @@ class cKnight (cPiece):
         return True
 
     def get_potential_moves(self, ownPieces=False):
-        moves = []
         
         for (i, j) in [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]:
             square = self.square.board.get_square_by_coords(self.square.rowIdx + i, self.square.colIdx + j)
             if square is not None and (square.piece is None or square.piece.color != self.color or ownPieces):
-                moves.append(cMove(self, square))
-
-        return moves
+                yield cMove(self, square)
 
     def get_potential_moves_pinned(self, direction):
-        return []
+        return
+        yield
 
     #def isAttackingSqr(self, colIdx, rowIdx):
         #return abs(colIdx - self.square.colIdx) == 1 and abs(rowIdx - self.square.rowIdx) == 2 or \

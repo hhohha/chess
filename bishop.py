@@ -14,8 +14,6 @@ class cBishop (cPiece):
         return True
 
     def get_potential_moves(self, ownPieces=False):
-        moves = []
-        
         for func in [lambda x, y: (x + 1, y + 1), lambda x, y: (x - 1, y - 1), lambda x, y: (x - 1, y + 1), lambda x, y: (x + 1, y - 1)]:
             i, j = 0, 0
             while True:
@@ -25,25 +23,26 @@ class cBishop (cPiece):
                     break
                 
                 if square.piece is None:
-                    moves.append(cMove(self, square))
+                    yield cMove(self, square)
                 elif square.piece.color != self.color:
-                    moves.append(cMove(self, square))
+                    yield cMove(self, square)
                     break
                 else:
                     if ownPieces:
-                        moves.append(cMove(self, square))
+                        yield cMove(self, square)
                     break
-
-        return moves
         
     def get_potential_moves_pinned(self, direction):
         if direction <= RIGHT:
-            return []
-        moves = self.square.board.find_first_piece_in_dir(self.square, direction, includePath=True)
-        moves += self.square.board.find_first_piece_in_dir(self.square, reverse_dir(direction), includePath=True)
-        moves.pop() # the previous line acually would include the square with own king
-        
-        return list(map(lambda sqr: cMove(self, sqr), moves))
+            return
+
+        # can move in the direction of the pinner including its capture
+        for square in self.square.board.find_first_piece_in_dir(self.square, direction, includePath=True):
+            yield cMove(self, square)
+
+        # can move towards the king but the last move would actually capture own king
+        for square in self.square.board.find_first_piece_in_dir(self.square, reverse_dir(direction), includePath=True)[:-1]:
+            yield cMove(self, square)
 
     #def isAttackingSqr(self, colIdx, rowIdx):
         #if self.square.colIdx == colIdx and self.square.rowIdx == rowIdx:

@@ -17,7 +17,8 @@ class cPiece:
         return False
 
     def get_potential_moves(self, ownPieces=False):
-        return []
+        return
+        yield
         
     def calculate_attacking_squares(self):
         for sqr in self.attackingSquares:
@@ -29,7 +30,8 @@ class cPiece:
             sqr.get_attacked_by(self.color).add(self)
             
     def getAttackedSquares(self):
-        return list(map(lambda move: move.toSqr, self.get_potential_moves(ownPieces=True)))
+        for move in self.get_potential_moves(ownPieces=True):
+            yield move.toSqr
     
     def is_pinned(self):
         kingSqr = self.square.board.get_king_sqr(self.color)
@@ -74,9 +76,6 @@ class cPiece:
         if sqr.piece.kind == QUEEN or sqr.piece.kind == attPiece:
             return otherDir
         return False
-
-    def pprint(self):
-        return kind_to_letter(self.kind) + self.square.getCoord()
 
     def get_legal_moves(self):
         if self.square.board.turn != self.color:

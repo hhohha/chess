@@ -8,29 +8,24 @@ class cKing (cPiece):
         
     # potential moves don't respect checks
     def get_potential_moves(self):
-        moves = []
-        
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
             square = self.square.board.get_square_by_coords(self.square.rowIdx + i, self.square.colIdx + j)
             if square is None:
                 continue
         
             if (not square.is_attacked_by(not self.color) and (square.piece is None or square.piece.color != self.color)):
-                moves.append(cMove(self, square))
-
-        return moves
+                yield cMove(self, square)
     
     def get_potential_moves_pinned(self, direction):
-        return []
+        return
+        yield
     
     def getAttackedSquares(self):
-        moves = []
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
             square = self.square.board.get_square_by_coords(self.square.rowIdx + j, self.square.colIdx + i)
             if square is not None:
-                moves.append(square)
+                yield square
                 
-        return moves
     
     #def is_attacking_sqr(self, sqr):
         #if self.square.colIdx == sqr.colIdx and self.square.rowIdx == sqr.rowIdx:
