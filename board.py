@@ -370,7 +370,7 @@ class cBoard:
                     row, col = move_in_direction(kingSqr.rowIdx, kingSqr.colIdx, direction)
                     invalidSqr = self.get_square_by_coords(row, col)
                     if invalidSqr is not None:
-                        invalidSquares += invalidSqr
+                        invalidSquares.append(invalidSqr)
 
             yield from filter(lambda move: move.toSqr not in invalidSquares, kingMoves)
 
