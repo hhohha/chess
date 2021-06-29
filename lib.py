@@ -31,6 +31,3 @@ def move_in_direction(row, col, direction):
 
 def squareIdx_to_coord(idx):
     return chr(idx % 8 + 97) + str(idx // 8 + 1)
-
-def kind_to_class(kind):
-    return [cPawn, cKnight, cBishop, cRook, cQueen, cKing][kind]

@@ -15,11 +15,11 @@ class cDisplayer:
                     self.display[i][j].ImageData=empty_icon
 
     def load(self, board):
-        self.clear()
         for sqr in board.squares:
             icon = self._get_icon(sqr.piece)
-            self.display[7-sqr.rowIdx][sqr.colIdx].Update(image_data=icon)
-            self.display[7-sqr.rowIdx][sqr.colIdx].ImageData = icon
+            if icon != self.display[7-sqr.rowIdx][sqr.colIdx].ImageData:
+                self.display[7-sqr.rowIdx][sqr.colIdx].Update(image_data=icon)
+                self.display[7-sqr.rowIdx][sqr.colIdx].ImageData = icon
 
     def draw_square(self, sqr, piece):
         icon = self._get_icon(piece)

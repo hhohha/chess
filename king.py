@@ -11,7 +11,7 @@ class cKing (cPiece):
         moves = []
         
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
-            square = self.square.board.getSquareGen(self.square.rowIdx + i, self.square.colIdx + j)
+            square = self.square.board.get_square_by_coords(self.square.rowIdx + i, self.square.colIdx + j)
             if square is None:
                 continue
         
@@ -26,7 +26,7 @@ class cKing (cPiece):
     def getAttackedSquares(self):
         moves = []
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
-            square = self.square.board.getSquareGen(self.square.rowIdx + j, self.square.colIdx + i)
+            square = self.square.board.get_square_by_coords(self.square.rowIdx + j, self.square.colIdx + i)
             if square is not None:
                 moves.append(square)
                 

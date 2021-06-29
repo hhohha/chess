@@ -12,7 +12,7 @@ class cGame:
         
     def place_piece(self, sqr, kind, color):
         self.board.place_piece(sqr, kind, color)
-        self.displayer.draw_square(square, square.piece)
+        self.displayer.draw_square(sqr, sqr.piece)
         
     def remove_piece(self, piece, display=False):
         self.board.remove_piece(piece)
@@ -46,35 +46,21 @@ class cGame:
         if self.board.half_moves == 100:
             self.displayer.inform(GAME_DRAW_50_MOVES)
 
-    def perform_move(self, move):
-        if move.is_promotion():
-            move.newPiece = self.displayer.get_promoted_piece_from_dialog()
-            #self.displayer.draw_square(toSqr, movPiece)
+    def undo_move(self):
+        if len(self.history) == 0:
+            return
+        move = self.history.pop()
 
-        # is en passant?
-        if move.piece == PAWN and (move.fromSqr + move.toSqr) & 1 == 1 and self.board.getSquare(move.toSqr).piece is None:
-            # if sum of to and from indexes is odd, the piece must be moving across columns (pawn takes)
-            self.displayer.draw_square(self.board.en_passant, None)
+        self.board.undo_move(move)
+        self.displayer.load(self.board)
+        self.legal_moves = self.board.legal_moves
+
+    def perform_move(self, move):
+        if move.isPromotion:
+            move.newPiece = self.displayer.get_promoted_piece_from_dialog()
 
         self.board.perform_move(move)
-        self.displayer.draw_square(self.board.getSquare(move.fromSqr), None)
-        self.displayer.draw_square(self.board.getSquare(move.toSqr), self.board.getSquare(move.toSqr).piece)
-        
-        if move.is_castling():
-            if move.toSqr == 6:
-                rookFromIdx, rookToIdx = 7, 5
-            elif move.toSqr == 2:
-                rookFromIdx, rookToIdx = 0, 3
-            elif move.toSqr == 62:
-                rookFromIdx, rookToIdx = 63, 61
-            else:
-                rookFromIdx, rookToIdx = 56, 59
-
-            rookFromSqr = self.board.getSquare(rookFromIdx)
-            rookToSqr = self.board.getSquare(rookToIdx)
-            self.displayer.draw_square(rookFromSqr, None)
-            self.displayer.draw_square(rookToSqr, rookToSqr.piece)
-
+        self.displayer.load(self.board)
         self.history.append(move)
         self.legal_moves = self.board.legal_moves
         self.check_game_end()

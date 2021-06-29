@@ -25,7 +25,7 @@ GAME_DRAW_50_MOVES = 'Draw (50 moves rule)!'
                 
 FEN_INIT = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0'
 #FEN_INIT = 'k7/8/8/8/8/8/3p4/7K w - - 98 0'
-FEN_INIT = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
+#FEN_INIT = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
 
 
 COLOR_BG_LIGHT_BASIC =      '#EDEAE0'
