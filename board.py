@@ -213,7 +213,6 @@ class cBoard:
             if move.isEnPassant:
                 # restore the taken piece
                 self.en_passant.piece = move.pieceTaken
-                move.pieceTaken.square = self.en_passant  # TODO - this line is probably not necessary
                 # remove the piece from toSqr
                 move.toSqr.piece = None
                 # place piece to fromSqr
@@ -222,8 +221,6 @@ class cBoard:
             else:
                 # restore the taken piece to toSqr
                 toSqr.piece = move.pieceTaken
-                move.pieceTaken.square = toSqr  # TODO - this line is probably not necessary
-
                 if move.pieceTaken.is_sliding():
                     self.get_pieces(move.pieceTaken.color, sliding=True).append(move.pieceTaken)
 
@@ -311,7 +308,7 @@ class cBoard:
         return None
         
     def get_pinned_pieces(self, color):
-        pinned_pieces = []
+        pinned_pieces = {}
         kingSqr = self.get_king_sqr(color)
 
         for piece in self.get_pieces(not color, sliding=True):
@@ -333,7 +330,7 @@ class cBoard:
             
             secondSquare = self.find_first_piece_in_dir(firstSquare, direction)
             if secondSquare.piece == piece:
-                pinned_pieces.append(firstSquare.piece)
+                pinned_pieces[firstSquare.piece] = direction
                 
         return pinned_pieces
            
@@ -341,16 +338,14 @@ class cBoard:
     def get_all_moves(self):
         color = self.turn
         pieces = self.get_pieces(color)
-        #pinned_pieces = self.get_pinned_pieces(color) # TODO - use this instead of piece.is_pinned()
+        pinned_pieces = self.get_pinned_pieces(color)
         
         if not self.is_in_check(color):
             for piece in pieces:
-                pinned = piece.is_pinned()
-                #pinned = piece in pinned_pieces
-                if not pinned:
-                    yield from piece.get_potential_moves()
+                if piece in pinned_pieces:
+                    yield from piece.get_potential_moves_pinned(pinned_pieces[piece])
                 else:
-                    yield from piece.get_potential_moves_pinned(pinned)
+                    yield from piece.get_potential_moves()
                     
             # TODO - write this better
             if self.is_castle_possible(color, RIGHT):
@@ -390,11 +385,10 @@ class cBoard:
                     target_squares = [attacker.square]
                     
                 for piece in pieces:
-                    pinned = piece.is_pinned()
-                    if piece.kind != KING and not pinned:
+                    if piece.kind != KING and piece not in pinned_pieces:
                         yield from filter(lambda x: x.toSqr in target_squares, piece.get_potential_moves())
 
-                    if self.en_passant is not None and attacker.square == self.en_passant and piece.kind == PAWN and piece.square.rowIdx == self.en_passant.rowIdx and abs(piece.square.idx - self.en_passant.idx) == 1 and pinned not in [UP, DOWN]:
+                    if self.en_passant is not None and attacker.square == self.en_passant and piece.kind == PAWN and piece.square.rowIdx == self.en_passant.rowIdx and abs(piece.square.idx - self.en_passant.idx) == 1 and pinned_pieces[piece] not in [UP, DOWN]:
                         yield cMove(piece, self.get_square_by_coords(self.en_passant.rowIdx + (1 if piece.color == WHITE else -1), self.en_passant.colIdx), isEnPassant=True)
 
     def get_pieces(self, color=None, sliding=False):

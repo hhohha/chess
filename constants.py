@@ -27,7 +27,7 @@ FEN_INIT = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0'
 #FEN_INIT = 'k7/8/8/8/8/8/3p4/7K w - - 98 0'
 #FEN_INIT = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'zz
 
-FEN_INIT = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0'
+FEN_INIT = '8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 0'
 
 
 COLOR_BG_LIGHT_BASIC =      '#EDEAE0'
