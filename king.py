@@ -27,6 +27,15 @@ class cKing (cPiece):
                 yield square
                 
     
+    def calculate_attacking_squares(self):
+        for sqr in self.attackingSquares:
+            sqr.get_attacked_by(self.color).remove(self)
+
+        self.attackingSquares = list(self.getAttackedSquares())
+
+        for sqr in self.attackingSquares:
+            sqr.get_attacked_by(self.color).add(self)
+
     #def is_attacking_sqr(self, sqr):
         #if self.square.colIdx == sqr.colIdx and self.square.rowIdx == sqr.rowIdx:
             #return False

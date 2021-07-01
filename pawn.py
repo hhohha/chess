@@ -15,7 +15,16 @@ class cPawn (cPiece):
             self.base_row = 6
             self.promote_row = 0
             self.en_passant_row = 3
-        
+
+    def calculate_attacking_squares(self):
+        for sqr in self.attackingSquares:
+            sqr.get_attacked_by(self.color).remove(self)
+
+        self.attackingSquares = list(self.getAttackedSquares())
+
+        for sqr in self.attackingSquares:
+            sqr.get_attacked_by(self.color).add(self)
+
     def get_potential_moves(self):
         yield from self.get_forward_moves()
         yield from self.get_capture_move(1)

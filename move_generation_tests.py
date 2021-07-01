@@ -26,7 +26,7 @@ def test_position(position, depth):
     for dpt in range(1, depth + 1):
         board = cBoard()
         board.loadFEN(position.position)
-        print ('TESTING position ' + str(position.id) + ' to depth ' + str(dpt), ':    ', end='')
+        print ('TESTING position ' + str(position.id) + ' to depth ' + str(dpt), ':    ')
         result = board.generate_successors(dpt)
         if result == position.reference[dpt]:
             print(COLOR_GREEN + 'OK' + COLOR_WHITE)
@@ -39,5 +39,4 @@ depth = int(sys.argv[1])
 for p in positions:
     test_position(p, depth)
 
-
-
+#test_position(positions[1], depth)

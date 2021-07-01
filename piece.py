@@ -8,6 +8,7 @@ class cPiece:
         self.color = color
         self.movesCnt = 0
         self.attackingSquares = []
+        self.potentialSquares = []
         self.square = square
         
     def is_sliding(self):
@@ -17,10 +18,16 @@ class cPiece:
         return False
         
     def calculate_attacking_squares(self):
+        self.potentialSquares.clear()
+
         for sqr in self.attackingSquares:
             sqr.get_attacked_by(self.color).remove(self)
             
-        self.attackingSquares = list(self.getAttackedSquares())
+        self.attackingSquares.clear()
+        for sqr in self.getAttackedSquares():
+            self.attackingSquares.append(sqr)
+            if sqr.piece is None or sqr.piece.color != self.color:
+                self.potentialSquares.append(sqr)
         
         for sqr in self.attackingSquares:
             sqr.get_attacked_by(self.color).add(self)

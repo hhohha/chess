@@ -197,9 +197,16 @@ class cBoard:
 
         self.turn = not self.turn
 
-        for piece in fromSqr.get_attacked_by().union(toSqr.get_attacked_by()).union({movPiece}):
+        recalcSquares = fromSqr.get_attacked_by().union(toSqr.get_attacked_by()).union({movPiece})
+        if move.is_castling():
+            recalcSquares.update(self.get_square_by_idx(rookFrom).get_attacked_by())
+            recalcSquares.update(self.get_square_by_idx(rookTo).get_attacked_by())
+
+        for piece in recalcSquares:
             if piece.is_sliding() or piece == movPiece:
                 piece.calculate_attacking_squares()
+            elif piece.kind == KNIGHT:
+                piece.calculate_potentional_squares()
         self.legal_moves = list(self.get_all_moves())
 
     def undo_move(self, move):
@@ -243,9 +250,16 @@ class cBoard:
             self.get_square_by_idx(rookFrom).piece = None
             self.get_square_by_idx(rookTo).piece.square = self.get_square_by_idx(rookTo)
 
-        for piece in fromSqr.get_attacked_by().union(toSqr.get_attacked_by()).union({movPiece}):
+        recalcSquares = fromSqr.get_attacked_by().union(toSqr.get_attacked_by()).union({movPiece})
+        if move.is_castling():
+            recalcSquares.update(self.get_square_by_idx(rookFrom).get_attacked_by())
+            recalcSquares.update(self.get_square_by_idx(rookTo).get_attacked_by())
+
+        for piece in recalcSquares:
             if piece.is_sliding() or piece == movPiece:
                 piece.calculate_attacking_squares()
+            elif piece.kind == KNIGHT:
+                piece.calculate_potentional_squares()
         if move.pieceTaken:
             move.pieceTaken.calculate_attacking_squares()
 
@@ -345,7 +359,10 @@ class cBoard:
                 if piece in pinned_pieces:
                     yield from piece.get_potential_moves_pinned(pinned_pieces[piece])
                 else:
-                    yield from piece.get_potential_moves()
+                    if piece.kind in [PAWN, KING]:
+                        yield from piece.get_potential_moves()
+                    else:
+                        yield from (cMove(piece, sqr) for sqr in piece.potentialSquares)
                     
             # TODO - write this better
             if self.is_castle_possible(color, RIGHT):

@@ -14,5 +14,5 @@ def main():
     print('cnt:', n)
 
 
-cProfile.run('main()')
-#main()   #24sec
+#cProfile.run('main()')
+main()   #15sec
