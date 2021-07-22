@@ -62,11 +62,11 @@ class cPieceSliding(cPiece):
         return self.potential_squares[-1]
 
     def add_new_calculation(self):
-        tmp = self.attacked_squares[-1][:]
-        self.attacked_squares.append(tmp)
+        for sqr in self.get_attacked_squares():
+            sqr.get_attacked_by(self.color).remove(self)
+        self.attacked_squares.append([])
 
-        tmp = self.potential_squares[-1][:]
-        self.potential_squares.append(tmp)
+        self.potential_squares.append([])
 
     def remove_last_calculation(self):
         for sqr in self.get_attacked_squares():
@@ -105,8 +105,9 @@ class cPieceNotSliding(cPiece):
         self.is_sliding = False
 
     def add_new_calculation(self):
-        tmp = self.attacked_squares[-1][:]
-        self.attacked_squares.append(tmp)
+        for sqr in self.get_attacked_squares():
+            sqr.get_attacked_by(self.color).remove(self)
+        self.attacked_squares.append([])
 
     def remove_last_calculation(self):
         for sqr in self.get_attacked_squares():
