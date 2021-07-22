@@ -1,39 +1,44 @@
 from lib import *
+from abc import ABC, abstractmethod
 
-class cPiece:
+class cPiece(ABC):
     def __init__(self, kind, color, square):
-        global counter
         self.id = square.idx
         self.kind = kind
         self.color = color
         self.movesCnt = 0
-        self.attackingSquares = []
-        self.potentialSquares = []
+        self.attacked_squares = [[]]
         self.square = square
-        
-    def is_sliding(self):
-        return False
+        self.is_active = True
 
-    def is_light(self):
-        return False
-        
-    def calculate_attacking_squares(self):
-        self.potentialSquares.clear()
+    def get_attacked_squares(self):
+        return self.attacked_squares[-1]
 
-        for sqr in self.attackingSquares:
-            sqr.get_attacked_by(self.color).remove(self)
-            
-        self.attackingSquares.clear()
-        for sqr in self.getAttackedSquares():
-            self.attackingSquares.append(sqr)
-            if sqr.piece is None or sqr.piece.color != self.color:
-                self.potentialSquares.append(sqr)
-        
-        for sqr in self.attackingSquares:
-            sqr.get_attacked_by(self.color).add(self)
-            
-    def getAttackedSquares(self):
-        for move in self.get_potential_moves(ownPieces=True):
+    def set_attacked_squares(self, sqrs):
+        self.attacked_squares[-1] = sqrs
+
+    @abstractmethod
+    def calc_potential_moves(self):
+        pass
+
+    @abstractmethod
+    def calc_potential_moves_pinned(self):
+        pass
+
+    @abstractmethod
+    def add_new_calculation(self):
+        self.attacked_squares.append([])
+
+    @abstractmethod
+    def remove_last_calculation(self):
+        self.attacked_squares.pop()
+
+    @abstractmethod
+    def update_attacked_squares(self):
+        pass
+
+    def calc_attacked_squares(self):
+        for move in self.calc_potential_moves(ownPieces=True):
             yield move.toSqr
 
     def get_legal_moves(self):
@@ -46,3 +51,84 @@ class cPiece:
     
     def __hash__(self):
         return hash(self.id)
+
+class cPieceSliding(cPiece):
+    def __init__(self, kind, color, square):
+        super().__init__(kind, color, square)
+        self.is_sliding = True
+        self.potential_squares = [[]]
+
+    def get_potential_squares(self):
+        return self.potential_squares[-1]
+
+    def add_new_calculation(self):
+        tmp = self.attacked_squares[-1][:]
+        self.attacked_squares.append(tmp)
+
+        tmp = self.potential_squares[-1][:]
+        self.potential_squares.append(tmp)
+
+    def remove_last_calculation(self):
+        for sqr in self.get_attacked_squares():
+           sqr.get_attacked_by(self.color).remove(self)
+        self.attacked_squares.pop()
+        for sqr in self.get_attacked_squares():
+            sqr.get_attacked_by(self.color).add(self)
+        self.potential_squares.pop()
+
+    # TODO - diff between new and old data - not update square this much
+    def update_attacked_squares(self):
+        self.get_potential_squares().clear()
+        if not self.is_active:
+            for sqr in self.get_attacked_squares():
+                sqr.get_attacked_by(self.color).remove(self)
+            self.get_attacked_squares().clear()
+            return
+
+        for sqr in self.get_attacked_squares():
+            sqr.get_attacked_by(self.color).remove(self)
+
+        self.get_attacked_squares().clear()
+
+        for sqr in self.calc_attacked_squares():
+            self.get_attacked_squares().append(sqr)
+            if sqr.piece is None or sqr.piece.color != self.color:
+                self.get_potential_squares().append(sqr)
+
+        for sqr in self.get_attacked_squares():
+            sqr.get_attacked_by(self.color).add(self)
+
+
+class cPieceNotSliding(cPiece):
+    def __init__(self, kind, color, square):
+        super().__init__(kind, color, square)
+        self.is_sliding = False
+
+    def add_new_calculation(self):
+        tmp = self.attacked_squares[-1][:]
+        self.attacked_squares.append(tmp)
+
+    def remove_last_calculation(self):
+        for sqr in self.get_attacked_squares():
+           sqr.get_attacked_by(self.color).remove(self)
+        self.attacked_squares.pop()
+        for sqr in self.get_attacked_squares():
+            sqr.get_attacked_by(self.color).add(self)
+
+    def update_attacked_squares(self):
+        if not self.is_active:
+            for sqr in self.get_attacked_squares():
+                sqr.get_attacked_by(self.color).remove(self)
+            self.get_attacked_squares().clear()
+            return
+
+        for sqr in self.get_attacked_squares():
+            sqr.get_attacked_by(self.color).remove(self)
+
+        self.get_attacked_squares().clear()
+
+        for sqr in self.calc_attacked_squares():
+            self.get_attacked_squares().append(sqr)
+
+        for sqr in self.get_attacked_squares():
+            sqr.get_attacked_by(self.color).add(self)

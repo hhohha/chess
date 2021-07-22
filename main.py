@@ -122,6 +122,7 @@ def main():
                 if len(moves) > 0:
                     game.perform_move(moves[0])
                     selected_button = None
+    window.close()
 
 if __name__ == '__main__':
     main()

@@ -1,10 +1,11 @@
-from piece import cPiece
+from piece import cPieceNotSliding
 from move import cMove
 from constants import *
 
-class cPawn (cPiece):
+class cPawn (cPieceNotSliding):
     def __init__(self, color, square):
         super().__init__(PAWN, color, square)
+        self.is_light = False
         if self.color == WHITE:
             self.move_offset = 1
             self.base_row = 1
@@ -16,16 +17,16 @@ class cPawn (cPiece):
             self.promote_row = 0
             self.en_passant_row = 3
 
-    def calculate_attacking_squares(self):
-        for sqr in self.attackingSquares:
+    def update_attacked_squares(self):
+        for sqr in self.get_attacked_squares():
             sqr.get_attacked_by(self.color).remove(self)
 
-        self.attackingSquares = list(self.getAttackedSquares())
+        self.set_attacked_squares(list(self.calc_attacked_squares()))
 
-        for sqr in self.attackingSquares:
+        for sqr in self.get_attacked_squares():
             sqr.get_attacked_by(self.color).add(self)
 
-    def get_potential_moves(self):
+    def calc_potential_moves(self):
         yield from self.get_forward_moves()
         yield from self.get_capture_move(1)
         yield from self.get_capture_move(-1)
@@ -34,7 +35,7 @@ class cPawn (cPiece):
         if en_passant is not None and self.square.rowIdx == self.en_passant_row and abs(self.square.idx - en_passant.idx) == 1 and not self.is_en_passant_pin(en_passant):
             yield cMove(self, self.square.board.get_square_by_coords(en_passant.rowIdx + self.move_offset, en_passant.colIdx), isEnPassant=True)
     
-    def get_potential_moves_pinned(self, direction):
+    def calc_potential_moves_pinned(self, direction):
         if direction == RIGHT or direction == LEFT:
             return
         elif direction == UP or direction == DOWN:
@@ -75,14 +76,11 @@ class cPawn (cPiece):
             for newPiece in [KNIGHT, BISHOP, ROOK, QUEEN]:
                 yield cMove(self, square, newPiece, isPromotion=True)
     
-    def getAttackedSquares(self):
+    def calc_attacked_squares(self):
         for i in [1, -1]:
             square = self.square.board.get_square_by_coords(self.square.rowIdx + self.move_offset, self.square.colIdx + i)
             if square is not None:
                 yield square
-    
-    #def isAttackingSqr(self, colIdx, rowIdx):
-        #return abs(colIdx - self.square.colIdx) == 1 and rowIdx == self.square.rowIdx + self.move_offset
         
     def is_en_passant_pin(self, en_passant):
         kingSqr = self.square.board.get_king_sqr(self.color)

@@ -7,8 +7,10 @@ class cSquare:
         self.colIdx = idx % 8
         self.piece = None
         self.board = board
-        self.attacked_by_whites = set()
-        self.attacked_by_blacks = set()
+        #self.attacked_by_whites = set()
+        #self.attacked_by_blacks = set()
+        self.attacked_by_whites = [(0, set())]
+        self.attacked_by_blacks = [(0, set())]
         
     def __str__(self):
         return self.getCoord()
@@ -22,12 +24,13 @@ class cSquare:
     def is_attacked_by(self, color):
         return len(self.get_attacked_by(color)) > 0
 
+    # TODO - color == None may be not efficient - test, and if so, remove
     def get_attacked_by(self, color=None):
         if color == WHITE:
-            return self.attacked_by_whites
+            return self.attacked_by_whites[-1][1]
         if color == BLACK:
-            return self.attacked_by_blacks
-        return self.attacked_by_whites.union(self.attacked_by_blacks)
+            return self.attacked_by_blacks[-1][1]
+        return self.attacked_by_whites[-1][1].union(self.attacked_by_blacks[-1][1])
 
     def __eq__(self, other):
         return self.idx == other.idx

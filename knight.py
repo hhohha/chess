@@ -1,34 +1,37 @@
-from piece import cPiece
+from piece import cPieceNotSliding
 from constants import *
 from move import cMove
 
-class cKnight (cPiece):
+class cKnight (cPieceNotSliding):
     def __init__(self, color, square):
         super().__init__(KNIGHT, color, square)
+        self.is_light = True
 
-    def is_light(self):
-        return True
-
-    def get_potential_moves(self, ownPieces=False):
+    def calc_potential_moves(self, ownPieces=False):
         for (i, j) in [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]:
             square = self.square.board.get_square_by_coords(self.square.rowIdx + i, self.square.colIdx + j)
             if square is not None and (square.piece is None or square.piece.color != self.color or ownPieces):
                 yield cMove(self, square)
 
-    def calculate_potentional_squares(self):
-        self.potentialSquares.clear()
-        for sqr in self.attackingSquares:
-            if sqr.piece is None or sqr.piece.color != self.color:
-                self.potentialSquares.append(sqr)
+    #def calculate_potentional_squares(self):
+        #self.potentialSquares.clear()
+        #for sqr in self.get_attacked_squares():
+            #if sqr.piece is None or sqr.piece.color != self.color:
+                #self.potentialSquares.append(sqr)
 
-    def get_potential_moves_pinned(self, direction):
+    def update_attacked_squares(self):
+        for sqr in self.get_attacked_squares():
+            sqr.get_attacked_by(self.color).remove(self)
+
+        self.set_attacked_squares(list(self.calc_attacked_squares()))
+
+        for sqr in self.get_attacked_squares():
+            sqr.get_attacked_by(self.color).add(self)
+
+    def calc_potential_moves_pinned(self, direction):
         return
         yield
 
-    #def isAttackingSqr(self, colIdx, rowIdx):
-        #return abs(colIdx - self.square.colIdx) == 1 and abs(rowIdx - self.square.rowIdx) == 2 or \
-            #abs(colIdx - self.square.colIdx) == 2 and abs(rowIdx - self.square.rowIdx) == 1
-        
     def __str__(self):
         return 'N' + self.square.getCoord()
 

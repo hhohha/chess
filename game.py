@@ -40,7 +40,7 @@ class cGame:
             return
         
         pieces = self.board.get_pieces()
-        if len(pieces) == 2 or (len(pieces) == 3 and any(map(lambda p: p.is_light(), pieces))):
+        if len(pieces) == 2 or (len(pieces) == 3 and any(map(lambda p: p.is_light, pieces))):
             self.displayer.inform(GAME_DRAW_MATERIAL)
             
         if self.board.half_moves == 100:

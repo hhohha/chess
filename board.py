@@ -30,6 +30,8 @@ class cBoard:
         self.en_passant = None
         self.half_moves = 0
         self.moves = 0
+        self.analysis_depth = 0
+        self.pieces_recalculated = []
 
     def loadFEN(self, fenstr):
         self.clear()
@@ -83,7 +85,7 @@ class cBoard:
         self.moves = int(fulls)
         
         for piece in self.get_pieces():
-            piece.calculate_attacking_squares()
+            piece.update_attacked_squares()
 
         self.legal_moves = list(self.get_all_moves())
 
@@ -149,18 +151,19 @@ class cBoard:
             self.get_pieces(color).insert(0, square.piece)
         else:
             self.get_pieces(color).append(square.piece)
-            if square.piece.is_sliding():
+            if square.piece.is_sliding:
                 self.get_pieces(color, sliding=True).append(square.piece)
         
     def remove_piece(self, piece):
         self.get_pieces(piece.color).remove(piece)
-        if piece.is_sliding():
+        if piece.is_sliding:
             self.get_pieces(piece.color, sliding=True).remove(piece)
-        for sqr in piece.attackingSquares:
-            sqr.get_attacked_by(piece.color).remove(piece)
-        piece.attackingSquares = []
+        piece.is_active = False
+        #for sqr in piece.get_attacked_squares():
+            #sqr.get_attacked_by(piece.color).remove(piece)
+        #piece.set_attacked_squares([])
     
-    def perform_move(self, move):
+    def perform_move(self, move, analysis=True):
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
 
         #if toSqr.piece is not None or movPiece.kind == PAWN:
@@ -197,19 +200,29 @@ class cBoard:
 
         self.turn = not self.turn
 
-        recalcSquares = fromSqr.get_attacked_by().union(toSqr.get_attacked_by()).union({movPiece})
-        if move.is_castling():
-            recalcSquares.update(self.get_square_by_idx(rookFrom).get_attacked_by())
-            recalcSquares.update(self.get_square_by_idx(rookTo).get_attacked_by())
+        recalc_pieces = {movPiece}
+        recalc_pieces.update(piece for piece in fromSqr.get_attacked_by() if piece.is_sliding)
+        recalc_pieces.update(piece for piece in toSqr.get_attacked_by() if piece.is_sliding)
 
-        for piece in recalcSquares:
-            if piece.is_sliding() or piece == movPiece:
-                piece.calculate_attacking_squares()
-            elif piece.kind == KNIGHT:
-                piece.calculate_potentional_squares()
+        if move.pieceTaken is not None:
+            recalc_pieces.add(move.pieceTaken)
+        if move.is_castling():
+            recalc_pieces.update(piece for piece in self.get_square_by_idx(rookFrom).get_attacked_by() if piece.is_sliding)
+            recalc_pieces.update(piece for piece in self.get_square_by_idx(rookTo).get_attacked_by() if piece.is_sliding)
+
+        if move.isEnPassant:
+            recalc_pieces.update(piece for piece in move.pieceTaken.square.get_attacked_by() if piece.is_sliding)
+
+        self.pieces_recalculated.append(recalc_pieces)
+
+        for piece in recalc_pieces:
+            if analysis:
+                piece.add_new_calculation()
+            piece.update_attacked_squares()
+
         self.legal_moves = list(self.get_all_moves())
 
-    def undo_move(self, move):
+    def undo_move(self, move, analysis=True):
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
 
         # TODO - move counters
@@ -217,6 +230,7 @@ class cBoard:
             self.en_passant = move.pastEP
 
         if move.pieceTaken is not None:
+            move.pieceTaken.is_active = True
             if move.isEnPassant:
                 # restore the taken piece
                 self.en_passant.piece = move.pieceTaken
@@ -228,7 +242,7 @@ class cBoard:
             else:
                 # restore the taken piece to toSqr
                 toSqr.piece = move.pieceTaken
-                if move.pieceTaken.is_sliding():
+                if move.pieceTaken.is_sliding:
                     self.get_pieces(move.pieceTaken.color, sliding=True).append(move.pieceTaken)
 
             self.get_pieces(move.pieceTaken.color).append(move.pieceTaken)
@@ -250,18 +264,12 @@ class cBoard:
             self.get_square_by_idx(rookFrom).piece = None
             self.get_square_by_idx(rookTo).piece.square = self.get_square_by_idx(rookTo)
 
-        recalcSquares = fromSqr.get_attacked_by().union(toSqr.get_attacked_by()).union({movPiece})
-        if move.is_castling():
-            recalcSquares.update(self.get_square_by_idx(rookFrom).get_attacked_by())
-            recalcSquares.update(self.get_square_by_idx(rookTo).get_attacked_by())
-
-        for piece in recalcSquares:
-            if piece.is_sliding() or piece == movPiece:
-                piece.calculate_attacking_squares()
-            elif piece.kind == KNIGHT:
-                piece.calculate_potentional_squares()
-        if move.pieceTaken:
-            move.pieceTaken.calculate_attacking_squares()
+        for piece in self.pieces_recalculated[-1]:
+            if analysis:
+                piece.remove_last_calculation()
+            else:
+                piece.update_attacked_squares()
+        self.pieces_recalculated.pop()
 
         self.turn = not self.turn
         self.legal_moves = list(self.get_all_moves())
@@ -278,12 +286,20 @@ class cBoard:
 
     def change_piece_kind(self, piece, newKind):
         # doesn't work for king
-        if piece.is_sliding() and newKind in [PAWN, KNIGHT]:
+        if piece.is_sliding and newKind in [PAWN, KNIGHT]:
             self.get_pieces(piece.color, sliding=True).remove(piece)
-        elif not piece.is_sliding() and newKind in [BISHOP, ROOK, QUEEN]:
+        elif not piece.is_sliding and newKind in [BISHOP, ROOK, QUEEN]:
             self.get_pieces(piece.color, sliding=True).append(piece)
         piece.kind = newKind
         piece.__class__ = [cPawn, cKnight, cBishop, cRook, cQueen, cKing][newKind]
+        if newKind in [PAWN, KNIGHT, KING]:
+            piece.is_sliding = False
+        else:
+            piece.is_sliding = True
+            piece.potential_squares = [[]]
+
+        piece.is_light = newKind in [KNIGHT, BISHOP]
+
 
     def _update_en_passant_rights(self, move):
         if move.piece.kind == PAWN and abs(move.toSqr.idx - move.fromSqr.idx) == 16:
@@ -347,8 +363,7 @@ class cBoard:
                 pinned_pieces[firstSquare.piece] = direction
                 
         return pinned_pieces
-           
-    # TODO - don't recalculate all pieces after a move !!!
+
     def get_all_moves(self):
         color = self.turn
         pieces = self.get_pieces(color)
@@ -357,12 +372,12 @@ class cBoard:
         if not self.is_in_check(color):
             for piece in pieces:
                 if piece in pinned_pieces:
-                    yield from piece.get_potential_moves_pinned(pinned_pieces[piece])
+                    yield from piece.calc_potential_moves_pinned(pinned_pieces[piece])
                 else:
-                    if piece.kind in [PAWN, KING]:
-                        yield from piece.get_potential_moves()
+                    if not piece.is_sliding:
+                        yield from piece.calc_potential_moves()
                     else:
-                        yield from (cMove(piece, sqr) for sqr in piece.potentialSquares)
+                        yield from (cMove(piece, sqr) for sqr in piece.get_potential_squares())
                     
             # TODO - write this better
             if self.is_castle_possible(color, RIGHT):
@@ -377,16 +392,17 @@ class cBoard:
             attackers = kingSqr.get_attacked_by(not color)
             
             # can always (attempt to) move the king
-            kingMoves = kingSqr.piece.get_potential_moves()
+            kingMoves = kingSqr.piece.calc_potential_moves()
             invalidSquares = []
             for piece in attackers:
-                if piece.is_sliding():
+                if piece.is_sliding:
                     # cannot just run from sliding piece in the direction of the attack
                     direction = reverse_dir(self.get_direction(kingSqr, piece.square))
                     row, col = move_in_direction(kingSqr.rowIdx, kingSqr.colIdx, direction)
                     invalidSqr = self.get_square_by_coords(row, col)
                     if invalidSqr is not None:
                         invalidSquares.append(invalidSqr)
+
             yield from filter(lambda move: move.toSqr not in invalidSquares, kingMoves)
 
             if len(attackers) == 1:
@@ -394,7 +410,7 @@ class cBoard:
                 attackers.add(attacker)
 
                 # not double check - can also capture the attacker
-                if attacker.is_sliding():
+                if attacker.is_sliding:
                     # can also block the attacker
                     direction = self.get_direction(kingSqr, attacker.square)
                     target_squares = self.find_first_piece_in_dir(kingSqr, direction, includePath=True)
@@ -403,7 +419,7 @@ class cBoard:
                     
                 for piece in pieces:
                     if piece.kind != KING and piece not in pinned_pieces:
-                        yield from filter(lambda x: x.toSqr in target_squares, piece.get_potential_moves())
+                        yield from filter(lambda x: x.toSqr in target_squares, piece.calc_potential_moves())
 
                     if self.en_passant is not None and attacker.square == self.en_passant and piece.kind == PAWN and piece.square.rowIdx == self.en_passant.rowIdx and abs(piece.square.idx - self.en_passant.idx) == 1 and pinned_pieces[piece] not in [UP, DOWN]:
                         yield cMove(piece, self.get_square_by_coords(self.en_passant.rowIdx + (1 if piece.color == WHITE else -1), self.en_passant.colIdx), isEnPassant=True)
@@ -496,8 +512,11 @@ class cBoard:
 
         total = 0
         for move in self.legal_moves:
+            self.analysis_depth += 1
             self.perform_move(move)
             total += self.generate_successors(depth - 1)
+            self.analysis_depth -= 1
             self.undo_move(move)
+
         return total
 
