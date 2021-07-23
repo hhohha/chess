@@ -415,12 +415,12 @@ class cBoard:
                     target_squares = self.find_first_piece_in_dir(kingSqr, direction, includePath=True)
                 else:
                     target_squares = [attacker.square]
-                    
+
                 for piece in pieces:
                     if piece.kind != KING and piece not in pinned_pieces:
                         yield from filter(lambda x: x.toSqr in target_squares, piece.calc_potential_moves())
 
-                    if self.en_passant is not None and attacker.square == self.en_passant and piece.kind == PAWN and piece.square.rowIdx == self.en_passant.rowIdx and abs(piece.square.idx - self.en_passant.idx) == 1 and pinned_pieces[piece] not in [UP, DOWN]:
+                    if self.en_passant is not None and attacker.square == self.en_passant and piece.kind == PAWN and piece.square.rowIdx == self.en_passant.rowIdx and abs(piece.square.idx - self.en_passant.idx) == 1 and (piece not in pinned_pieces or pinned_pieces[piece] not in [UP, DOWN]):
                         yield cMove(piece, self.get_square_by_coords(self.en_passant.rowIdx + (1 if piece.color == WHITE else -1), self.en_passant.colIdx), isEnPassant=True)
 
     def get_pieces(self, color=None, sliding=False):
