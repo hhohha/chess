@@ -17,15 +17,6 @@ class cPawn (cPieceNotSliding):
             self.promote_row = 0
             self.en_passant_row = 3
 
-    def update_attacked_squares(self):
-        for sqr in self.get_attacked_squares():
-            sqr.get_attacked_by(self.color).remove(self)
-
-        self.set_attacked_squares(list(self.calc_attacked_squares()))
-
-        for sqr in self.get_attacked_squares():
-            sqr.get_attacked_by(self.color).add(self)
-
     def calc_potential_moves(self):
         yield from self.get_forward_moves()
         yield from self.get_capture_move(1)

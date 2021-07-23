@@ -41,7 +41,11 @@ def test_position(position, depth):
 
 
 depth = int(sys.argv[1])
-for p in positions:
 
+total_start = time()
+for p in positions:
     test_position(p, depth)
-#test_position(positions[1], depth)
+
+total_end = time()
+print('total time needed:  ', round(total_end - total_start, 4), 'sec')
+

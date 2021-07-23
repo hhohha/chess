@@ -27,15 +27,6 @@ class cKing (cPieceNotSliding):
             if square is not None:
                 yield square
                 
-    
-    def update_attacked_squares(self):
-        for sqr in self.get_attacked_squares():
-            sqr.get_attacked_by(self.color).remove(self)
-
-        self.set_attacked_squares(list(self.calc_attacked_squares()))
-
-        for sqr in self.get_attacked_squares():
-            sqr.get_attacked_by(self.color).add(self)
 
     def __str__(self):
         return 'K' + self.square.getCoord()

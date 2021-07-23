@@ -19,15 +19,6 @@ class cKnight (cPieceNotSliding):
             #if sqr.piece is None or sqr.piece.color != self.color:
                 #self.potentialSquares.append(sqr)
 
-    def update_attacked_squares(self):
-        for sqr in self.get_attacked_squares():
-            sqr.get_attacked_by(self.color).remove(self)
-
-        self.set_attacked_squares(list(self.calc_attacked_squares()))
-
-        for sqr in self.get_attacked_squares():
-            sqr.get_attacked_by(self.color).add(self)
-
     def calc_potential_moves_pinned(self, direction):
         return
         yield
