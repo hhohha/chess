@@ -7,7 +7,6 @@ from queen import cQueen
 from king import cKing
 from square import cSquare
 from move import cMove
-from displayer import cDisplayer
 from constants import *
 from icons import *
 from lib import *
