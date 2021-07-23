@@ -4,6 +4,7 @@ from board import cBoard
 from move import cMove
 from constants import *
 import sys
+from time import time
 
 
 class cPosition:
@@ -27,16 +28,20 @@ def test_position(position, depth):
         board = cBoard()
         board.loadFEN(position.position)
         print ('TESTING position ' + str(position.id) + ' to depth ' + str(dpt), ':    ', end='')
+
+        start_time = time()
         result = board.generate_successors(dpt)
+        end_time = time()
+
         if result == position.reference[dpt]:
-            print(COLOR_GREEN + 'OK' + COLOR_WHITE)
+            print(COLOR_GREEN + 'OK' + COLOR_WHITE, '                         time: ', round(end_time - start_time, 4), 'sec')
         else:
-            print(COLOR_RED + 'FAILED' + COLOR_WHITE + '  expected number: ' + str(position.reference[dpt]), '  but got: ' + str(result))
+            print(COLOR_RED + 'FAILED' + COLOR_WHITE + '  expected number: ' + str(position.reference[dpt]), '  but got: ' + str(result), '                         time: ', round(end_time - start_time, 4), 'sec')
             break
 
 
 depth = int(sys.argv[1])
 for p in positions:
-    test_position(p, depth)
 
+    test_position(p, depth)
 #test_position(positions[1], depth)
