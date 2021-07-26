@@ -44,7 +44,7 @@ class cPiece(ABC):
     def get_legal_moves(self):
         if self.square.board.turn != self.color:
             return []
-        return list(filter(lambda move: move.fromSqr == self.square, self.square.board.legal_moves))
+        return list(filter(lambda move: move.fromSqr == self.square, self.square.board.legal_moves[-1]))
 
     def __eq__(self, other):
         return self.id == other.id

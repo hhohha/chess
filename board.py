@@ -31,6 +31,7 @@ class cBoard:
         self.moves = 0
         self.analysis_depth = 0
         self.pieces_recalculated = []
+        self.legal_moves = []
 
     def loadFEN(self, fenstr):
         self.clear()
@@ -86,7 +87,7 @@ class cBoard:
         for piece in self.get_pieces():
             piece.update_attacked_squares()
 
-        self.legal_moves = list(self.get_all_moves())
+        self.legal_moves.append(list(self.get_all_moves()))
 
     def clear(self):
         self.squares = [cSquare(idx, self) for idx in range(64)]
@@ -199,13 +200,18 @@ class cBoard:
 
         self.turn = not self.turn
 
-        recalc_pieces = {movPiece}
-        recalc_pieces.update(piece for piece in fromSqr.get_attacked_by() if piece.is_sliding)
-        recalc_pieces.update(piece for piece in toSqr.get_attacked_by() if piece.is_sliding)
+        self.recalculation(move, analysis)
+        self.legal_moves.append(list(self.get_all_moves()))
+
+    def recalculation(self, move, analysis):
+        recalc_pieces = {move.piece}
+        recalc_pieces.update(piece for piece in move.fromSqr.get_attacked_by() if piece.is_sliding)
+        recalc_pieces.update(piece for piece in move.toSqr.get_attacked_by() if piece.is_sliding)
 
         if move.pieceTaken is not None:
             recalc_pieces.add(move.pieceTaken)
         if move.is_castling():
+            rookFrom, rookTo = self._get_castle_rook_squares(move)
             recalc_pieces.update(piece for piece in self.get_square_by_idx(rookFrom).get_attacked_by() if piece.is_sliding)
             recalc_pieces.update(piece for piece in self.get_square_by_idx(rookTo).get_attacked_by() if piece.is_sliding)
 
@@ -218,8 +224,6 @@ class cBoard:
             if analysis:
                 piece.add_new_calculation()
             piece.update_attacked_squares()
-
-        self.legal_moves = list(self.get_all_moves())
 
     def undo_move(self, move, analysis=True):
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
@@ -271,7 +275,7 @@ class cBoard:
         self.pieces_recalculated.pop()
 
         self.turn = not self.turn
-        self.legal_moves = list(self.get_all_moves())
+        self.legal_moves.pop()
 
     def _get_castle_rook_squares(self, move):
         if move.toSqr.idx == 6:
@@ -510,7 +514,7 @@ class cBoard:
             return 1
 
         total = 0
-        for move in self.legal_moves:
+        for move in self.legal_moves[-1]:
             self.analysis_depth += 1
             self.perform_move(move)
             total += self.generate_successors(depth - 1)

@@ -53,7 +53,7 @@ class cGame:
 
         self.board.undo_move(move)
         self.displayer.load(self.board)
-        self.legal_moves = self.board.legal_moves
+        self.legal_moves = self.board.legal_moves[-1]
 
     def perform_move(self, move):
         if move.isPromotion:
@@ -62,6 +62,6 @@ class cGame:
         self.board.perform_move(move)
         self.displayer.load(self.board)
         self.history.append(move)
-        self.legal_moves = self.board.legal_moves
+        self.legal_moves = self.board.legal_moves[-1]
         self.check_game_end()
 
