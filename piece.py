@@ -38,8 +38,10 @@ class cPiece(ABC):
         pass
 
     def calc_attacked_squares(self):
+        res = []
         for move in self.calc_potential_moves(ownPieces=True):
-            yield move.toSqr
+            res.append(move.toSqr)
+        return res
 
     def get_legal_moves(self):
         if self.square.board.turn != self.color:

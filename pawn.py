@@ -18,60 +18,72 @@ class cPawn (cPieceNotSliding):
             self.en_passant_row = 3
 
     def calc_potential_moves(self):
-        yield from self.get_forward_moves()
-        yield from self.get_capture_move(1)
-        yield from self.get_capture_move(-1)
+        all_moves = []
+        all_moves += self.get_forward_moves()
+        all_moves += self.get_capture_move(1)
+        all_moves += self.get_capture_move(-1)
         
         en_passant = self.square.board.en_passant
         if en_passant is not None and self.square.rowIdx == self.en_passant_row and abs(self.square.idx - en_passant.idx) == 1 and not self.is_en_passant_pin(en_passant):
-            yield cMove(self, self.square.board.get_square_by_coords(en_passant.rowIdx + self.move_offset, en_passant.colIdx), isEnPassant=True)
+            all_moves.append(cMove(self, self.square.board.get_square_by_coords(en_passant.rowIdx + self.move_offset, en_passant.colIdx), isEnPassant=True))
+        return all_moves
     
     def calc_potential_moves_pinned(self, direction):
+        all_moves = []
         if direction == RIGHT or direction == LEFT:
-            return
+            return all_moves
         elif direction == UP or direction == DOWN:
-            yield from self.get_forward_moves()
+            all_moves += self.get_forward_moves()
         elif direction == UP_RIGHT or direction == DOWN_LEFT:
-            yield from self.get_capture_move(self.move_offset)
+            all_moves += self.get_capture_move(self.move_offset)
 
             en_passant = self.square.board.en_passant
             if en_passant is not None and self.square.rowIdx == self.en_passant_row and en_passant.idx - self.square.idx == self.move_offset and not self.is_en_passant_pin(en_passant):
-                yield cMove(self, self.square.board.get_square_by_coords(en_passant.rowIdx + self.move_offset, en_passant.colIdx), isEnPassant=True)
+                all_moves.append(cMove(self, self.square.board.get_square_by_coords(en_passant.rowIdx + self.move_offset, en_passant.colIdx), isEnPassant=True))
         else: # direction is LEFT_UP or RIGHT_DOWN
-            yield from self.get_capture_move(-self.move_offset)
+            all_moves += self.get_capture_move(-self.move_offset)
             en_passant = self.square.board.en_passant
             if en_passant is not None and self.square.rowIdx == self.en_passant_row and self.square.idx - en_passant.idx == self.move_offset and not self.is_en_passant_pin(en_passant):
-                yield cMove(self, self.square.board.get_square_by_coords(en_passant.rowIdx + self.move_offset, en_passant.colIdx), isEnPassant=True)
+                all_moves.append(cMove(self, self.square.board.get_square_by_coords(en_passant.rowIdx + self.move_offset, en_passant.colIdx), isEnPassant=True))
+
+        return all_moves
 
     def get_forward_moves(self):
+        all_moves = []
         # check the square in front of the pawn
         square = self.square.board.get_square_by_coords(self.square.rowIdx + self.move_offset, self.square.colIdx)
         if square.piece is None:
-            yield from self.generate_pawn_move(square)
+            all_moves += self.generate_pawn_move(square)
 
             # if on the base row, check one square further
             if self.square.rowIdx == self.base_row:
                 square = self.square.board.get_square_by_coords(self.square.rowIdx + 2*self.move_offset, self.square.colIdx)
                 if square.piece is None:
-                    yield cMove(self, square)
+                    all_moves.append(cMove(self, square))
+        return all_moves
 
     def get_capture_move(self, column_offest):
         square = self.square.board.get_square_by_coords(self.square.rowIdx + self.move_offset, self.square.colIdx + column_offest)
         if square is not None and square.piece is not None and square.piece.color != self.color:
-            yield from self.generate_pawn_move(square)
+            return self.generate_pawn_move(square)
+        return []
 
     def generate_pawn_move(self, square):
         if square.rowIdx != self.promote_row:
-            yield cMove(self, square)
+            return [cMove(self, square)]
         else:
+            all_moves = []
             for newPiece in [KNIGHT, BISHOP, ROOK, QUEEN]:
-                yield cMove(self, square, newPiece, isPromotion=True)
+                all_moves.append(cMove(self, square, newPiece, isPromotion=True))
+            return all_moves
     
     def calc_attacked_squares(self):
+        all_squares = []
         for i in [1, -1]:
             square = self.square.board.get_square_by_coords(self.square.rowIdx + self.move_offset, self.square.colIdx + i)
             if square is not None:
-                yield square
+                all_squares.append(square)
+        return all_squares
         
     def is_en_passant_pin(self, en_passant):
         kingSqr = self.square.board.get_king_sqr(self.color)
