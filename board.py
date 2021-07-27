@@ -160,9 +160,6 @@ class cBoard:
         if piece.is_sliding:
             self.get_pieces(piece.color, sliding=True).remove(piece)
         piece.is_active = False
-        #for sqr in piece.get_attacked_squares():
-            #sqr.get_attacked_by(piece.color).remove(piece)
-        #piece.set_attacked_squares([])
     
     def perform_move(self, move, analysis=True):
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece

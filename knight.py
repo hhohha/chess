@@ -17,12 +17,6 @@ class cKnight (cPieceWithoutPS):
 
         return all_moves
 
-    #def calculate_potentional_squares(self):
-        #self.potentialSquares.clear()
-        #for sqr in self.get_attacked_squares():
-            #if sqr.piece is None or sqr.piece.color != self.color:
-                #self.potentialSquares.append(sqr)
-
     def calc_potential_moves_pinned(self, direction):
         return []
 

@@ -14,9 +14,6 @@ class cPiece(ABC):
     def get_attacked_squares(self):
         return self.attacked_squares[-1]
 
-    def set_attacked_squares(self, sqrs):
-        self.attacked_squares[-1] = sqrs
-
     @abstractmethod
     def calc_potential_moves(self):
         pass
