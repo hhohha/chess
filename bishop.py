@@ -1,12 +1,13 @@
-from piece import cPieceSliding
+from piece import *
 from constants import *
 from lib import *
 from move import cMove
 
-class cBishop (cPieceSliding):
+class cBishop (cPieceWithoutPS):
     def __init__(self, color, square):
         super().__init__(BISHOP, color, square)
         self.is_light = True
+        self.is_sliding = True
 
     def calc_potential_moves(self, ownPieces=False):
         all_moves = []

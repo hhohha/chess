@@ -1,3 +1,4 @@
+from piece import *
 from square import cSquare
 from pawn import cPawn
 from knight import cKnight
@@ -295,14 +296,16 @@ class cBoard:
             self.get_pieces(piece.color, sliding=True).append(piece)
         piece.kind = newKind
         piece.__class__ = [cPawn, cKnight, cBishop, cRook, cQueen, cKing][newKind]
-        if newKind in [PAWN, KNIGHT, KING]:
-            piece.is_sliding = False
-        else:
-            piece.is_sliding = True
+        #piece.__init__(piece.color, piece.square)
+
+        if cPieceWithPS in piece.__class__.__bases__:
+            piece.has_PT = True
             piece.potential_squares = [[]]
+        else:
+            piece.has_PT = False
 
+        piece.is_sliding = newKind in [BISHOP, ROOK, QUEEN]
         piece.is_light = newKind in [KNIGHT, BISHOP]
-
 
     def _update_en_passant_rights(self, move):
         if move.piece.kind == PAWN and abs(move.toSqr.idx - move.fromSqr.idx) == 16:
@@ -378,10 +381,11 @@ class cBoard:
                 if piece in pinned_pieces:
                     all_moves += piece.calc_potential_moves_pinned(pinned_pieces[piece])
                 else:
-                    if not piece.is_sliding:
-                        all_moves += piece.calc_potential_moves()
-                    else:
+                    if piece.has_PT:
                         all_moves += list(map(lambda sqr: cMove(piece, sqr), piece.get_potential_squares()))
+                    else:
+                        all_moves += piece.calc_potential_moves()
+
                     
             # TODO - write this better
             if self.is_castle_possible(color, RIGHT):

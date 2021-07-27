@@ -1,11 +1,12 @@
-from piece import cPieceNotSliding
+from piece import *
 from constants import *
 from move import cMove
 
-class cKing (cPieceNotSliding):
+class cKing (cPieceWithoutPS):
     def __init__(self, color, square):
         super().__init__(KING, color, square)
         self.is_light = False
+        self.is_sliding = False
         
     # potential moves don't respect checks
     def calc_potential_moves(self):

@@ -1,11 +1,13 @@
-from piece import cPieceNotSliding
+from piece import *
 from move import cMove
 from constants import *
 
-class cPawn (cPieceNotSliding):
+class cPawn (cPieceWithoutPS):
     def __init__(self, color, square):
         super().__init__(PAWN, color, square)
         self.is_light = False
+        self.is_sliding = False
+
         if self.color == WHITE:
             self.move_offset = 1
             self.base_row = 1

@@ -54,11 +54,11 @@ class cPiece(ABC):
     def __hash__(self):
         return self.id
 
-class cPieceSliding(cPiece):
+class cPieceWithPS(cPiece):
     def __init__(self, kind, color, square):
         super().__init__(kind, color, square)
-        self.is_sliding = True
         self.potential_squares = [[]]
+        self.has_PT = True
 
     def get_potential_squares(self):
         return self.potential_squares[-1]
@@ -103,10 +103,10 @@ class cPieceSliding(cPiece):
                 sqr.get_attacked_by(self.color).append(self)
 
 
-class cPieceNotSliding(cPiece):
+class cPieceWithoutPS(cPiece):
     def __init__(self, kind, color, square):
         super().__init__(kind, color, square)
-        self.is_sliding = False
+        self.has_PT = False
 
     def add_new_calculation(self):
         for sqr in self.get_attacked_squares():
