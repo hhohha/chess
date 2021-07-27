@@ -35,10 +35,7 @@ class cPiece(ABC):
         pass
 
     def calc_attacked_squares(self):
-        res = []
-        for move in self.calc_potential_moves(ownPieces=True):
-            res.append(move.toSqr)
-        return res
+        return list(map(lambda mv: mv.toSqr, self.calc_potential_moves(ownPieces=True)))
 
     def get_legal_moves(self):
         if self.square.board.turn != self.color:
@@ -64,7 +61,6 @@ class cPieceWithPS(cPiece):
         for sqr in self.get_attacked_squares():
             sqr.get_attacked_by(self.color).remove(self)
         self.attacked_squares.append([])
-
         self.potential_squares.append([])
 
     def remove_last_calculation(self):
@@ -76,7 +72,6 @@ class cPieceWithPS(cPiece):
                 sqr.get_attacked_by(self.color).append(self)
         self.potential_squares.pop()
 
-    # TODO - diff between new and old data - not update square this much
     def update_attacked_squares(self):
         self.get_potential_squares().clear()
         if not self.is_active:
@@ -85,9 +80,6 @@ class cPieceWithPS(cPiece):
             self.get_attacked_squares().clear()
             return
 
-        for sqr in self.get_attacked_squares():
-            sqr.get_attacked_by(self.color).remove(self)
-
         self.get_attacked_squares().clear()
 
         for sqr in self.calc_attacked_squares():
@@ -95,9 +87,7 @@ class cPieceWithPS(cPiece):
             if sqr.piece is None or sqr.piece.color != self.color:
                 self.get_potential_squares().append(sqr)
 
-        for sqr in self.get_attacked_squares():
-            if self not in sqr.get_attacked_by(self.color):
-                sqr.get_attacked_by(self.color).append(self)
+            sqr.get_attacked_by(self.color).append(self)
 
 
 class cPieceWithoutPS(cPiece):
@@ -125,14 +115,6 @@ class cPieceWithoutPS(cPiece):
             self.get_attacked_squares().clear()
             return
 
-        for sqr in self.get_attacked_squares():
-            sqr.get_attacked_by(self.color).remove(self)
-
-        self.get_attacked_squares().clear()
-
         for sqr in self.calc_attacked_squares():
             self.get_attacked_squares().append(sqr)
-
-        for sqr in self.get_attacked_squares():
-            if self not in sqr.get_attacked_by(self.color):
-                sqr.get_attacked_by(self.color).append(self)
+            sqr.get_attacked_by(self.color).append(self)

@@ -3,7 +3,7 @@ from constants import *
 from lib import *
 from move import cMove
 
-class cBishop (cPieceWithoutPS):
+class cBishop (cPieceWithPS):
     def __init__(self, color, square):
         super().__init__(BISHOP, color, square)
         self.is_light = True

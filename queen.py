@@ -3,7 +3,7 @@ from constants import *
 from lib import *
 from move import cMove
 
-class cQueen (cPieceWithoutPS):
+class cQueen (cPieceWithPS):
     def __init__(self, color, square):
         super().__init__(QUEEN, color, square)
         self.is_light = False

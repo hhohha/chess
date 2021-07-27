@@ -3,7 +3,7 @@ from constants import *
 from lib import *
 from move import cMove
 
-class cRook (cPieceWithoutPS):
+class cRook (cPieceWithPS):
     def __init__(self, color, square):
         super().__init__(ROOK, color, square)
         self.is_light = False
