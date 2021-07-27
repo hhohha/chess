@@ -11,7 +11,7 @@ class cPosition:
     def __init__(self, id, position, ref):
         self.id = id
         self.position = position
-        self.reference = ref
+        self.ref = ref
 
 positions = []
 positions.append(cPosition(1, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0', [1, 20, 400, 8902, 197281, 4865609, 119060324]))
@@ -33,10 +33,10 @@ def test_position(position, depth):
         result = board.generate_successors(dpt)
         end_time = time()
 
-        if result == position.reference[dpt]:
+        if result == position.ref[dpt]:
             print(COLOR_GREEN + 'OK' + COLOR_WHITE, '                         time: ', round(end_time - start_time, 4), 'sec')
         else:
-            print(COLOR_RED + 'FAILED' + COLOR_WHITE + '  expected number: ' + str(position.reference[dpt]), '  but got: ' + str(result), '                         time: ', round(end_time - start_time, 4), 'sec')
+            print(COLOR_RED + 'FAILED' + COLOR_WHITE + '  expected number: ' + str(position.ref[dpt]), '  but got: ' + str(result), '                         time: ', round(end_time - start_time, 4), 'sec')
             break
 
 

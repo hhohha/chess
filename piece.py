@@ -52,7 +52,7 @@ class cPiece(ABC):
         return self.id == other.id
     
     def __hash__(self):
-        return hash(self.id)
+        return self.id
 
 class cPieceSliding(cPiece):
     def __init__(self, kind, color, square):
@@ -75,7 +75,8 @@ class cPieceSliding(cPiece):
            sqr.get_attacked_by(self.color).remove(self)
         self.attacked_squares.pop()
         for sqr in self.get_attacked_squares():
-            sqr.get_attacked_by(self.color).add(self)
+            if self not in sqr.get_attacked_by(self.color):
+                sqr.get_attacked_by(self.color).append(self)
         self.potential_squares.pop()
 
     # TODO - diff between new and old data - not update square this much
@@ -98,7 +99,8 @@ class cPieceSliding(cPiece):
                 self.get_potential_squares().append(sqr)
 
         for sqr in self.get_attacked_squares():
-            sqr.get_attacked_by(self.color).add(self)
+            if self not in sqr.get_attacked_by(self.color):
+                sqr.get_attacked_by(self.color).append(self)
 
 
 class cPieceNotSliding(cPiece):
@@ -116,7 +118,8 @@ class cPieceNotSliding(cPiece):
            sqr.get_attacked_by(self.color).remove(self)
         self.attacked_squares.pop()
         for sqr in self.get_attacked_squares():
-            sqr.get_attacked_by(self.color).add(self)
+            if self not in sqr.get_attacked_by(self.color):
+                sqr.get_attacked_by(self.color).append(self)
 
     def update_attacked_squares(self):
         if not self.is_active:
@@ -134,4 +137,5 @@ class cPieceNotSliding(cPiece):
             self.get_attacked_squares().append(sqr)
 
         for sqr in self.get_attacked_squares():
-            sqr.get_attacked_by(self.color).add(self)
+            if self not in sqr.get_attacked_by(self.color):
+                sqr.get_attacked_by(self.color).append(self)

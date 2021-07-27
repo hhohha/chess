@@ -201,7 +201,7 @@ class cBoard:
         self.turn = not self.turn
 
         self.recalculation(move, analysis)
-        self.legal_moves.append(list(self.get_all_moves()))
+        self.legal_moves.append(self.get_all_moves())
 
     def recalculation(self, move, analysis):
         recalc_pieces = {move.piece}
@@ -412,8 +412,9 @@ class cBoard:
                     all_moves.append(mv)
 
             if len(attackers) == 1:
-                attacker = attackers.pop()
-                attackers.add(attacker)
+                #attacker = attackers.pop()
+                #attackers.add(attacker)
+                attacker = attackers[0]
 
                 # not double check - can also capture the attacker
                 if attacker.is_sliding:
