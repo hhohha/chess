@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 
 from constants import *
-from board import cBoard
+from board import Board
 from square import cSquare
 import unittest
+
+# TODO - refactor
 
 class dummyDisplayer:
     def __init__(self):
@@ -21,7 +23,7 @@ class dummyDisplayer:
 
 class TestStringMethods(unittest.TestCase):
     def test_start_position(self):
-        board = cBoard(dummyDisplayer())
+        board = Board(dummyDisplayer())
         board.loadFEN(FEN_INIT)
         self.assertEqual(len(board.white_pieces), 16)
         self.assertEqual(len(board.black_pieces), 16)

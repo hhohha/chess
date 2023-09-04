@@ -1,14 +1,16 @@
-from board import cBoard
+from board import Board
 from constants import *
 from copy import deepcopy
 import sys
 
-class cGame:
+# TODO - refactor
+
+class Game:
     def __init__(self, display):
         self.history = []
-        self.displayer = display
+        self.displayHandler = display
         self.legal_moves = []
-        self.board = cBoard()
+        self.board = Board()
         
     def place_piece(self, sqr, kind, color):
         self.board.place_piece(sqr, kind, color)

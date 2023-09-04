@@ -1,10 +1,12 @@
 #!/usr/bin/pypy3
 
-from board import cBoard
+from board import Board
 from move import cMove
 from constants import *
 import sys
 from time import time
+
+# TODO - refactor
 
 
 class cPosition:
@@ -25,7 +27,7 @@ positions.append(cPosition(7, 'r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1P
 def test_position(position, depth):
 
     for dpt in range(1, depth + 1):
-        board = cBoard()
+        board = Board()
         board.loadFEN(position.position)
         print ('TESTING position ' + str(position.id) + ' to depth ' + str(dpt), ':    ', end='')
 

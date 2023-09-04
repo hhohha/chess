@@ -1,35 +1,43 @@
-WHITE = False
-BLACK = True
+from enum import Enum
 
-PAWN = 0
-KNIGHT = 1
-BISHOP = 2
-ROOK = 3
-QUEEN = 4
-KING = 5
+# TODO - refactor
 
-UP = 1
-DOWN = 2
-LEFT = 3
-RIGHT = 4
-UP_LEFT = 5
-UP_RIGHT = 6
-DOWN_LEFT = 7
-DOWN_RIGHT = 8
+class Color(Enum):
+    WHITE = 0
+    BLACK = 1
 
-GAME_WON_BLACK = 'Black has won!'
-GAME_WON_WHITE = 'White has won!'
-GAME_DRAW_STALEMATE = 'Draw (stalemate)!'
-GAME_DRAW_MATERIAL = 'Draw!'
-GAME_DRAW_50_MOVES = 'Draw (50 moves rule)!'
-                
+class PieceType(Enum):
+    PAWN = 0
+    KNIGHT = 1
+    BISHOP = 2
+    ROOK = 3
+    QUEEN = 4
+    KING = 5
+
+class Direction(Enum):
+    UP = 0
+    DOWN = 1
+    LEFT = 2
+    RIGHT = 3
+    UP_LEFT = 4
+    UP_RIGHT = 5
+    DOWN_LEFT = 6
+    DOWN_RIGHT = 7
+
+class Result(Enum):
+    BLACK_WON = 'Black has won!'
+    WHITE_WON = 'White has won!'
+    DRAW_STALEMATE = 'Draw by stalemate!'
+    DRAW_50_MOVES = 'Draw by 50 moves rule!'
+    DRAW_3_REPETITIONS = 'Draw by 3 repetitions!'
+    DRAW_INSUFFICIENT_MATERIAL = 'Draw by insufficient material!'
+    DRAW_AGREEMENT = 'Draw by agreement!'
+
 FEN_INIT = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0'
 #FEN_INIT = 'k7/8/8/8/8/8/3p4/7K w - - 98 0'
 #FEN_INIT = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'zz
-
-FEN_INIT = '8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 0'
-FEN_INIT = 'r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1'
-
+#FEN_INIT = '8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 0'
+#FEN_INIT = 'r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1'
 
 COLOR_BG_LIGHT_BASIC =      '#EDEAE0'
 COLOR_BG_LIGHT_HLIGHTED_1 = '#8DCA80'

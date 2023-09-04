@@ -1,6 +1,8 @@
 from constants import *
 
-class cSquare:
+# TODO - refactor
+
+class Square:
     def __init__(self, idx, board):
         self.idx = idx
         self.rowIdx = idx // 8
@@ -22,11 +24,11 @@ class cSquare:
     def is_attacked_by(self, color):
         return len(self.get_attacked_by(color)) > 0
 
-    # TODO - color == None may be not efficient - test, and if so, remove
+    # TODO - color == None may be not efficient - unit_tests, and if so, remove
     def get_attacked_by(self, color=None):
-        if color == WHITE:
+        if color == Color.WHITE:
             return self.attacked_by_whites[-1]
-        if color == BLACK:
+        if color == Color.BLACK:
             return self.attacked_by_blacks[-1]
         return self.attacked_by_whites[-1] + self.attacked_by_blacks[-1]
 

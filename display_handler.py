@@ -2,7 +2,9 @@ from constants import *
 from icons import *
 import PySimpleGUI as sg
 
-class cDisplayer:
+# TODO - refactor
+
+class DisplayHandler:
     def __init__(self, display):
         self.display = display
         self.lighted_squares = []

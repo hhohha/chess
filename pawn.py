@@ -1,115 +1,167 @@
-from piece import *
-from move import cMove
-from constants import *
+from typing import List
+from constants import PieceType, Color, Direction
+from move import Move
+from piece import Piece
+from square import Square
 
-class cPawn (cPieceWithoutPS):
-    def __init__(self, color, square):
-        super().__init__(PAWN, color, square)
-        self.is_light = False
-        self.is_sliding = False
+class Pawn (Piece):
+    def __init__(self, color: Color, square: Square):
+        super().__init__(PieceType.PAWN, color, square)
+        self.isLight = False
 
-        if self.color == WHITE:
-            self.move_offset = 1
-            self.base_row = 1
-            self.promote_row = 7
-            self.en_passant_row = 4
+        if self.color == Color.WHITE:
+            self.MOVE_OFFSET = 1      # white pawns move up the board (+1 row), black opposite
+            self.BASE_ROW = 1         # white pawns start on row 1, black on row 6
+            self.PROMOTION_ROW = 7    # white pawns promote on row 7, black on row 0
+            self.EN_PASSANT_ROW = 4   # white pawns can take en passant on row 4, black on row 3
         else:
-            self.move_offset = -1
-            self.base_row = 6
-            self.promote_row = 0
-            self.en_passant_row = 3
+            self.MOVE_OFFSET = -1
+            self.BASE_ROW = 6
+            self.PROMOTION_ROW = 0
+            self.EN_PASSANT_ROW = 3
 
-    def calc_potential_moves(self):
-        all_moves = []
-        all_moves += self.get_forward_moves()
-        all_moves += self.get_capture_move(1)
-        all_moves += self.get_capture_move(-1)
+    def calc_potential_moves(self) -> List[Move]:
+        """
+        TODO - do we need the ownPieces parameter?
+        potential moves of a piece are not necessarily legal moves, checks and pins are not considered
+        the potential moves consists of possible (1) moves forward, (2) captures left, (3) captures right and (4) en passant
+        :return: a list of all potential moves for this piece
+        """
+        potentialMoves = self.get_forward_moves() + self.get_capture_move(1) + self.get_capture_move(-1)
         
-        en_passant = self.square.board.en_passant
-        if en_passant is not None and self.square.rowIdx == self.en_passant_row and abs(self.square.idx - en_passant.idx) == 1 and not self.is_en_passant_pin(en_passant):
-            all_moves.append(cMove(self, self.square.board.get_square_by_coords(en_passant.rowIdx + self.move_offset, en_passant.colIdx), isEnPassant=True))
-        return all_moves
-    
-    def calc_potential_moves_pinned(self, direction):
-        all_moves = []
-        if direction == RIGHT or direction == LEFT:
-            return all_moves
-        elif direction == UP or direction == DOWN:
-            all_moves += self.get_forward_moves()
-        elif direction == UP_RIGHT or direction == DOWN_LEFT:
-            all_moves += self.get_capture_move(self.move_offset)
+        enPassantSquare = self.square.board.enPassantSquare # if en passant is possible, the enPassantSquare is the square behind the pawn
 
-            en_passant = self.square.board.en_passant
-            if en_passant is not None and self.square.rowIdx == self.en_passant_row and en_passant.idx - self.square.idx == self.move_offset and not self.is_en_passant_pin(en_passant):
-                all_moves.append(cMove(self, self.square.board.get_square_by_coords(en_passant.rowIdx + self.move_offset, en_passant.colIdx), isEnPassant=True))
-        else: # direction is LEFT_UP or RIGHT_DOWN
-            all_moves += self.get_capture_move(-self.move_offset)
-            en_passant = self.square.board.en_passant
-            if en_passant is not None and self.square.rowIdx == self.en_passant_row and self.square.idx - en_passant.idx == self.move_offset and not self.is_en_passant_pin(en_passant):
-                all_moves.append(cMove(self, self.square.board.get_square_by_coords(en_passant.rowIdx + self.move_offset, en_passant.colIdx), isEnPassant=True))
+        # if en passant is possible and the pawn to take is next to this pawn, add the en passant move
+        if (enPassantSquare is not None and self.square.rowIdx == self.EN_PASSANT_ROW and abs(self.square.idx - enPassantSquare.idx) == 1 and
+                # en passant pin is a bit problematic, because the pawn is not technically pinned so this case cannot be handled in
+                # "calc_potential_moves_pinned" and there is no suitable place to handle it
+                # the en passant move should technically be among potential moves even if the pawn is pinned in this way, but if it's not,
+                # it shouldn't break anything
+                not self.is_en_passant_pin(enPassantSquare)):
+            potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassantSquare.rowIdx + self.MOVE_OFFSET, enPassantSquare.colIdx),
+                                       isEnPassant=True))
+        return potentialMoves
 
-        return all_moves
-
-    def get_forward_moves(self):
-        all_moves = []
+    def get_forward_moves(self) -> List[Move]:
+        """
+        check the possibility of moving one step forward or two steps forward if on the base row
+        :return: a list of possible moves forward
+        """
+        potentialMoves: List[Move] = []
         # check the square in front of the pawn
-        square = self.square.board.get_square_by_coords(self.square.rowIdx + self.move_offset, self.square.colIdx)
+        square = self.square.board.get_square_by_coords(self.square.rowIdx + self.MOVE_OFFSET, self.square.colIdx)
         if square.piece is None:
-            all_moves += self.generate_pawn_move(square)
+            potentialMoves += self.generate_pawn_move(square) # might be a promotion - that would be 4 possible moves
 
             # if on the base row, check one square further
-            if self.square.rowIdx == self.base_row:
-                square = self.square.board.get_square_by_coords(self.square.rowIdx + 2*self.move_offset, self.square.colIdx)
+            if self.square.rowIdx == self.BASE_ROW:
+                square = self.square.board.get_square_by_coords(self.square.rowIdx + 2 * self.MOVE_OFFSET, self.square.colIdx)
                 if square.piece is None:
-                    all_moves.append(cMove(self, square))
-        return all_moves
+                    potentialMoves.append(Move(self, square))
+        return potentialMoves
 
-    def get_capture_move(self, column_offest):
-        square = self.square.board.get_square_by_coords(self.square.rowIdx + self.move_offset, self.square.colIdx + column_offest)
+    def get_capture_move(self, columnOffset: int) -> List[Move]:
+        """
+        check the possibility of capturing a piece on the given column offset: left(-1) or right(1)
+        :param columnOffset:
+        :return: a list of possible capture moves (empty, one or four in case of promotion)
+        """
+        square = self.square.board.get_square_by_coords(self.square.rowIdx + self.MOVE_OFFSET, self.square.colIdx + columnOffset)
         if square is not None and square.piece is not None and square.piece.color != self.color:
             return self.generate_pawn_move(square)
         return []
 
-    def generate_pawn_move(self, square):
-        if square.rowIdx != self.promote_row:
-            return [cMove(self, square)]
+    def calc_potential_moves_pinned(self, direction: Direction) -> List[Move]:
+        """
+        the piece is pinned in the given direction, it can potentially still move in the pin and the opposite direction
+        :param direction: direction of the pin
+        :return: a list of possible moves
+        """
+        potentialMoves: List[Move] = []
+        if direction == Direction.RIGHT or direction == Direction.LEFT:
+            # a pawn pinned from side can never move
+            return potentialMoves
+
+        elif direction == Direction.UP or direction == Direction.DOWN:
+            # a pawn pinned from front or back can only move forward
+            potentialMoves += self.get_forward_moves()
+
+        elif direction == Direction.UP_RIGHT or direction == Direction.DOWN_LEFT:
+            # pawn pinned diagonally can possibly capture in the pin direction
+            potentialMoves += self.get_capture_move(self.MOVE_OFFSET)
+
+            # a diagonally pinned pawn can even capture en passant, en passant pin special pin is impossible in this case (the pawn is already pinned)
+            enPassant = self.square.board.en_passant
+            if enPassant is not None and self.square.rowIdx == self.EN_PASSANT_ROW and enPassant.idx - self.square.idx == self.MOVE_OFFSET:
+                potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.rowIdx + self.MOVE_OFFSET, enPassant.colIdx),
+                                           isEnPassant=True))
+
+        else: # direction is LEFT_UP or RIGHT_DOWN
+            # capture in the other direction is analogous to the previous case
+            potentialMoves += self.get_capture_move(-self.MOVE_OFFSET)
+            enPassant = self.square.board.en_passant
+            if enPassant is not None and self.square.rowIdx == self.EN_PASSANT_ROW and self.square.idx - enPassant.idx == self.MOVE_OFFSET:
+                potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.rowIdx + self.MOVE_OFFSET, enPassant.colIdx),
+                                           isEnPassant=True))
+
+        return potentialMoves
+
+    def generate_pawn_move(self, square: Square) -> List[Move]:
+        """
+        normally the pown has one possible move to the given square, but if it's a promotion, there are 4 possible moves
+        :param square: destination square
+        :return: a list of possible pawn moves to the given square
+        """
+        if square.rowIdx != self.PROMOTION_ROW:
+            return [Move(self, square)]
         else:
-            all_moves = []
-            for newPiece in [KNIGHT, BISHOP, ROOK, QUEEN]:
-                all_moves.append(cMove(self, square, newPiece, isPromotion=True))
-            return all_moves
+            return [Move(self, square, isPromotion=True, newPiece=piece) for piece in [PieceType.KNIGHT, PieceType.BISHOP, PieceType.ROOK,
+                                                                                       PieceType.QUEEN]]
     
-    def calc_attacked_squares(self):
-        all_squares = []
-        for i in [1, -1]:
-            square = self.square.board.get_square_by_coords(self.square.rowIdx + self.move_offset, self.square.colIdx + i)
-            if square is not None:
-                all_squares.append(square)
-        return all_squares
+    # def calc_attacked_squares(self):
+    #     all_squares = []
+    #     for i in [1, -1]:
+    #         square = self.square.board.get_square_by_coords(self.square.rowIdx + self.move_offset, self.square.colIdx + i)
+    #         if square is not None:
+    #             all_squares.append(square)
+    #     return all_squares
         
-    def is_en_passant_pin(self, en_passant):
+    def is_en_passant_pin(self, enPassantSquare: Square) -> bool:
+        """
+        checks very specific situation when the pawn is not technically pinned - there is another pawn in the path, but taking en passant would
+        still expose the king to check (like white: Kh5, pf5, black Qe5, pg5, white to move, taking en passant would expose the king to check,
+        even though the f5 pawn is technically not pinned)
+        :param enPassantSquare: square of the opponent's pawn that (maybe) can be taken en passant
+        :return: is the pawn pinned in this way
+        """
         kingSqr = self.square.board.get_king_sqr(self.color)
-        if kingSqr.rowIdx != en_passant.rowIdx:
+        # the special pin can only occur on the en passant row
+        if kingSqr.rowIdx != enPassantSquare.rowIdx:
             return False
-        
-        direction = LEFT if kingSqr.colIdx > en_passant.colIdx else RIGHT
+
+        # what is the direction of the potential pin (from king to pinner)
+        direction = Direction.LEFT if kingSqr.colIdx > enPassantSquare.colIdx else Direction.RIGHT
+
+        # on the way from own king towards the pinner, the first piece must be the own pawn (that wants to take en passant) or the opponent's pawn
         firstSquare = self.square.board.find_first_piece_in_dir(kingSqr, direction)
-        
-        if firstSquare is None or (firstSquare != en_passant and firstSquare.piece != self):
+        if firstSquare is None or (firstSquare != enPassantSquare and firstSquare.piece != self):
             return False
-        
-        secondSquare = self.square.board.get_square_by_coords(firstSquare.rowIdx, firstSquare.colIdx + (1 if direction == RIGHT else -1))
+
+        # second piece must be the other relevant pawn (taker or being taken) and must be right next to the first piece
+        secondSquare = self.square.board.get_square_by_coords(firstSquare.rowIdx, firstSquare.colIdx + (1 if direction == Direction.RIGHT else -1))
         if secondSquare is None or secondSquare.piece is None:
             return False
-        
-        if not (firstSquare == en_passant and secondSquare.piece == self or firstSquare.piece == self and secondSquare == en_passant):
+
+        # now check that those two pawns have been found
+        if not (firstSquare == enPassantSquare and secondSquare.piece == self or firstSquare.piece == self and secondSquare == enPassantSquare):
             return False
-        
+
+        # the third piece must be the opponent's queen or rook
         thirdSquare = self.square.board.find_first_piece_in_dir(secondSquare, direction)
-        
-        if thirdSquare is None or thirdSquare.piece.color == self.color or thirdSquare.piece.kind not in [QUEEN, ROOK]:
+        if thirdSquare is None or thirdSquare.piece.color == self.color or thirdSquare.piece.kind not in [PieceType.QUEEN, PieceType.ROOK]:
             return False
-        
+
+        # all conditions are met, the pawn is pinned
         return True
         
     
@@ -117,4 +169,4 @@ class cPawn (cPieceWithoutPS):
         return 'p' + self.square.getCoord()
 
     def __repr__(self):
-        return 'p' + self.square.getCoord()
+        return f'Pawn({self.color}, {self.square})'

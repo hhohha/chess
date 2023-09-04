@@ -1,54 +1,20 @@
-from piece import *
-from constants import *
-from lib import *
-from move import cMove
+from typing import List
 
-class cRook (cPieceWithPS):
-    def __init__(self, color, square):
-        super().__init__(ROOK, color, square)
-        self.is_light = False
-        self.is_sliding = True
+from constants import Color, PieceType, Direction
+from piece import SlidingPiece
+from square import Square
 
-    def calc_potential_moves(self, ownPieces=False):
-        all_moves = []
-        for func in [lambda x, y: (x + 1, y), lambda x, y: (x - 1, y), lambda x, y: (x, y + 1), lambda x, y: (x, y - 1)]:
-            i, j = 0, 0
-            while True:
-                i, j = func(i, j)
-                square = self.square.board.get_square_by_coords(self.square.rowIdx + i, self.square.colIdx + j)
-                if square is None:
-                    break
-                
-                if square.piece is None:
-                    all_moves.append(cMove(self, square))
-                elif square.piece.color != self.color:
-                    all_moves.append(cMove(self, square))
+class Rook (SlidingPiece):
+    def __init__(self, color: Color, square:Square):
+        super().__init__(PieceType.ROOK, color, square)
+        self.isLight = False    # light piece is a bishop or a knight
+        self.slidingDirections: List[Direction] = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT]
 
-                    break
-                else:
-                    if ownPieces:
-                        all_moves.append(cMove(self, square))
-                    break
-        return all_moves
-
-    def calc_potential_moves_pinned(self, direction):
-        if direction > RIGHT:
-            return []
-
-        all_moves = []
-        
-        # can move in the direction of the pinner including its capture
-        for square in self.square.board.find_first_piece_in_dir(self.square, direction, includePath=True):
-            all_moves.append(cMove(self, square))
-
-        # can move towards the king but the last move would actually capture own king
-        for square in self.square.board.find_first_piece_in_dir(self.square, reverse_dir(direction), includePath=True)[:-1]:
-            all_moves.append(cMove(self, square))
-
-        return all_moves
+    def get_sliding_directions(self) -> List[Direction]:
+        return self.slidingDirections
         
     def __str__(self):
         return 'R' + self.square.getCoord()
     
     def __repr__(self):
-        return 'R' + self.square.getCoord()
+        return f'Rook({self.color}, {self.square})'

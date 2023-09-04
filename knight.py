@@ -1,23 +1,24 @@
-from piece import *
-from constants import *
-from move import cMove
+from typing import List
+from constants import Color, PieceType, Direction
+from move import Move
+from piece import Piece
+from square import Square
 
-class cKnight (cPieceWithoutPS):
-    def __init__(self, color, square):
-        super().__init__(KNIGHT, color, square)
-        self.is_light = True
-        self.is_sliding = False
+class Knight (Piece):
+    def __init__(self, color: Color, square: Square):
+        super().__init__(PieceType.KNIGHT, color, square)
+        self.isLight = True
 
     def calc_potential_moves(self, ownPieces=False):
-        all_moves = []
+        potentialMoves = []
         for (i, j) in [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]:
             square = self.square.board.get_square_by_coords(self.square.rowIdx + i, self.square.colIdx + j)
             if square is not None and (square.piece is None or square.piece.color != self.color or ownPieces):
-                all_moves.append(cMove(self, square))
+                potentialMoves.append(Move(self, square))
 
-        return all_moves
+        return potentialMoves
 
-    def calc_potential_moves_pinned(self, direction):
+    def calc_potential_moves_pinned(self, direction: Direction) -> List[Move]:
         return []
 
     def __str__(self):
