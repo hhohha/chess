@@ -15,7 +15,7 @@ COLOR_RED = '\033[91m'
 COLOR_GREEN = '\033[92m'
 COLOR_WHITE = '\x1b[0m'
 
-vline = '-' * 111
+vline = '-' * 121
 
 
 class TestSummary:
@@ -36,11 +36,11 @@ class TestSummary:
 
 def print_test_result(item, desc, result, msg):
     desc = desc.strip()
-    print(f'| {item:20} | {desc:50} |  {result:16} | {msg:20} |')
+    print(f'| {item:30} | {desc:50} |  {result:16} | {msg:20} |')
 
 def run_test_suite(testClass, testSuiteName):
     print(vline)
-    print(f'| TEST SUITE: {testSuiteName.removeprefix("TestSuite_"):95} |')
+    print(f'| TEST SUITE: {testSuiteName.removeprefix("TestSuite_"):105} |')
     print(vline)
     testObj = testClass()
     summary = TestSummary()
@@ -62,7 +62,7 @@ def run_test_suite(testClass, testSuiteName):
             print_test_result(item, "" if not test or not test.__doc__ else test.__doc__, testResult, errDetails)
 
     print(vline)
-    print(f"| PASSED TEST IN SUITE: {summary.passed} out of {summary.all}    FAILED: {summary.failed}   SKIPPED: {summary.skipped}   PASS RATE: {summary.get_pass_rate()}{' '*30}|")
+    print(f"| PASSED TEST IN SUITE: {summary.passed} out of {summary.all}    FAILED: {summary.failed}   SKIPPED: {summary.skipped}   PASS RATE: {summary.get_pass_rate()}{' '*40}|")
     print(vline)
     return summary
 

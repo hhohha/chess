@@ -106,25 +106,30 @@ class SlidingPiece(Piece, ABC):
 
         potentialMoves: List[Move] = []
 
-        while True:
-            # a piece can move in the direction of the pinner including its capture
-            colIdx, rowIdx = move_in_direction(self.square.colIdx, self.square.rowIdx, directionFrom)
-            sqr = self.square.board.get_square_by_coords(rowIdx, colIdx)
-            assert sqr is not None, f"piece {self} is actually not pinned"
-
-            potentialMoves.append(Move(self, sqr))
-            if not sqr.is_free():
-                break
-
+        colIdx, rowIdx = self.square.colIdx, self.square.rowIdx
         while True:
             # can move towards the king but cannot capture
-            colIdx, rowIdx = move_in_direction(self.square.colIdx, self.square.rowIdx, reverse_dir(directionFrom))
+            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, directionFrom)
             sqr = self.square.board.get_square_by_coords(rowIdx, colIdx)
             assert sqr is not None, f"piece {self} is actually not pinned"
 
             if not sqr.is_free():
+                assert sqr.piece.color == self.color and sqr.piece.kind == PieceType.KING, f"piece {self} is actually not pinned"
                 break
             potentialMoves.append(Move(self, sqr))
+
+        colIdx, rowIdx = self.square.colIdx, self.square.rowIdx
+        while True:
+
+            # a piece can move in the direction of the pinner including its capture
+            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, reverse_dir(directionFrom))
+            sqr = self.square.board.get_square_by_coords(rowIdx, colIdx)
+            assert sqr is not None, f"piece {self} is actually not pinned"
+
+            potentialMoves.append(Move(self, sqr))
+            if not sqr.is_free():
+                assert sqr.piece.color != self.color and sqr.piece.isSliding(), f"piece {self} is actually not pinned"
+                break
 
         return potentialMoves
 
