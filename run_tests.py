@@ -8,6 +8,7 @@ TEST_DIR = 'unit_tests'
 def run_test(testClass):
     testObj = testClass()
     for item in dir(testObj):
+        # these classes must contain methods starting with "test_" - run all these methods
         if item.startswith("test_"):
             test = getattr(testObj, item)
             print(item, test())
@@ -22,7 +23,7 @@ def main():
 
     for testFile in testFiles:
         # 1. import the file, the test file must be named "test_*.py"
-        if not testFile.startswith("test_") or not testFile.endswith("*.py"):
+        if not testFile.startswith("test_") or not testFile.endswith(".py"):
             continue
 
         spec = importlib.util.spec_from_file_location(testFile.removesuffix('.py'), f'{TEST_DIR}/{testFile}')
@@ -31,12 +32,11 @@ def main():
         spec.loader.exec_module(module)
 
         # 2. the file must contain some classes starting with "TestSuite_" - instantiate all such classes
+        testSuites = filter(lambda m: m.startswith('TestSuite_'), dir(module))
+        for testSuiteName in testSuites:
+            testSuite = getattr(module, testSuiteName)
+            run_test(testSuite)
 
-
-        # 3. these classes must contain methods starting with "test_" - run all these methods
-        # 4. see if they throw an assert exception (FAILED test) or not (PASSED test)
-
-        pass
 
 if __name__ == '__main__':
     main()
