@@ -3,8 +3,12 @@ from board import Board
 from constants import PieceType, Color
 from unit_tests.testing_utils import compare_moves
 
+
 class TestSuite_BishopMoves(unittest.TestCase):
     def test_bishop(self):
+        """
+        describe what we are actually testing
+        """
         b = Board()
         b.place_piece('a1', PieceType.BISHOP, Color.WHITE)
         bishop = b.get_square('a1').piece

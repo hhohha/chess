@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import sys
 import importlib.util
@@ -5,13 +6,67 @@ import importlib.util
 
 TEST_DIR = 'unit_tests'
 
-def run_test(testClass):
+RED_TEXT = ''
+NORMAL_TEXT = ''
+GREEN_TEXT = ''
+YELLOW_TEXT = ''
+
+COLOR_RED = '\033[91m'
+COLOR_GREEN = '\033[92m'
+COLOR_WHITE = '\x1b[0m'
+
+vline = '-' * 111
+
+
+class TestSummary:
+    def __init__(self):
+        self.all = 0
+        self.passed = 0
+        self.failed = 0
+        self.skipped = 0
+
+    def update(self, other: TestSummary) -> None:
+        self.all += other.all
+        self.passed = other.passed
+        self.failed = other.failed
+        self.skipped = other.skipped
+
+    def get_pass_rate(self) -> str:
+        return f"{round(self.passed * 100 / self.all, 2)}%"
+
+def print_test_result(item, desc, result, msg):
+    desc = desc.strip()
+    print(f'| {item:20} | {desc:50} |  {result:16} | {msg:20} |')
+
+def run_test_suite(testClass, testSuiteName):
+    print(vline)
+    print(f'| TEST SUITE: {testSuiteName.removeprefix("TestSuite_"):95} |')
+    print(vline)
     testObj = testClass()
+    summary = TestSummary()
+
     for item in dir(testObj):
         # these classes must contain methods starting with "test_" - run all these methods
         if item.startswith("test_"):
             test = getattr(testObj, item)
-            print(item, test())
+            errDetails = ''
+            try:
+                test()
+                testResult = f"{COLOR_GREEN}PASSED{COLOR_WHITE}"
+                summary.passed += 1
+            except AssertionError as e:
+                testResult = f"{COLOR_RED}FAILED{COLOR_WHITE}"
+                errDetails = str(e)
+                summary.failed += 1
+            summary.all += 1
+            print_test_result(item, "" if not test or not test.__doc__ else test.__doc__, testResult, errDetails)
+
+    print(vline)
+    print(f"| PASSED TEST IN SUITE: {summary.passed} out of {summary.all}    FAILED: {summary.failed}   SKIPPED: {summary.skipped}   PASS RATE: {summary.get_pass_rate()}{' '*30}|")
+    print(vline)
+    return summary
+
+
 
 def main():
     if not len(sys.argv) > 1:
@@ -33,9 +88,10 @@ def main():
 
         # 2. the file must contain some classes starting with "TestSuite_" - instantiate all such classes
         testSuites = filter(lambda m: m.startswith('TestSuite_'), dir(module))
+
         for testSuiteName in testSuites:
             testSuite = getattr(module, testSuiteName)
-            run_test(testSuite)
+            run_test_suite(testSuite, testSuiteName)
 
 
 if __name__ == '__main__':
