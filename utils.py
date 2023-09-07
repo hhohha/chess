@@ -27,7 +27,8 @@ def is_same_diag(sqr1, sqr2):
     return abs(sqr1.colIdx - sqr2.colIdx) == abs(sqr1.rowIdx - sqr2.rowIdx)
 
 def move_in_direction(row: int, col: int, direction: Direction) -> Tuple[int ,int]:
-    return [(row+1, col), (row-1, col), (row, col-1), (row, col+1), (row+1, col-1), (row+1, col+1), (row-1, col-1), (row-1, col+1)][direction.value]
+    # UP = 0, DOWN, LEFT, RIGHT, UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT 
+    return [(col, row+1), (col, row-1), (col-1, row), (col+1, row), (col-1, row+1), (col+1, row+1), (col-1, row-1), (col+1, row-1)][direction.value]
 
 def squareIdx_to_coord(idx):
     return chr(idx % 8 + 97) + str(idx // 8 + 1)

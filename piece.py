@@ -110,7 +110,8 @@ class SlidingPiece(Piece, ABC):
         while True:
             # can move towards the king but cannot capture
             colIdx, rowIdx = move_in_direction(colIdx, rowIdx, directionFrom)
-            sqr = self.square.board.get_square_by_coords(rowIdx, colIdx)
+            sqr = self.square.board.get_square_by_coords(colIdx, rowIdx)
+            print(f'testing sqr {sqr}   {colIdx},{rowIdx}, direction : {directionFrom}')
             assert sqr is not None, f"piece {self} is actually not pinned"
 
             if not sqr.is_free():
@@ -123,7 +124,7 @@ class SlidingPiece(Piece, ABC):
 
             # a piece can move in the direction of the pinner including its capture
             colIdx, rowIdx = move_in_direction(colIdx, rowIdx, reverse_dir(directionFrom))
-            sqr = self.square.board.get_square_by_coords(rowIdx, colIdx)
+            sqr = self.square.board.get_square_by_coords(colIdx, rowIdx)
             assert sqr is not None, f"piece {self} is actually not pinned"
 
             potentialMoves.append(Move(self, sqr))
