@@ -13,6 +13,9 @@ class Queen (SlidingPiece):
     def get_sliding_directions(self) -> List[Direction]:
         return self.slidingDirections
 
+    def isSliding(self) -> bool:
+        return True
+
     def __str__(self):
         return 'Q' + self.square.getCoord()
 

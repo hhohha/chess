@@ -12,6 +12,15 @@ letterToPiece = {
     'q': PieceType.QUEEN,
     'k': PieceType.KING
 }
+
+pieceToLetter = {
+    PieceType.PAWN: 'p',
+    PieceType.KNIGHT: 'N',
+    PieceType.BISHOP: 'B',
+    PieceType.ROOK: 'R',
+    PieceType.QUEEN: 'Q',
+    PieceType.KING: 'K'
+}
     
 def kind_to_letter(kind: PieceType) -> str:
     return 'pNBRQK'[kind.value]
@@ -26,7 +35,7 @@ def is_same_col_or_row(sqr1, sqr2):
 def is_same_diag(sqr1, sqr2):
     return abs(sqr1.colIdx - sqr2.colIdx) == abs(sqr1.rowIdx - sqr2.rowIdx)
 
-def move_in_direction(row: int, col: int, direction: Direction) -> Tuple[int ,int]:
+def move_in_direction(col: int, row: int, direction: Direction) -> Tuple[int ,int]:
     # UP = 0, DOWN, LEFT, RIGHT, UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT 
     return [(col, row+1), (col, row-1), (col-1, row), (col+1, row), (col-1, row+1), (col+1, row+1), (col-1, row-1), (col+1, row-1)][direction.value]
 

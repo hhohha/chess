@@ -25,7 +25,7 @@ class Piece(ABC):
         pass
 
     def isSliding(self) -> bool:
-        return False
+        False
 
     #def get_attacked_squares(self):
     #    return self.attacked_squares[-1]
@@ -78,7 +78,7 @@ class SlidingPiece(Piece, ABC):
             i, j = 0, 0
             while True:
                 i, j = move_in_direction(i, j, direction)
-                square: Optional[Square] = self.square.board.get_square_by_coords(self.square.rowIdx + i, self.square.colIdx + j)
+                square: Optional[Square] = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
 
                 if square is None:
                     break  # reached the edge of the board
@@ -111,7 +111,6 @@ class SlidingPiece(Piece, ABC):
             # can move towards the king but cannot capture
             colIdx, rowIdx = move_in_direction(colIdx, rowIdx, directionFrom)
             sqr = self.square.board.get_square_by_coords(colIdx, rowIdx)
-            print(f'testing sqr {sqr}   {colIdx},{rowIdx}, direction : {directionFrom}')
             assert sqr is not None, f"piece {self} is actually not pinned"
 
             if not sqr.is_free():

@@ -6,7 +6,7 @@ from constants import PieceType, Color, Direction
 class TestSuite_RookMoves(unittest.TestCase):
     def test_rook_moves_1(self):
         """
-        rooks's moves on an empty board
+        rook's moves on an empty board
         """
         b = Board()
         b.place_piece('b3', PieceType.ROOK, Color.WHITE)
@@ -17,7 +17,7 @@ class TestSuite_RookMoves(unittest.TestCase):
 
     def test_rook_moves_2(self):
         """
-        rooks's moves on a non-empty board
+        rook's moves on a non-empty board
         """
         b = Board()
         b.place_piece('e4', PieceType.ROOK, Color.WHITE)
@@ -32,7 +32,7 @@ class TestSuite_RookMoves(unittest.TestCase):
 
     def test_rook_moves_pinned(self):
         """
-        rooks's moves while pinned
+        rook's moves while pinned
         """
         b = Board()
         b.place_piece('e4', PieceType.ROOK, Color.WHITE)
@@ -77,7 +77,7 @@ class TestSuite_RookMoves(unittest.TestCase):
 
     def test_rook_moves_pinned_2(self):
         """
-        rooks's moves while pinned
+        rook's moves while pinned
         """
 
         # correct pin, bad direction
@@ -87,8 +87,8 @@ class TestSuite_RookMoves(unittest.TestCase):
         b.place_piece('e1', PieceType.QUEEN, Color.BLACK)
         rook = b.get_square('c1').piece
 
-#        with self.assertRaises(AssertionError):
-#            rook.calc_potential_moves_pinned(Direction.RIGHT)
+        with self.assertRaises(AssertionError):
+            rook.calc_potential_moves_pinned(Direction.RIGHT)
 
         # correct pin and direction
         actualMoves = rook.calc_potential_moves_pinned(Direction.LEFT)

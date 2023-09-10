@@ -27,9 +27,16 @@ class Pawn (Piece):
         the potential moves consists of possible (1) moves forward, (2) captures left, (3) captures right and (4) en passant
         :return: a list of all potential moves for this piece
         """
-        potentialMoves = self.get_forward_moves() + self.get_capture_move(1) + self.get_capture_move(-1)
-        
-        enPassantSquare = self.square.board.enPassantSquare # if en passant is possible, the enPassantSquare is the square behind the pawn
+        return self.get_forward_moves() + self.get_capture_moves(1) + self.get_capture_moves(-1) + self.get_en_passant_moves()
+
+    def get_en_passant_moves(self) -> List[Move]:
+        """
+        check the possibility of taking en passant
+        :return: a list of possible en passant moves
+        """
+        potentialMoves: List[Move] = []
+
+        enPassantSquare = self.square.board.enPassantSquare  # if en passant is possible, the enPassantSquare is the square behind the pawn
 
         # if en passant is possible and the pawn to take is next to this pawn, add the en passant move
         if (enPassantSquare is not None and self.square.rowIdx == self.EN_PASSANT_ROW and abs(self.square.idx - enPassantSquare.idx) == 1 and
@@ -38,8 +45,9 @@ class Pawn (Piece):
                 # the en passant move should technically be among potential moves even if the pawn is pinned in this way, but if it's not,
                 # it shouldn't break anything
                 not self.is_en_passant_pin(enPassantSquare)):
-            potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassantSquare.rowIdx + self.MOVE_OFFSET, enPassantSquare.colIdx),
-                                       isEnPassant=True))
+            potentialMoves.append(Move(self, self.square.board.get_square_by_coords(
+                enPassantSquare.colIdx, enPassantSquare.rowIdx + self.MOVE_OFFSET), isEnPassant=True))
+
         return potentialMoves
 
     def get_forward_moves(self) -> List[Move]:
@@ -49,24 +57,24 @@ class Pawn (Piece):
         """
         potentialMoves: List[Move] = []
         # check the square in front of the pawn
-        square = self.square.board.get_square_by_coords(self.square.rowIdx + self.MOVE_OFFSET, self.square.colIdx)
+        square = self.square.board.get_square_by_coords(self.square.colIdx, self.square.rowIdx + self.MOVE_OFFSET)
         if square.piece is None:
             potentialMoves += self.generate_pawn_move(square) # might be a promotion - that would be 4 possible moves
 
             # if on the base row, check one square further
             if self.square.rowIdx == self.BASE_ROW:
-                square = self.square.board.get_square_by_coords(self.square.rowIdx + 2 * self.MOVE_OFFSET, self.square.colIdx)
+                square = self.square.board.get_square_by_coords(self.square.colIdx, self.square.rowIdx + 2 * self.MOVE_OFFSET)
                 if square.piece is None:
                     potentialMoves.append(Move(self, square))
         return potentialMoves
 
-    def get_capture_move(self, columnOffset: int) -> List[Move]:
+    def get_capture_moves(self, columnOffset: int) -> List[Move]:
         """
         check the possibility of capturing a piece on the given column offset: left(-1) or right(1)
         :param columnOffset:
         :return: a list of possible capture moves (empty, one or four in case of promotion)
         """
-        square = self.square.board.get_square_by_coords(self.square.rowIdx + self.MOVE_OFFSET, self.square.colIdx + columnOffset)
+        square = self.square.board.get_square_by_coords(self.square.colIdx + columnOffset, self.square.rowIdx + self.MOVE_OFFSET)
         if square is not None and square.piece is not None and square.piece.color != self.color:
             return self.generate_pawn_move(square)
         return []
@@ -88,34 +96,34 @@ class Pawn (Piece):
 
         elif direction == Direction.UP_RIGHT or direction == Direction.DOWN_LEFT:
             # pawn pinned diagonally can possibly capture in the pin direction
-            potentialMoves += self.get_capture_move(self.MOVE_OFFSET)
+            potentialMoves += self.get_capture_moves(self.MOVE_OFFSET)
 
             # a diagonally pinned pawn can even capture en passant, en passant pin special pin is impossible in this case (the pawn is already pinned)
             enPassant = self.square.board.en_passant
             if enPassant is not None and self.square.rowIdx == self.EN_PASSANT_ROW and enPassant.idx - self.square.idx == self.MOVE_OFFSET:
-                potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.rowIdx + self.MOVE_OFFSET, enPassant.colIdx),
+                potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.colIdx, enPassant.rowIdx + self.MOVE_OFFSET),
                                            isEnPassant=True))
 
         else: # direction is LEFT_UP or RIGHT_DOWN
             # capture in the other direction is analogous to the previous case
-            potentialMoves += self.get_capture_move(-self.MOVE_OFFSET)
+            potentialMoves += self.get_capture_moves(-self.MOVE_OFFSET)
             enPassant = self.square.board.en_passant
             if enPassant is not None and self.square.rowIdx == self.EN_PASSANT_ROW and self.square.idx - enPassant.idx == self.MOVE_OFFSET:
-                potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.rowIdx + self.MOVE_OFFSET, enPassant.colIdx),
+                potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.colIdx, enPassant.rowIdx + self.MOVE_OFFSET),
                                            isEnPassant=True))
 
         return potentialMoves
 
-    def generate_pawn_move(self, square: Square) -> List[Move]:
+    def generate_pawn_move(self, targetSquare: Square) -> List[Move]:
         """
         normally the pown has one possible move to the given square, but if it's a promotion, there are 4 possible moves
         :param square: destination square
         :return: a list of possible pawn moves to the given square
         """
-        if square.rowIdx != self.PROMOTION_ROW:
-            return [Move(self, square)]
+        if targetSquare.rowIdx != self.PROMOTION_ROW:
+            return [Move(self, targetSquare)]
         else:
-            return [Move(self, square, isPromotion=True, newPiece=piece) for piece in [PieceType.KNIGHT, PieceType.BISHOP, PieceType.ROOK,
+            return [Move(self, targetSquare, isPromotion=True, newPiece=piece) for piece in [PieceType.KNIGHT, PieceType.BISHOP, PieceType.ROOK,
                                                                                        PieceType.QUEEN]]
     
     # def calc_attacked_squares(self):
@@ -134,7 +142,12 @@ class Pawn (Piece):
         :param enPassantSquare: square of the opponent's pawn that (maybe) can be taken en passant
         :return: is the pawn pinned in this way
         """
+        assert enPassantSquare is not None and enPassantSquare.piece is not None and enPassantSquare.piece.kind == PieceType.PAWN and\
+            enPassantSquare.piece.color != self.color, f"no opponent's pawn to take en passant"
         kingSqr = self.square.board.get_king_sqr(self.color)
+        assert kingSqr is not None and kingSqr.piece.kind == PieceType.KING and kingSqr.piece.color == self.color,\
+            f"king of color {self.color} not found"
+
         # the special pin can only occur on the en passant row
         if kingSqr.rowIdx != enPassantSquare.rowIdx:
             return False
@@ -148,7 +161,7 @@ class Pawn (Piece):
             return False
 
         # second piece must be the other relevant pawn (taker or being taken) and must be right next to the first piece
-        secondSquare = self.square.board.get_square_by_coords(firstSquare.rowIdx, firstSquare.colIdx + (1 if direction == Direction.RIGHT else -1))
+        secondSquare = self.square.board.get_square_by_coords(firstSquare.colIdx + (1 if direction == Direction.RIGHT else -1), firstSquare.rowIdx)
         if secondSquare is None or secondSquare.piece is None:
             return False
 

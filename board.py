@@ -2,7 +2,6 @@ from typing import Optional, Dict, List
 
 from constants import Color, PieceType, Direction
 from piece import Piece, SlidingPiece
-from square import Square
 from pawn import Pawn
 from knight import Knight
 from bishop import Bishop
@@ -32,7 +31,7 @@ class Board:
         self.blackPieces: List[Piece] = []
         self.whiteSlidingPieces: List[SlidingPiece] = []
         self.blackSlidingPieces: List[SlidingPiece] = []
-        self.enPassant = None
+        self.enPassantSquare: Optional[Square] = None     # a pawn that has just moved two squares and can be captured en passant
         self.halfMoves: int = 0
         self.moves: int = 0
         self.analysisDepth: int = 0
@@ -86,7 +85,7 @@ class Board:
             cornerPiece.movesCnt = 1
 
         if en_passant != '-':
-            self.enPassant = self.get_square_by_idx(en_passant.idx)
+            self.enPassantSquare = self.get_square_by_idx(en_passant.idx)
         
         self.halfMoves = int(halves)
         self.moves = int(fulls)
@@ -114,7 +113,7 @@ class Board:
     def get_square_by_coords(self, col, row) -> Optional[Square]:
         if col < 0 or col > 7 or row < 0 or row > 7:
             return None
-        return self.squares[col*8 + row]
+        return self.squares[col + row*8]
 
     # not to be used in the engine - is slower than get_square_by_idx or get_square_by_coords
     # get_square('a1') == get_square(0) == get_square(0, 0) == get_square('a', 1) == get_square('a', '1')
@@ -177,8 +176,8 @@ class Board:
             #self.half_moves = 0
         #else:
             #self.half_moves += 1
-        if self.en_passant:
-            move.pastEP = self.en_passant
+        if self.enPassantSquare:
+            move.pastEP = self.enPassantSquare
         if self.turn == Color.BLACK:
             self.moves += 1
 
@@ -187,9 +186,9 @@ class Board:
             self.remove_piece(toSqr.piece)
 
         if move.isEnPassant:
-            move.pieceTaken = self.en_passant.piece
-            self.remove_piece(self.en_passant.piece)
-            self.en_passant.piece = None
+            move.pieceTaken = self.enPassantSquare.piece
+            self.remove_piece(self.enPassantSquare.piece)
+            self.enPassantSquare.piece = None
 
         toSqr.piece, fromSqr.piece, movPiece.square = movPiece, None, toSqr
         movPiece.movesCnt += 1
@@ -237,13 +236,13 @@ class Board:
 
         # TODO - move counters
         if move.pastEP:
-            self.enPassant = move.pastEP
+            self.enPassantSquare = move.pastEP
 
         if move.pieceTaken is not None:
             move.pieceTaken.is_active = True
             if move.isEnPassant:
                 # restore the taken piece
-                self.en_passant.piece = move.pieceTaken
+                self.enPassantSquare.piece = move.pieceTaken
                 # remove the piece from toSqr
                 move.toSqr.piece = None
                 # place piece to fromSqr
@@ -316,9 +315,9 @@ class Board:
 
     def _update_en_passant_rights(self, move):
         if move.piece.kind == PieceType.PAWN and abs(move.toSqr.idx - move.fromSqr.idx) == 16:
-            self.en_passant = move.toSqr
+            self.enPassantSquare = move.toSqr
         else:
-            self.en_passant = None
+            self.enPassantSquare = None
 
     def get_direction(self, sqr1, sqr2):
         if sqr1 == sqr2:
@@ -450,8 +449,8 @@ class Board:
                             if mv.toSqr in target_squares:
                                 legalMoves.append(mv)
 
-                    if self.en_passant is not None and attacker.square == self.en_passant and piece.kind == PieceType.PAWN and piece.square.rowIdx == self.en_passant.rowIdx and abs(piece.square.idx - self.en_passant.idx) == 1 and (piece not in pinnedPieces or pinnedPieces[piece] not in [Direction.UP, Direction.DOWN]):
-                        legalMoves.append(Move(piece, self.get_square_by_coords(self.en_passant.rowIdx + (1 if piece.color == Color.WHITE else -1), self.en_passant.colIdx), isEnPassant=True))
+                    if self.enPassantSquare is not None and attacker.square == self.enPassantSquare and piece.kind == PieceType.PAWN and piece.square.rowIdx == self.enPassantSquare.rowIdx and abs(piece.square.idx - self.enPassantSquare.idx) == 1 and (piece not in pinnedPieces or pinnedPieces[piece] not in [Direction.UP, Direction.DOWN]):
+                        legalMoves.append(Move(piece, self.get_square_by_coords(self.enPassantSquare.rowIdx + (1 if piece.color == Color.WHITE else -1), self.enPassantSquare.colIdx), isEnPassant=True))
         return legalMoves
 
     def get_pieces(self, color=None, sliding=False):

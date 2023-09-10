@@ -12,7 +12,7 @@ class Knight (Piece):
     def calc_potential_moves(self, ownPieces=False):
         potentialMoves = []
         for (i, j) in [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]:
-            square = self.square.board.get_square_by_coords(self.square.rowIdx + i, self.square.colIdx + j)
+            square = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
             if square is not None and (square.piece is None or square.piece.color != self.color or ownPieces):
                 potentialMoves.append(Move(self, square))
 

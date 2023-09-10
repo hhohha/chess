@@ -1,6 +1,8 @@
 from constants import PieceType
 from typing import TYPE_CHECKING
 from square import Square
+from utils import pieceToLetter
+
 if TYPE_CHECKING:
     from piece import Piece
 
@@ -24,7 +26,8 @@ class Move:
         return self.piece == other.piece and self.fromSqr == other.fromSqr and self.toSqr == other.toSqr and self.newPiece == other.newPiece
     
     def __str__(self):
-        return str(self.piece)[0] + str(self.fromSqr) + '-' + str(self.toSqr)
+        #return str(self.piece)[0] + str(self.fromSqr) + '-' + str(self.toSqr)
+        return f'{self.piece}-{self.toSqr}{pieceToLetter[self.newPiece] if self.newPiece else ""}'
 
     def __hash__(self):
         return hash((self.piece, self.fromSqr, self.toSqr, self.newPiece))

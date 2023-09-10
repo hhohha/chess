@@ -15,7 +15,7 @@ COLOR_RED = '\033[91m'
 COLOR_GREEN = '\033[92m'
 COLOR_WHITE = '\x1b[0m'
 
-vline = '-' * 121
+vline = '-' * 158
 
 
 class TestSummary:
@@ -36,11 +36,14 @@ class TestSummary:
 
 def print_test_result(item, desc, result, msg):
     desc = desc.strip()
-    print(f'| {item:30} | {desc:50} |  {result:16} | {msg:20} |')
+    print(f'| {item:40} | {desc:100} |  {result:16} |')
+    if msg:
+        print(f'\n{COLOR_RED}\n{msg}\n{COLOR_WHITE}\n')
+
 
 def run_test_suite(testClass, testSuiteName):
     print(vline)
-    print(f'| TEST SUITE: {testSuiteName.removeprefix("TestSuite_"):105} |')
+    print(f'| TEST SUITE: {testSuiteName.removeprefix("TestSuite_"):142} |')
     print(vline)
     testObj = testClass()
     summary = TestSummary()
@@ -62,7 +65,7 @@ def run_test_suite(testClass, testSuiteName):
             print_test_result(item, "" if not test or not test.__doc__ else test.__doc__, testResult, errDetails)
 
     print(vline)
-    print(f"| PASSED TEST IN SUITE: {summary.passed} out of {summary.all}    FAILED: {summary.failed}   SKIPPED: {summary.skipped}   PASS RATE: {summary.get_pass_rate()}{' '*40}|")
+    print(f"| PASSED TEST IN SUITE: {summary.passed:2} out of {summary.all:2}    FAILED: {summary.failed:2}   SKIPPED: {summary.skipped:2}   PASS RATE: {summary.get_pass_rate():6}{' '*73}|")
     print(vline)
     return summary
 
@@ -77,14 +80,19 @@ def main():
         testFiles = sys.argv[1:]
 
     for testFile in testFiles:
+
         # 1. import the file, the test file must be named "test_*.py"
         if not testFile.startswith("test_") or not testFile.endswith(".py"):
-            continue
+            testFile = f'test_{testFile}.py'
 
-        spec = importlib.util.spec_from_file_location(testFile.removesuffix('.py'), f'{TEST_DIR}/{testFile}')
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[testFile] = module
-        spec.loader.exec_module(module)
+        try:
+            spec = importlib.util.spec_from_file_location(testFile.removesuffix('.py'), f'{TEST_DIR}/{testFile}')
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[testFile] = module
+            spec.loader.exec_module(module)
+        except FileNotFoundError:
+            print(f'file {testFile} not found, skipping')
+            continue
 
         # 2. the file must contain some classes starting with "TestSuite_" - instantiate all such classes
         testSuites = filter(lambda m: m.startswith('TestSuite_'), dir(module))
