@@ -1,10 +1,9 @@
 from typing import List, Optional
+from constants import Color
 from square import Square
 from utils import *
 from abc import ABC, abstractmethod
 from move import Move
-
-# TODO - refactor
 
 class Piece(ABC):
     def __init__(self, kind: PieceType, color: Color, square: Square):

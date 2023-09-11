@@ -1,5 +1,4 @@
 from typing import List
-
 from constants import PieceType, Color
 from move import Move
 from piece import Piece
@@ -20,7 +19,7 @@ class King(Piece):
         """
         potentialMoves: List[Move] = []
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
-            square = self.square.board.get_square_by_coords(self.square.rowIdx + i, self.square.colIdx + j)
+            square = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
             if square is None:
                 continue
         
@@ -29,13 +28,14 @@ class King(Piece):
 
         return potentialMoves
     
-    def calc_potential_moves_pinned(self, direction):
+    def calc_potential_moves_pinned(self, direction) -> List[Move]:
+        assert False, "king cannot be pinned"
         return []
     
     def calc_attacked_squares(self) -> List[Square]:
         attackedSquares: List[Square] = []
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
-            square = self.square.board.get_square_by_coords(self.square.rowIdx + j, self.square.colIdx + i)
+            square = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
             if square is not None:
                 attackedSquares.append(square)
         return attackedSquares

@@ -1,7 +1,7 @@
 import unittest
 
 from constants import Direction
-from utils import move_in_direction
+from utils import move_in_direction, reverse_dir, is_same_col_or_row, is_same_diag, square_idx_to_coord, coord_to_square_idx
 
 
 class TestSuite_Utils(unittest.TestCase):
@@ -29,3 +29,45 @@ class TestSuite_Utils(unittest.TestCase):
 
         col, row = move_in_direction(1, 1, Direction.DOWN_LEFT)
         self.assertEqual((col, row), (0, 0))
+
+    def test_reverse_dir(self):
+        self.assertEqual(reverse_dir(Direction.UP), Direction.DOWN)
+        self.assertEqual(reverse_dir(Direction.DOWN), Direction.UP)
+        self.assertEqual(reverse_dir(Direction.LEFT), Direction.RIGHT)
+        self.assertEqual(reverse_dir(Direction.RIGHT), Direction.LEFT)
+        self.assertEqual(reverse_dir(Direction.UP_RIGHT), Direction.DOWN_LEFT)
+        self.assertEqual(reverse_dir(Direction.UP_LEFT), Direction.DOWN_RIGHT)
+        self.assertEqual(reverse_dir(Direction.DOWN_RIGHT), Direction.UP_LEFT)
+        self.assertEqual(reverse_dir(Direction.DOWN_LEFT), Direction.UP_RIGHT)
+
+    def test_is_same_col_row_diag(self):
+        from board import Board
+        b = Board()
+        self.assertTrue(is_same_col_or_row(b.get_square('a1'), b.get_square('a2')))
+        self.assertTrue(is_same_col_or_row(b.get_square('a1'), b.get_square('a7')))
+        self.assertTrue(is_same_col_or_row(b.get_square('a1'), b.get_square('b1')))
+        self.assertTrue(is_same_col_or_row(b.get_square('a1'), b.get_square('f1')))
+        self.assertFalse(is_same_col_or_row(b.get_square('a1'), b.get_square('b2')))
+        self.assertFalse(is_same_col_or_row(b.get_square('a1'), b.get_square('f3')))
+
+        self.assertTrue(is_same_diag(b.get_square('a1'), b.get_square('b2')))
+        self.assertTrue(is_same_diag(b.get_square('a1'), b.get_square('h8')))
+        self.assertTrue(is_same_diag(b.get_square('a2'), b.get_square('b1')))
+        self.assertFalse(is_same_diag(b.get_square('a2'), b.get_square('h8')))
+        self.assertFalse(is_same_diag(b.get_square('e1'), b.get_square('b3')))
+
+    def test_square_coord_idx(self):
+        self.assertEqual(square_idx_to_coord(0), 'a1')
+        self.assertEqual(coord_to_square_idx('a1'), 0)
+
+        self.assertEqual(square_idx_to_coord(7), 'h1')
+        self.assertEqual(coord_to_square_idx('h1'), 7)
+
+        self.assertEqual(square_idx_to_coord(56), 'a8')
+        self.assertEqual(coord_to_square_idx('a8'), 56)
+
+        self.assertEqual(square_idx_to_coord(63), 'h8')
+        self.assertEqual(coord_to_square_idx('h8'), 63)
+
+        self.assertEqual(square_idx_to_coord(28), 'e4')
+        self.assertEqual(coord_to_square_idx('e4'), 28)

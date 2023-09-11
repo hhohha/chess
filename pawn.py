@@ -82,7 +82,7 @@ class Pawn (Piece):
     def calc_potential_moves_pinned(self, direction: Direction) -> List[Move]:
         """
         the piece is pinned in the given direction, it can potentially still move in the pin and the opposite direction
-        :param direction: direction of the pin
+        :param direction: direction of the pin - from the pinner to king
         :return: a list of possible moves
         """
         potentialMoves: List[Move] = []
@@ -99,7 +99,7 @@ class Pawn (Piece):
             potentialMoves += self.get_capture_moves(self.MOVE_OFFSET)
 
             # a diagonally pinned pawn can even capture en passant, en passant pin special pin is impossible in this case (the pawn is already pinned)
-            enPassant = self.square.board.en_passant
+            enPassant = self.square.board.enPassantSquare
             if enPassant is not None and self.square.rowIdx == self.EN_PASSANT_ROW and enPassant.idx - self.square.idx == self.MOVE_OFFSET:
                 potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.colIdx, enPassant.rowIdx + self.MOVE_OFFSET),
                                            isEnPassant=True))
@@ -107,7 +107,7 @@ class Pawn (Piece):
         else: # direction is LEFT_UP or RIGHT_DOWN
             # capture in the other direction is analogous to the previous case
             potentialMoves += self.get_capture_moves(-self.MOVE_OFFSET)
-            enPassant = self.square.board.en_passant
+            enPassant = self.square.board.enPassantSquare
             if enPassant is not None and self.square.rowIdx == self.EN_PASSANT_ROW and self.square.idx - enPassant.idx == self.MOVE_OFFSET:
                 potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.colIdx, enPassant.rowIdx + self.MOVE_OFFSET),
                                            isEnPassant=True))
@@ -145,11 +145,10 @@ class Pawn (Piece):
         assert enPassantSquare is not None and enPassantSquare.piece is not None and enPassantSquare.piece.kind == PieceType.PAWN and\
             enPassantSquare.piece.color != self.color, f"no opponent's pawn to take en passant"
         kingSqr = self.square.board.get_king_sqr(self.color)
-        assert kingSqr is not None and kingSqr.piece.kind == PieceType.KING and kingSqr.piece.color == self.color,\
-            f"king of color {self.color} not found"
 
         # the special pin can only occur on the en passant row
-        if kingSqr.rowIdx != enPassantSquare.rowIdx:
+        # kingSqr == None cannot occur in a regular game
+        if kingSqr is None or kingSqr.rowIdx != enPassantSquare.rowIdx:
             return False
 
         # what is the direction of the potential pin (from king to pinner)

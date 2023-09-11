@@ -13,7 +13,7 @@ from move import Move
 
 import re
 
-from utils import letterToPiece, is_same_col_or_row, is_same_diag, reverse_dir, move_in_direction, squareIdx_to_coord, coord_to_squareIdx
+from utils import letterToPiece, is_same_col_or_row, is_same_diag, reverse_dir, move_in_direction, square_idx_to_coord, coord_to_square_idx
 
 # TODO - refactor
 
@@ -453,7 +453,7 @@ class Board:
                         legalMoves.append(Move(piece, self.get_square_by_coords(self.enPassantSquare.rowIdx + (1 if piece.color == Color.WHITE else -1), self.enPassantSquare.colIdx), isEnPassant=True))
         return legalMoves
 
-    def get_pieces(self, color=None, sliding=False):
+    def get_pieces(self, color: Color=None, sliding: bool=False) -> List[Piece]:
         if color == Color.WHITE:
             if sliding:
                 return self.whiteSlidingPieces
@@ -482,11 +482,12 @@ class Board:
                 return path
 
     def find_first_piece_in_dir(self, square: Square, direction) -> Optional[Square]:
+        colIdx, rowIdx = move_in_direction(square.colIdx, square.rowIdx, direction)
         while True:
-            colIdx, rowIdx = move_in_direction(square.colIdx, square.rowIdx, direction)
-            sqr = self.get_square_by_coords(rowIdx, colIdx)
+            sqr = self.get_square_by_coords(colIdx, rowIdx)
             if sqr is None or not sqr.is_free():
                 return sqr
+            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, direction)
             
     def get_king_sqr(self, color):
         if color == Color.WHITE:
@@ -500,7 +501,10 @@ class Board:
         
         return kingSqr.is_attacked_by(not color)
     
-    def is_castle_possible(self, color, side):
+    def is_castle_possible(self, color: Color, side: Direction) -> bool:
+        assert side == Direction.LEFT or side == Direction.RIGHT, f"castling must be to the LEFT or RIGHT, not {side}"
+        rookPassSqr: Optional[Square] = None
+
         if color == Color.WHITE:
             kingSqr = self.get_square_by_idx(4)
             if side == Direction.RIGHT:
