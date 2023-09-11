@@ -13,7 +13,7 @@ class Queen (SlidingPiece):
     def get_sliding_directions(self) -> List[Direction]:
         return self.slidingDirections
 
-    def isSliding(self) -> bool:
+    def is_sliding(self) -> bool:
         return True
 
     def __str__(self):

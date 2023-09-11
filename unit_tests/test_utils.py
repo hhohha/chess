@@ -43,18 +43,18 @@ class TestSuite_Utils(unittest.TestCase):
     def test_is_same_col_row_diag(self):
         from board import Board
         b = Board()
-        self.assertTrue(is_same_col_or_row(b.get_square('a1'), b.get_square('a2')))
-        self.assertTrue(is_same_col_or_row(b.get_square('a1'), b.get_square('a7')))
-        self.assertTrue(is_same_col_or_row(b.get_square('a1'), b.get_square('b1')))
-        self.assertTrue(is_same_col_or_row(b.get_square('a1'), b.get_square('f1')))
-        self.assertFalse(is_same_col_or_row(b.get_square('a1'), b.get_square('b2')))
-        self.assertFalse(is_same_col_or_row(b.get_square('a1'), b.get_square('f3')))
+        self.assertTrue(is_same_col_or_row(b.get_square_by_name('a1'), b.get_square_by_name('a2')))
+        self.assertTrue(is_same_col_or_row(b.get_square_by_name('a1'), b.get_square_by_name('a7')))
+        self.assertTrue(is_same_col_or_row(b.get_square_by_name('a1'), b.get_square_by_name('b1')))
+        self.assertTrue(is_same_col_or_row(b.get_square_by_name('a1'), b.get_square_by_name('f1')))
+        self.assertFalse(is_same_col_or_row(b.get_square_by_name('a1'), b.get_square_by_name('b2')))
+        self.assertFalse(is_same_col_or_row(b.get_square_by_name('a1'), b.get_square_by_name('f3')))
 
-        self.assertTrue(is_same_diag(b.get_square('a1'), b.get_square('b2')))
-        self.assertTrue(is_same_diag(b.get_square('a1'), b.get_square('h8')))
-        self.assertTrue(is_same_diag(b.get_square('a2'), b.get_square('b1')))
-        self.assertFalse(is_same_diag(b.get_square('a2'), b.get_square('h8')))
-        self.assertFalse(is_same_diag(b.get_square('e1'), b.get_square('b3')))
+        self.assertTrue(is_same_diag(b.get_square_by_name('a1'), b.get_square_by_name('b2')))
+        self.assertTrue(is_same_diag(b.get_square_by_name('a1'), b.get_square_by_name('h8')))
+        self.assertTrue(is_same_diag(b.get_square_by_name('a2'), b.get_square_by_name('b1')))
+        self.assertFalse(is_same_diag(b.get_square_by_name('a2'), b.get_square_by_name('h8')))
+        self.assertFalse(is_same_diag(b.get_square_by_name('e1'), b.get_square_by_name('b3')))
 
     def test_square_coord_idx(self):
         self.assertEqual(square_idx_to_coord(0), 'a1')

@@ -25,10 +25,10 @@ class Board:
     def __init__(self):
         self.squares: List[Square] = [Square(idx, self) for idx in range(64)]
         self.turn: Color = Color.WHITE
-        self.whitePieces: List[Piece] = []
-        self.blackPieces: List[Piece] = []
-        self.whiteSlidingPieces: List[SlidingPiece] = []
-        self.blackSlidingPieces: List[SlidingPiece] = []
+        #self.whitePieces: List[Piece] = []
+        #self.blackPieces: List[Piece] = []
+        #self.whiteSlidingPieces: List[SlidingPiece] = []
+        #self.blackSlidingPieces: List[SlidingPiece] = []
         self.enPassantSquare: Optional[Square] = None     # a pawn that has just moved two squares and can be captured en passant
         self.halfMoves: int = 0
         self.moves: int = 0
@@ -36,6 +36,19 @@ class Board:
         self.piecesRecalculated: List[Piece] = []
         self.legalMoves: List[Move] = []
         self.history: List[Move] = []
+
+        self.whiteKing: Optional[King] = None
+        self.blackKing: Optional[King] = None
+        self.whiteQueens: List[Queen] = []
+        self.blackQueens: List[Queen] = []
+        self.whiteRooks: List[Rook] = []
+        self.blackRooks: List[Rook] = []
+        self.whiteBishops: List[Bishop] = []
+        self.blackBishops: List[Bishop] = []
+        self.whiteKnights: List[Knight] = []
+        self.blackKnights: List[Knight] = []
+        self.whitePawns: List[Pawn] = []
+        self.blackPawns: List[Pawn] = []
 
     def load_FEN(self, fen: str) -> None:
         self.clear()
@@ -65,19 +78,19 @@ class Board:
         self.turn = Color.WHITE if turn == 'w' else Color.BLACK
 
         # if cannot castle, mark the respective rook to have moved
-        cornerPiece = self.get_square('h1').piece
+        cornerPiece = self.get_square_by_name('h1').piece
         if not 'K' in castling and cornerPiece is not None and cornerPiece.color == Color.WHITE and cornerPiece.kind == PieceType.ROOK:
             cornerPiece.hasMoved = True
 
-        cornerPiece = self.get_square('a1').piece
+        cornerPiece = self.get_square_by_name('a1').piece
         if not 'Q' in castling and cornerPiece is not None and cornerPiece.color == Color.WHITE and cornerPiece.kind == PieceType.ROOK:
             cornerPiece.hasMoved = True
 
-        cornerPiece = self.get_square('h8').piece
+        cornerPiece = self.get_square_by_name('h8').piece
         if not 'k' in castling and cornerPiece is not None and cornerPiece.color == Color.BLACK and cornerPiece.kind == PieceType.ROOK:
             cornerPiece.hasMoved = True
 
-        cornerPiece = self.get_square('a8').piece
+        cornerPiece = self.get_square_by_name('a8').piece
         if not 'q' in castling and cornerPiece is not None and cornerPiece.color == Color.BLACK and cornerPiece.kind == PieceType.ROOK:
             cornerPiece.hasMoved = True
 
@@ -94,78 +107,93 @@ class Board:
 
     def clear(self):
         self.squares = [Square(idx, self) for idx in range(64)]
-        self.whitePieces.clear()
-        self.blackPieces.clear()
-        self.whiteSlidingPieces.clear()
-        self.blackSlidingPieces.clear()
+        #self.whitePieces.clear()
+        #self.blackPieces.clear()
+        #self.whiteSlidingPieces.clear()
+        #self.blackSlidingPieces.clear()
+        self.whiteKing = None
+        self.blackKing = None
+        self.whiteQueens.clear()
+        self.blackQueens.clear()
+        self.whiteRooks.clear()
+        self.blackRooks.clear()
+        self.whiteBishops.clear()
+        self.blackBishops.clear()
+        self.whiteKnights.clear()
+        self.blackKnights.clear()
+        self.whitePawns.clear()
+        self.blackPawns.clear()
+        self.enPassantSquare = None
         self.history.clear()
         self.halfMoves = 0
         self.moves = 0
 
-    def get_square_by_idx(self, idx):
-        if idx < 0 or idx > 63:
-            return None
+    def get_pieces(self, kind: PieceType, color: Color) -> List[Piece]:
+        if kind == PieceType.PAWN:
+            return self.whitePawns if color == Color.WHITE else self.blackPawns
+        elif kind == PieceType.KNIGHT:
+            return self.whiteKnights if color == Color.WHITE else self.blackKnights
+        elif kind == PieceType.BISHOP:
+            return self.whiteBishops if color == Color.WHITE else self.blackBishops
+        elif kind == PieceType.ROOK:
+            return self.whiteRooks if color == Color.WHITE else self.blackRooks
+        elif kind == PieceType.QUEEN:
+            return self.whiteQueens if color == Color.WHITE else self.blackQueens
+
+    def get_king(self, color: Color) -> King:
+        return self.whiteKing if color == Color.WHITE else self.blackKing
+
+    def get_square_by_idx(self, idx: int) -> Optional[Square]:
+        return self.squares[idx] if 0 <= idx < 64 else None
+
+    def get_square_by_coords(self, col: int, row: int) -> Optional[Square]:
+        return self.squares[col + row*8] if 0 <= col < 8 and 0 <= row < 8 else None
+
+    def get_square_by_name(self, square: str) -> Optional[Square]:
+        assert len(square) == 2, f'Invalid square given {square}'
+
+        col, row = square
+        assert 'a' <= col <= 'h' and '1' <=  row <= '8', f'Invalid square given {square}'
+
+        idx = (ord(col) - 97) + (int(row) - 1)*8
         return self.squares[idx]
 
-    def get_square_by_coords(self, col, row) -> Optional[Square]:
-        if col < 0 or col > 7 or row < 0 or row > 7:
-            return None
-        return self.squares[col + row*8]
-
-    # not to be used in the engine - is slower than get_square_by_idx or get_square_by_coords
-    # get_square('a1') == get_square(0) == get_square(0, 0) == get_square('a', 1) == get_square('a', '1')
-    # get_square('h1') == get_square(7) == get_square(7, 0) == get_square('a', 1) == get_square('a', '1')
-    # get_square('a8') == get_square(56) == get_square(0, 7) == get_square('a', 8) == get_square('a', '8')
-    # get_square('h8') == get_square(63) == get_square(7, 7) == get_square('h', 8) == get_square('h', '8')
-    def get_square(self, col, row=None):
-        if type(col) == int and row is None:
-            if col < 0 or col > 63:
-                return None
-            return self.squares[col]
-
-        elif type(col) == int and type(row) == int:
-            if col < 0 or col > 7 or row < 0 or row > 7:
-                return None
-            idx = col*8 + row
-        
-        else:
-            if type(col) == str and row is None:
-                row, col = int(col[1]), col[0]
-
-            if col < 'a' or col > 'h' or row < 1 or row > 8:
-                return None
-            idx = (ord(col) - 97) + (row - 1)*8
-
-        return self.squares[idx]
-        
-    def place_piece(self, sqr, kind, color):
+    def place_piece(self, sqr: int | str, kind: PieceType, color: Color) -> Piece:
         if isinstance(sqr, str):
-            square = self.get_square(sqr)
+            square = self.get_square_by_name(sqr)
         else:
             square = self.get_square_by_idx(sqr)
-        
+
         if kind == PieceType.PAWN: square.piece = Pawn(color, square)
         elif kind == PieceType.KNIGHT: square.piece = Knight(color, square)
         elif kind == PieceType.BISHOP: square.piece = Bishop(color, square)
         elif kind == PieceType.ROOK: square.piece = Rook(color, square)
         elif kind == PieceType.QUEEN: square.piece = Queen(color, square)
         elif kind == PieceType.KING: square.piece = King(color, square)
-        
+        else: assert False, f'Invalid piece kind {kind}'
+
         square.piece.square = square
-        
+
         if kind == PieceType.KING:
-            self.get_pieces(color).insert(0, square.piece)
+            #self.get_pieces(color).insert(0, square.piece)
+            if color == Color.WHITE:
+                self.whiteKing = square.piece
+            else:
+                self.blackKing = square.piece
         else:
-            self.get_pieces(color).append(square.piece)
-            if square.piece.is_sliding():
-                self.get_pieces(color, sliding=True).append(square.piece)
-        
+            self.get_pieces(kind, color).append(square.piece)
+            #self.get_pieces(color).append(square.piece)
+            #if square.piece.is_sliding():
+            #    self.get_pieces(color, sliding=True).append(square.piece)
+
+        return square.piece
+
     def remove_piece(self, piece):
         self.get_pieces(piece.color).remove(piece)
         if piece.is_sliding:
             self.get_pieces(piece.color, sliding=True).remove(piece)
         piece.is_active = False
-    
+
     def perform_move(self, move, analysis=True):
         # TODO - rook and king has moved indicators
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
@@ -452,7 +480,7 @@ class Board:
                         legalMoves.append(Move(piece, self.get_square_by_coords(self.enPassantSquare.rowIdx + (1 if piece.color == Color.WHITE else -1), self.enPassantSquare.colIdx), isEnPassant=True))
         return legalMoves
 
-    def get_pieces(self, color: Color=None, sliding: bool=False) -> List[Piece]:
+    def to_delete_get_pieces(self, color: Color=None, sliding: bool=False) -> List[Piece]:
         if color == Color.WHITE:
             if sliding:
                 return self.whiteSlidingPieces

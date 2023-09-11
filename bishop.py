@@ -12,8 +12,8 @@ class Bishop (SlidingPiece):
     def get_sliding_directions(self) -> List[Direction]:
         return self.slidingDirections
         
-    def __str__(self):
+    def __str__(self) -> str:
         return f'B{self.square.getCoord()}'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'Bishop({self.color}, {self.square})'

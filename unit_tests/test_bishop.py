@@ -9,22 +9,19 @@ class TestSuite_BishopMoves(unittest.TestCase):
         bishop's moves on an empty board
         """
         b = Board()
-        b.place_piece('a1', PieceType.BISHOP, Color.WHITE)
-        bishop = b.get_square('a1').piece
+        bishop = b.place_piece('a1', PieceType.BISHOP, Color.WHITE)
         actualMoves = bishop.calc_potential_moves()
         expectedMoves = ['Ba1-h8', 'Ba1-g7', 'Ba1-f6', 'Ba1-e5', 'Ba1-d4', 'Ba1-c3', 'Ba1-b2']
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
 
         b = Board()
-        b.place_piece('b1', PieceType.BISHOP, Color.WHITE)
-        bishop = b.get_square('b1').piece
+        bishop = b.place_piece('b1', PieceType.BISHOP, Color.WHITE)
         actualMoves = bishop.calc_potential_moves()
         expectedMoves =  ['Bb1-a2', 'Bb1-c2', 'Bb1-d3', 'Bb1-e4', 'Bb1-f5', 'Bb1-g6', 'Bb1-h7']
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
 
         b = Board()
-        b.place_piece('f4', PieceType.BISHOP, Color.BLACK)
-        bishop = b.get_square('f4').piece
+        bishop = b.place_piece('f4', PieceType.BISHOP, Color.BLACK)
         actualMoves = bishop.calc_potential_moves()
         expectedMoves =  ['Bf4-e3', 'Bf4-d2', 'Bf4-c1', 'Bf4-g5', 'Bf4-h6', 'Bf4-g3', 'Bf4-h2', 'Bf4-e5', 'Bf4-d6', 'Bf4-c7', 'Bf4-b8']
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
@@ -36,8 +33,7 @@ class TestSuite_BishopMoves(unittest.TestCase):
         b = Board()
         b.place_piece('a1', PieceType.KNIGHT, Color.WHITE)
         b.place_piece('c3', PieceType.ROOK, Color.BLACK)
-        b.place_piece('b2', PieceType.BISHOP, Color.WHITE)
-        bishop = b.get_square('b2').piece
+        bishop = b.place_piece('b2', PieceType.BISHOP, Color.WHITE)
         actualMoves = bishop.calc_potential_moves()
         expectedMoves =  ['Bb2-c3', 'Bb2-a3', 'Bb2-c1']
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
@@ -47,16 +43,14 @@ class TestSuite_BishopMoves(unittest.TestCase):
             b.place_piece(square, PieceType.PAWN, Color.BLACK)
         for square in ['c2', 'd2', 'e2']:
             b.place_piece(square, PieceType.PAWN, Color.WHITE)
-        b.place_piece('d3', PieceType.BISHOP, Color.WHITE)
-        bishop = b.get_square('d3').piece
+        bishop = b.place_piece('d3', PieceType.BISHOP, Color.WHITE)
         actualMoves = bishop.calc_potential_moves()
         expectedMoves = ['Bd3-c4', 'Bd3-e4']
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
 
         b = Board()
         b.place_piece('g2', PieceType.PAWN, Color.BLACK)
-        b.place_piece('h1', PieceType.BISHOP, Color.BLACK)
-        bishop = b.get_square('h1').piece
+        bishop = b.place_piece('h1', PieceType.BISHOP, Color.BLACK)
         actualMoves = bishop.calc_potential_moves()
         expectedMoves = []
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
@@ -66,8 +60,7 @@ class TestSuite_BishopMoves(unittest.TestCase):
         bishop's moves on a board while pinned
         """
         b = Board()
-        b.place_piece('c3', PieceType.BISHOP, Color.BLACK)
-        bishop = b.get_square('c3').piece
+        bishop = b.place_piece('c3', PieceType.BISHOP, Color.BLACK)
         actualMoves = bishop.calc_potential_moves_pinned(Direction.LEFT)
         expectedMoves = []
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))

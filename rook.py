@@ -11,6 +11,9 @@ class Rook (SlidingPiece):
         self.slidingDirections: List[Direction] = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT]
         self.hasMoved = False
 
+    def is_sliding(self) -> bool:
+        return True
+
     def get_sliding_directions(self) -> List[Direction]:
         return self.slidingDirections
         

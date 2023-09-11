@@ -119,7 +119,6 @@ class SlidingPiece(Piece, ABC):
 
         colIdx, rowIdx = self.square.colIdx, self.square.rowIdx
         while True:
-
             # a piece can move in the direction of the pinner including its capture
             colIdx, rowIdx = move_in_direction(colIdx, rowIdx, reverse_dir(directionFrom))
             sqr = self.square.board.get_square_by_coords(colIdx, rowIdx)

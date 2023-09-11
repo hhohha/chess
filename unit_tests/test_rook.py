@@ -9,8 +9,7 @@ class TestSuite_RookMoves(unittest.TestCase):
         rook's moves on an empty board
         """
         b = Board()
-        b.place_piece('b3', PieceType.ROOK, Color.WHITE)
-        rook = b.get_square('b3').piece
+        rook = b.place_piece('b3', PieceType.ROOK, Color.WHITE)
         actualMoves = rook.calc_potential_moves()
         expectedMoves = [f'Rb3-{col}3' for col in 'acdefgh'] + [f'Rb3-b{row}' for row in [1, 2, 4, 5, 6, 7, 8]]
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
@@ -20,12 +19,11 @@ class TestSuite_RookMoves(unittest.TestCase):
         rook's moves on a non-empty board
         """
         b = Board()
-        b.place_piece('e4', PieceType.ROOK, Color.WHITE)
+        rook = b.place_piece('e4', PieceType.ROOK, Color.WHITE)
         b.place_piece('e5', PieceType.ROOK, Color.WHITE)
         b.place_piece('e2', PieceType.QUEEN, Color.BLACK)
         b.place_piece('b4', PieceType.PAWN, Color.WHITE)
         b.place_piece('h4', PieceType.PAWN, Color.BLACK)
-        rook = b.get_square('e4').piece
         actualMoves = rook.calc_potential_moves()
         expectedMoves = ['Re4-e3', 'Re4-e2', 'Re4-d4', 'Re4-c4', 'Re4-f4', 'Re4-g4', 'Re4-h4']
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
@@ -35,17 +33,15 @@ class TestSuite_RookMoves(unittest.TestCase):
         rook's moves while pinned
         """
         b = Board()
-        b.place_piece('e4', PieceType.ROOK, Color.WHITE)
-        rook = b.get_square('e4').piece
+        rook = b.place_piece('e4', PieceType.ROOK, Color.WHITE)
         actualMoves = rook.calc_potential_moves_pinned(Direction.UP_LEFT)
         expectedMoves = []
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
 
         # there is a rook and a king lined up, but no pinner
         b = Board()
-        b.place_piece('c1', PieceType.ROOK, Color.WHITE)
+        rook = b.place_piece('c1', PieceType.ROOK, Color.WHITE)
         b.place_piece('a1', PieceType.KING, Color.WHITE)
-        rook = b.get_square('c1').piece
 
         with self.assertRaises(AssertionError):
             rook.calc_potential_moves_pinned(Direction.LEFT)
@@ -54,9 +50,8 @@ class TestSuite_RookMoves(unittest.TestCase):
 
         # there is a rook and a pinner lined up, but no king
         b = Board()
-        b.place_piece('c1', PieceType.ROOK, Color.WHITE)
+        rook = b.place_piece('c1', PieceType.ROOK, Color.WHITE)
         b.place_piece('d1', PieceType.ROOK, Color.BLACK)
-        rook = b.get_square('c1').piece
 
         with self.assertRaises(AssertionError):
             rook.calc_potential_moves_pinned(Direction.LEFT)
@@ -65,10 +60,9 @@ class TestSuite_RookMoves(unittest.TestCase):
 
         # there is a rook and a king lined up, but the pinner is invalid (knight)
         b = Board()
+        rook = b.place_piece('c1', PieceType.ROOK, Color.WHITE)
         b.place_piece('a1', PieceType.KING, Color.WHITE)
-        b.place_piece('c1', PieceType.ROOK, Color.WHITE)
         b.place_piece('e1', PieceType.KNIGHT, Color.BLACK)
-        rook = b.get_square('c1').piece
 
         with self.assertRaises(AssertionError):
             rook.calc_potential_moves_pinned(Direction.LEFT)
@@ -82,10 +76,9 @@ class TestSuite_RookMoves(unittest.TestCase):
 
         # correct pin, bad direction
         b = Board()
+        rook = b.place_piece('c1', PieceType.ROOK, Color.WHITE)
         b.place_piece('a1', PieceType.KING, Color.WHITE)
-        b.place_piece('c1', PieceType.ROOK, Color.WHITE)
         b.place_piece('e1', PieceType.QUEEN, Color.BLACK)
-        rook = b.get_square('c1').piece
 
         with self.assertRaises(AssertionError):
             rook.calc_potential_moves_pinned(Direction.RIGHT)

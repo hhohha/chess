@@ -144,7 +144,7 @@ class Pawn (Piece):
         """
         assert enPassantSquare is not None and enPassantSquare.piece is not None and enPassantSquare.piece.kind == PieceType.PAWN and\
             enPassantSquare.piece.color != self.color, f"no opponent's pawn to take en passant"
-        kingSqr = self.square.board.get_king_sqr(self.color)
+        kingSqr = self.square.board.get_king(self.color).square
 
         # the special pin can only occur on the en passant row
         # kingSqr == None cannot occur in a regular game
