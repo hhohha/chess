@@ -9,6 +9,7 @@ class King(Piece):
     def __init__(self, color: Color, square: Square):
         super().__init__(PieceType.KING, color, square)
         self.isLight = False
+        self.hasMoved = False
 
     def calc_potential_moves(self) -> List[Move]:
         """

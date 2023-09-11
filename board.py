@@ -10,10 +10,8 @@ from queen import Queen
 from king import King
 from square import Square
 from move import Move
-
 import re
-
-from utils import letterToPiece, is_same_col_or_row, is_same_diag, reverse_dir, move_in_direction, square_idx_to_coord, coord_to_square_idx
+from utils import letterToPiece, is_same_col_or_row, is_same_diag, reverse_dir, move_in_direction
 
 # TODO - refactor
 
@@ -25,8 +23,8 @@ checks = 0
 
 class Board:
     def __init__(self):
-        self.squares = [Square(idx, self) for idx in range(64)]
-        self.turn = Color.WHITE
+        self.squares: List[Square] = [Square(idx, self) for idx in range(64)]
+        self.turn: Color = Color.WHITE
         self.whitePieces: List[Piece] = []
         self.blackPieces: List[Piece] = []
         self.whiteSlidingPieces: List[SlidingPiece] = []
@@ -36,16 +34,16 @@ class Board:
         self.moves: int = 0
         self.analysisDepth: int = 0
         self.piecesRecalculated: List[Piece] = []
-        self.legalMoves = []
+        self.legalMoves: List[Move] = []
         self.history: List[Move] = []
 
-    def loadFEN(self, fenstr: str) -> None:
+    def load_FEN(self, fen: str) -> None:
         self.clear()
         
-        if not re.match(r'^([rnbqkpRNBQKP1-8]*/){7}[rnbqkpRNBQKP1-8]* [wb] (-|[KQkq]{1,4}) (-|[a-h][36]) [0-9]+ [0-9]+$', fenstr):
+        if not re.match(r'^([rnbqkpRNBQKP1-8]*/){7}[rnbqkpRNBQKP1-8]* [wb] (-|[KQkq]{1,4}) (-|[a-h][36]) [0-9]+ [0-9]+$', fen):
             raise ValueError('Invalid FEN position given')
 
-        pieces, turn, castling, en_passant, halves, fulls = fenstr.split()
+        pieces, turn, castling, en_passant, halves, fulls = fen.split()
 
         i, j = 0, 7
         for c in pieces:
@@ -54,8 +52,7 @@ class Board:
                 continue
 
             if c == '/':
-                if i != 8:
-                    raise ValueError('Invalid FEN position given')
+                assert i == 8, 'Invalid FEN position given'
                 i, j = 0, j - 1
                 continue
 
@@ -70,19 +67,19 @@ class Board:
         # if cannot castle, mark the respective rook to have moved
         cornerPiece = self.get_square('h1').piece
         if not 'K' in castling and cornerPiece is not None and cornerPiece.color == Color.WHITE and cornerPiece.kind == PieceType.ROOK:
-            cornerPiece.movesCnt = 1
+            cornerPiece.hasMoved = True
 
         cornerPiece = self.get_square('a1').piece
         if not 'Q' in castling and cornerPiece is not None and cornerPiece.color == Color.WHITE and cornerPiece.kind == PieceType.ROOK:
-            cornerPiece.movesCnt = 1
+            cornerPiece.hasMoved = True
 
         cornerPiece = self.get_square('h8').piece
         if not 'k' in castling and cornerPiece is not None and cornerPiece.color == Color.BLACK and cornerPiece.kind == PieceType.ROOK:
-            cornerPiece.movesCnt = 1
+            cornerPiece.hasMoved = True
 
         cornerPiece = self.get_square('a8').piece
         if not 'q' in castling and cornerPiece is not None and cornerPiece.color == Color.BLACK and cornerPiece.kind == PieceType.ROOK:
-            cornerPiece.movesCnt = 1
+            cornerPiece.hasMoved = True
 
         if en_passant != '-':
             self.enPassantSquare = self.get_square_by_idx(en_passant.idx)
@@ -160,7 +157,7 @@ class Board:
             self.get_pieces(color).insert(0, square.piece)
         else:
             self.get_pieces(color).append(square.piece)
-            if square.piece.isSliding():
+            if square.piece.is_sliding():
                 self.get_pieces(color, sliding=True).append(square.piece)
         
     def remove_piece(self, piece):
@@ -170,6 +167,7 @@ class Board:
         piece.is_active = False
     
     def perform_move(self, move, analysis=True):
+        # TODO - rook and king has moved indicators
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
 
         #if toSqr.piece is not None or movPiece.kind == PAWN:
@@ -232,6 +230,7 @@ class Board:
             piece.update_attacked_squares()
 
     def undo_move(self, move, analysis=True):
+        # TODO - rook and king has moved indicators
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
 
         # TODO - move counters
@@ -360,7 +359,7 @@ class Board:
         kingSqr = self.get_king_sqr(color)
 
         # look at all opponent's sliding pieces (rooks, bishops, queens)
-        for piece in self.get_pieces(not color, sliding=True):
+        for piece in self.get_pieces(color.invert(), sliding=True):
             # if the piece is not on the same row, column (rook, queen) or diagonal (bishop, queen) as the king, it cannot pin
             if piece.kind == PieceType.ROOK:
                 if not is_same_col_or_row(piece.square, kingSqr):
@@ -412,7 +411,7 @@ class Board:
         else:
             # king is in check
             kingSqr = self.get_king_sqr(color)
-            attackers = kingSqr.get_attacked_by(not color)
+            attackers = kingSqr.get_attacked_by(color.invert())
             
             # can always (attempt to) move the king
             kingMoves = kingSqr.piece.calc_potential_moves()
@@ -499,7 +498,7 @@ class Board:
         if not kingSqr:
             return False
         
-        return kingSqr.is_attacked_by(not color)
+        return kingSqr.is_attacked_by(color.invert())
     
     def is_castle_possible(self, color: Color, side: Direction) -> bool:
         assert side == Direction.LEFT or side == Direction.RIGHT, f"castling must be to the LEFT or RIGHT, not {side}"
@@ -524,10 +523,12 @@ class Board:
                 passingSqrs = [self.get_square_by_idx(58), self.get_square_by_idx(59)]
                 rookPassSqr = self.get_square_by_idx(57)
 
-        if kingSqr.piece is None or kingSqr.piece.kind != PieceType.KING or kingSqr.piece.color != color or kingSqr.piece.movesCnt > 0:
+        assert isinstance(kingSqr.piece, King), f"error in castle handling"
+        if kingSqr.piece is None or kingSqr.piece.kind != PieceType.KING or kingSqr.piece.color != color or kingSqr.piece.hasMoved:
             return False
 
-        if rookSqr.piece is None or rookSqr.piece.kind != PieceType.ROOK or rookSqr.piece.color != color or rookSqr.piece.movesCnt > 0:
+        assert isinstance(rookSqr.piece, Rook), f"error in castle handling"
+        if rookSqr.piece is None or rookSqr.piece.kind != PieceType.ROOK or rookSqr.piece.color != color or rookSqr.piece.hasMoved:
             return False
 
         if self.is_in_check(color):
@@ -537,7 +538,7 @@ class Board:
             return False
 
         for sqr in passingSqrs:
-            if sqr.piece is not None or sqr.is_attacked_by(not color):
+            if sqr.piece is not None or sqr.is_attacked_by(color.invert()):
                 return False
 
         return True

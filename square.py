@@ -43,7 +43,7 @@ class Square:
     #         return self.attackedByBlacks[-1]
     #     return self.attackedByWhites[-1] + self.attackedByBlacks[-1]
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Square) -> bool:
         return self.idx == other.idx
     
     def __hash__(self) -> int:

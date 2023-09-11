@@ -22,7 +22,7 @@ class Game:
             self.displayer.draw_square(piece.square, None)
         
     def reset(self):
-        self.board.loadFEN(FEN_INIT)
+        self.board.load_FEN(FEN_INIT)
         self.displayer.load(self.board)
         
     def clear(self):

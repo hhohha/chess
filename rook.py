@@ -9,6 +9,7 @@ class Rook (SlidingPiece):
         super().__init__(PieceType.ROOK, color, square)
         self.isLight = False    # light piece is a bishop or a knight
         self.slidingDirections: List[Direction] = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT]
+        self.hasMoved = False
 
     def get_sliding_directions(self) -> List[Direction]:
         return self.slidingDirections

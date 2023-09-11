@@ -1,10 +1,11 @@
 from enum import Enum
 
-# TODO - refactor
-
 class Color(Enum):
     WHITE = 0
     BLACK = 1
+
+    def invert(self):
+        return Color.BLACK if self == Color.WHITE else Color.WHITE
 
 class PieceType(Enum):
     PAWN = 0

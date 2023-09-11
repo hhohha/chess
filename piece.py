@@ -23,8 +23,8 @@ class Piece(ABC):
     def calc_potential_moves_pinned(self, direction: Direction):
         pass
 
-    def isSliding(self) -> bool:
-        False
+    def is_sliding(self) -> bool:
+        return False
 
     #def get_attacked_squares(self):
     #    return self.attacked_squares[-1]
@@ -127,7 +127,7 @@ class SlidingPiece(Piece, ABC):
 
             potentialMoves.append(Move(self, sqr))
             if not sqr.is_free():
-                assert sqr.piece.color != self.color and sqr.piece.isSliding(), f"piece {self} is actually not pinned"
+                assert sqr.piece.color != self.color and sqr.piece.is_sliding(), f"piece {self} is actually not pinned"
                 break
 
         return potentialMoves

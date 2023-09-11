@@ -28,7 +28,7 @@ def test_position(position, depth):
 
     for dpt in range(1, depth + 1):
         board = Board()
-        board.loadFEN(position.position)
+        board.load_FEN(position.position)
         print ('TESTING position ' + str(position.id) + ' to depth ' + str(dpt), ':    ', end='')
 
         start_time = time()
