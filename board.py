@@ -532,12 +532,10 @@ class Board:
                 passingSqrs = [self.get_square_by_idx(58), self.get_square_by_idx(59)]
                 rookPassSqr = self.get_square_by_idx(57)
 
-        assert isinstance(kingSqr.piece, King), f"error in castle handling"
-        if kingSqr.piece is None or kingSqr.piece.kind != PieceType.KING or kingSqr.piece.color != color or kingSqr.piece.hasMoved:
+        if kingSqr.piece is None or not isinstance(kingSqr.piece, King) or kingSqr.piece.color != color or kingSqr.piece.hasMoved:
             return False
 
-        assert isinstance(rookSqr.piece, Rook), f"error in castle handling"
-        if rookSqr.piece is None or rookSqr.piece.kind != PieceType.ROOK or rookSqr.piece.color != color or rookSqr.piece.hasMoved:
+        if rookSqr.piece is None or not isinstance(rookSqr.piece, Rook) or rookSqr.piece.color != color or rookSqr.piece.hasMoved:
             return False
 
         if self.is_in_check(color):

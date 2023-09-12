@@ -116,7 +116,7 @@ class Pawn (Piece):
 
     def generate_pawn_move(self, targetSquare: Square) -> List[Move]:
         """
-        normally the pown has one possible move to the given square, but if it's a promotion, there are 4 possible moves
+        normally the pawn has one possible move to the given square, but if it's a promotion, there are 4 possible moves
         :param square: destination square
         :return: a list of possible pawn moves to the given square
         """
@@ -124,15 +124,19 @@ class Pawn (Piece):
             return [Move(self, targetSquare)]
         else:
             return [Move(self, targetSquare, isPromotion=True, newPiece=piece) for piece in [PieceType.KNIGHT, PieceType.BISHOP, PieceType.ROOK,
-                                                                                       PieceType.QUEEN]]
+                                                                                             PieceType.QUEEN]]
     
-    # def calc_attacked_squares(self):
-    #     all_squares = []
-    #     for i in [1, -1]:
-    #         square = self.square.board.get_square_by_coords(self.square.rowIdx + self.move_offset, self.square.colIdx + i)
-    #         if square is not None:
-    #             all_squares.append(square)
-    #     return all_squares
+    def calc_attacked_squares(self) -> List[Square]:
+        """
+        :return: list of squares attacked by the piece
+        """
+        if self.square.colIdx == 0:
+            return [self.square.board.get_square_by_coords(self.square.rowIdx + self.MOVE_OFFSET, self.square.colIdx + 1)]
+        elif self.square.colIdx == 7:
+            return [self.square.board.get_square_by_coords(self.square.rowIdx + self.MOVE_OFFSET, self.square.colIdx - 1)]
+        else:
+            return [self.square.board.get_square_by_coords(self.square.rowIdx + self.MOVE_OFFSET, self.square.colIdx + 1),
+                    self.square.board.get_square_by_coords(self.square.rowIdx + self.MOVE_OFFSET, self.square.colIdx - 1)]
         
     def is_en_passant_pin(self, enPassantSquare: Square) -> bool:
         """

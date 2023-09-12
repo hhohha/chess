@@ -13,7 +13,6 @@ class King(Piece):
 
     def calc_potential_moves(self) -> List[Move]:
         """
-        TODO - do we need the ownPieces parameter?
         TODO - why cannot king's potential move lead to a check (it's not the same as legal move)?
         potential moves don't respect checks
         :return: list of potential moves
@@ -24,7 +23,7 @@ class King(Piece):
             if square is None:
                 continue
         
-            if not square.is_attacked_by(not self.color) and (square.piece is None or square.piece.color != self.color):
+            if not square.is_attacked_by(self.color.invert()) and (square.piece is None or square.piece.color != self.color):
                 potentialMoves.append(Move(self, square))
 
         return potentialMoves
@@ -33,14 +32,14 @@ class King(Piece):
         assert False, "king cannot be pinned"
         return []
     
-    def calc_attacked_squares(self) -> List[Square]:
+    def get_attacked_squares(self) -> List[Square]:
         attackedSquares: List[Square] = []
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
             square = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
             if square is not None:
                 attackedSquares.append(square)
         return attackedSquares
-                
+
 
     def __str__(self):
         return 'K' + self.square.getCoord()

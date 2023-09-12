@@ -34,7 +34,7 @@ class Result(Enum):
     DRAW_INSUFFICIENT_MATERIAL = 'Draw by insufficient material!'
     DRAW_AGREEMENT = 'Draw by agreement!'
 
-FEN_INIT = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0'
+FEN_INIT = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 FEN_A = 'k7/8/8/8/8/8/3p4/7K w - - 98 0'
 FEN_B = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
 FEN_C = '8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 0'
