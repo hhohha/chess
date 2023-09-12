@@ -168,7 +168,7 @@ class TestSuite_PawnMoves(unittest.TestCase):
         assert isinstance(pawn, Pawn)
         b.place_piece('d5', PieceType.PAWN, Color.BLACK)
         b.place_piece('f5', PieceType.PAWN, Color.BLACK)
-        b.enPassantSquare = b.get_square_by_name('d5')
+        b.enPassantPawnSquare = b.get_square_by_name('d5')
         expectedMoves = ['pe5-d6']
         enPassantMoves = pawn.get_en_passant_moves()
         self.assertEqual(set(map(str, enPassantMoves)), set(expectedMoves))
@@ -196,7 +196,7 @@ class TestSuite_PawnMoves(unittest.TestCase):
         b.place_piece('d6', PieceType.PAWN, Color.BLACK)
         b.place_piece('f5', PieceType.PAWN, Color.BLACK)
         b.place_piece('e6', PieceType.PAWN, Color.BLACK)
-        b.enPassantSquare = b.get_square_by_name('f5')
+        b.enPassantPawnSquare = b.get_square_by_name('f5')
         actualMoves = pawn.calc_potential_moves()
         expectedMoves = ['pe5-d6', 'pe5-f6']
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
@@ -243,7 +243,7 @@ class TestSuite_PawnMoves(unittest.TestCase):
         b.place_piece('f6', PieceType.PAWN, Color.BLACK)
         b.place_piece('g3', PieceType.KING, Color.WHITE)
         b.place_piece('c7', PieceType.QUEEN, Color.BLACK)
-        b.enPassantSquare = b.get_square_by_name('d5')
+        b.enPassantPawnSquare = b.get_square_by_name('d5')
         actualMoves = pawn.calc_potential_moves_pinned(Direction.DOWN_RIGHT)
         expectedMoves = ['pe5-d6']
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))

@@ -11,7 +11,7 @@ from king import King
 from square import Square
 from move import Move
 import re
-from utils import letterToPiece, is_same_col_or_row, is_same_diag, reverse_dir, move_in_direction
+from utils import letterToPiece, is_same_col_or_row, is_same_diag, reverse_dir, move_in_direction, coord_to_square_idx
 
 # TODO - refactor
 
@@ -25,11 +25,10 @@ class Board:
     def __init__(self):
         self.squares: List[Square] = [Square(idx, self) for idx in range(64)]
         self.turn: Color = Color.WHITE
-        #self.whitePieces: List[Piece] = []
-        #self.blackPieces: List[Piece] = []
-        #self.whiteSlidingPieces: List[SlidingPiece] = []
-        #self.blackSlidingPieces: List[SlidingPiece] = []
-        self.enPassantSquare: Optional[Square] = None     # a pawn that has just moved two squares and can be captured en passant
+
+        # a square of a pawn that has just moved two squares and can be captured en passant (of there is a pawn next to it)
+        # careful - FEN uses the square behind the pawn, but this is the square of the pawn itself
+        self.enPassantPawnSquare: Optional[Square] = None
         self.halfMoves: int = 0
         self.moves: int = 0
         self.analysisDepth: int = 0
@@ -51,29 +50,35 @@ class Board:
         self.blackPawns: List[Pawn] = []
 
     def load_FEN(self, fen: str) -> None:
+        """
+        load a position from a FEN string
+        :param fen: string in a FEN format
+        """
         self.clear()
         
         if not re.match(r'^([rnbqkpRNBQKP1-8]*/){7}[rnbqkpRNBQKP1-8]* [wb] (-|[KQkq]{1,4}) (-|[a-h][36]) [0-9]+ [0-9]+$', fen):
+            # doesn't catch all invalid FENs, but it's a good sanity check
             raise ValueError('Invalid FEN position given')
 
-        pieces, turn, castling, en_passant, halves, fulls = fen.split()
+        pieces, turn, castling, enPassantSqr, halves, fulls = fen.split()
 
-        i, j = 0, 7
+        col, row = 0, 7 # for some reason, FEN starts with a8
         for c in pieces:
-            if c.isnumeric():
-                i += int(c)
+            if c.isnumeric():  # number of empty squares to skip
+                col += int(c)
                 continue
 
-            if c == '/':
-                assert i == 8, 'Invalid FEN position given'
-                i, j = 0, j - 1
+            if c == '/': # new row
+                assert col == 8, 'Invalid FEN position given'
+                col, row = 0, row - 1
                 continue
 
+            # place a new piece
             piece: PieceType = letterToPiece[c.lower()]
+            color: Color = Color.WHITE if c.isupper() else Color.BLACK
+            self.place_piece(col + 8*row, piece, color)
 
-            color = Color.WHITE if c.isupper() else Color.BLACK
-            self.place_piece(i + 8*j, piece, color)
-            i += 1
+            col += 1
 
         self.turn = Color.WHITE if turn == 'w' else Color.BLACK
 
@@ -94,8 +99,9 @@ class Board:
         if not 'q' in castling and cornerPiece is not None and cornerPiece.color == Color.BLACK and cornerPiece.kind == PieceType.ROOK:
             cornerPiece.hasMoved = True
 
-        if en_passant != '-':
-            self.enPassantSquare = self.get_square_by_idx(en_passant.idx)
+        if enPassantSqr != '-':
+            # we need the square of the pawn, not the square behind it
+            self.enPassantPawnSquare = self.get_square_by_idx(coord_to_square_idx(enPassantSqr) + (8 if self.turn == Color.WHITE else -8))
         
         self.halfMoves = int(halves)
         self.moves = int(fulls)
@@ -107,10 +113,6 @@ class Board:
 
     def clear(self):
         self.squares = [Square(idx, self) for idx in range(64)]
-        #self.whitePieces.clear()
-        #self.blackPieces.clear()
-        #self.whiteSlidingPieces.clear()
-        #self.blackSlidingPieces.clear()
         self.whiteKing = None
         self.blackKing = None
         self.whiteQueens.clear()
@@ -123,7 +125,7 @@ class Board:
         self.blackKnights.clear()
         self.whitePawns.clear()
         self.blackPawns.clear()
-        self.enPassantSquare = None
+        self.enPassantPawnSquare = None
         self.history.clear()
         self.halfMoves = 0
         self.moves = 0
@@ -140,7 +142,11 @@ class Board:
         elif kind == PieceType.QUEEN:
             return self.whiteQueens if color == Color.WHITE else self.blackQueens
 
-    def get_king(self, color: Color) -> King:
+    def get_sliding_pieces(self, color: Color) -> List[Piece]:
+        return self.whiteBishops + self.whiteRooks + self.whiteQueens if color == Color.WHITE else (self.blackBishops + self.blackRooks +
+                                                                                                    self.blackQueens)
+
+    def get_king(self, color: Color) -> Optional[King]:
         return self.whiteKing if color == Color.WHITE else self.blackKing
 
     def get_square_by_idx(self, idx: int) -> Optional[Square]:
@@ -202,8 +208,8 @@ class Board:
             #self.half_moves = 0
         #else:
             #self.half_moves += 1
-        if self.enPassantSquare:
-            move.pastEP = self.enPassantSquare
+        if self.enPassantPawnSquare:
+            move.pastEP = self.enPassantPawnSquare
         if self.turn == Color.BLACK:
             self.moves += 1
 
@@ -212,9 +218,9 @@ class Board:
             self.remove_piece(toSqr.piece)
 
         if move.isEnPassant:
-            move.pieceTaken = self.enPassantSquare.piece
-            self.remove_piece(self.enPassantSquare.piece)
-            self.enPassantSquare.piece = None
+            move.pieceTaken = self.enPassantPawnSquare.piece
+            self.remove_piece(self.enPassantPawnSquare.piece)
+            self.enPassantPawnSquare.piece = None
 
         toSqr.piece, fromSqr.piece, movPiece.square = movPiece, None, toSqr
         movPiece.movesCnt += 1
@@ -263,13 +269,13 @@ class Board:
 
         # TODO - move counters
         if move.pastEP:
-            self.enPassantSquare = move.pastEP
+            self.enPassantPawnSquare = move.pastEP
 
         if move.pieceTaken is not None:
             move.pieceTaken.is_active = True
             if move.isEnPassant:
                 # restore the taken piece
-                self.enPassantSquare.piece = move.pieceTaken
+                self.enPassantPawnSquare.piece = move.pieceTaken
                 # remove the piece from toSqr
                 move.toSqr.piece = None
                 # place piece to fromSqr
@@ -342,9 +348,9 @@ class Board:
 
     def _update_en_passant_rights(self, move):
         if move.piece.kind == PieceType.PAWN and abs(move.toSqr.idx - move.fromSqr.idx) == 16:
-            self.enPassantSquare = move.toSqr
+            self.enPassantPawnSquare = move.toSqr
         else:
-            self.enPassantSquare = None
+            self.enPassantPawnSquare = None
 
     def get_direction(self, sqr1, sqr2):
         if sqr1 == sqr2:
@@ -387,7 +393,7 @@ class Board:
         kingSqr = self.get_king_sqr(color)
 
         # look at all opponent's sliding pieces (rooks, bishops, queens)
-        for piece in self.get_pieces(color.invert(), sliding=True):
+        for piece in self.get_sliding_pieces(color.invert()):
             # if the piece is not on the same row, column (rook, queen) or diagonal (bishop, queen) as the king, it cannot pin
             if piece.kind == PieceType.ROOK:
                 if not is_same_col_or_row(piece.square, kingSqr):
@@ -476,26 +482,9 @@ class Board:
                             if mv.toSqr in target_squares:
                                 legalMoves.append(mv)
 
-                    if self.enPassantSquare is not None and attacker.square == self.enPassantSquare and piece.kind == PieceType.PAWN and piece.square.rowIdx == self.enPassantSquare.rowIdx and abs(piece.square.idx - self.enPassantSquare.idx) == 1 and (piece not in pinnedPieces or pinnedPieces[piece] not in [Direction.UP, Direction.DOWN]):
-                        legalMoves.append(Move(piece, self.get_square_by_coords(self.enPassantSquare.rowIdx + (1 if piece.color == Color.WHITE else -1), self.enPassantSquare.colIdx), isEnPassant=True))
+                    if self.enPassantPawnSquare is not None and attacker.square == self.enPassantPawnSquare and piece.kind == PieceType.PAWN and piece.square.rowIdx == self.enPassantPawnSquare.rowIdx and abs(piece.square.idx - self.enPassantPawnSquare.idx) == 1 and (piece not in pinnedPieces or pinnedPieces[piece] not in [Direction.UP, Direction.DOWN]):
+                        legalMoves.append(Move(piece, self.get_square_by_coords(self.enPassantPawnSquare.rowIdx + (1 if piece.color == Color.WHITE else -1), self.enPassantPawnSquare.colIdx), isEnPassant=True))
         return legalMoves
-
-    def to_delete_get_pieces(self, color: Color=None, sliding: bool=False) -> List[Piece]:
-        if color == Color.WHITE:
-            if sliding:
-                return self.whiteSlidingPieces
-            else:
-                return self.whitePieces
-        elif color == Color.BLACK:
-            if sliding:
-                return self.blackSlidingPieces
-            else:
-                return self.blackPieces
-        else:
-            if sliding:
-                return self.whiteSlidingPieces + self.blackSlidingPieces
-            else:
-                return self.whitePieces + self.blackPieces
 
     def find_path_in_dir(self, square: Square, direction: Direction) -> List[Square]:
         # TODO - should include the piece itself???
@@ -515,18 +504,10 @@ class Board:
             if sqr is None or not sqr.is_free():
                 return sqr
             colIdx, rowIdx = move_in_direction(colIdx, rowIdx, direction)
-            
-    def get_king_sqr(self, color):
-        if color == Color.WHITE:
-            return self.whitePieces[0].square
-        return self.blackPieces[0].square
 
-    def is_in_check(self, color):
-        kingSqr = self.get_king_sqr(color)
-        if not kingSqr:
-            return False
-        
-        return kingSqr.is_attacked_by(color.invert())
+    def is_in_check(self, color: Color) -> bool:
+        king = self.get_king(color)
+        return king is not None and king.square.is_attacked_by(color.invert())
     
     def is_castle_possible(self, color: Color, side: Direction) -> bool:
         assert side == Direction.LEFT or side == Direction.RIGHT, f"castling must be to the LEFT or RIGHT, not {side}"
@@ -562,7 +543,7 @@ class Board:
         if self.is_in_check(color):
             return False
 
-        if side == Direction.LEFT and rookPassSqr.piece is not None:
+        if side == Direction.LEFT and rookPassSqr is not None and rookPassSqr.piece is not None:
             return False
 
         for sqr in passingSqrs:

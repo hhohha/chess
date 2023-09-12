@@ -36,7 +36,7 @@ class Pawn (Piece):
         """
         potentialMoves: List[Move] = []
 
-        enPassantSquare = self.square.board.enPassantSquare  # if en passant is possible, the enPassantSquare is the square behind the pawn
+        enPassantSquare = self.square.board.enPassantPawnSquare  # if en passant is possible, the enPassantSquare is the square behind the pawn
 
         # if en passant is possible and the pawn to take is next to this pawn, add the en passant move
         if (enPassantSquare is not None and self.square.rowIdx == self.EN_PASSANT_ROW and abs(self.square.idx - enPassantSquare.idx) == 1 and
@@ -99,7 +99,7 @@ class Pawn (Piece):
             potentialMoves += self.get_capture_moves(self.MOVE_OFFSET)
 
             # a diagonally pinned pawn can even capture en passant, en passant pin special pin is impossible in this case (the pawn is already pinned)
-            enPassant = self.square.board.enPassantSquare
+            enPassant = self.square.board.enPassantPawnSquare
             if enPassant is not None and self.square.rowIdx == self.EN_PASSANT_ROW and enPassant.idx - self.square.idx == self.MOVE_OFFSET:
                 potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.colIdx, enPassant.rowIdx + self.MOVE_OFFSET),
                                            isEnPassant=True))
@@ -107,7 +107,7 @@ class Pawn (Piece):
         else: # direction is LEFT_UP or RIGHT_DOWN
             # capture in the other direction is analogous to the previous case
             potentialMoves += self.get_capture_moves(-self.MOVE_OFFSET)
-            enPassant = self.square.board.enPassantSquare
+            enPassant = self.square.board.enPassantPawnSquare
             if enPassant is not None and self.square.rowIdx == self.EN_PASSANT_ROW and self.square.idx - enPassant.idx == self.MOVE_OFFSET:
                 potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.colIdx, enPassant.rowIdx + self.MOVE_OFFSET),
                                            isEnPassant=True))
@@ -144,18 +144,19 @@ class Pawn (Piece):
         """
         assert enPassantSquare is not None and enPassantSquare.piece is not None and enPassantSquare.piece.kind == PieceType.PAWN and\
             enPassantSquare.piece.color != self.color, f"no opponent's pawn to take en passant"
-        kingSqr = self.square.board.get_king(self.color).square
+        king = self.square.board.get_king(self.color)
+        if not king: # this cannot occur in a regular game
+            return False
 
         # the special pin can only occur on the en passant row
-        # kingSqr == None cannot occur in a regular game
-        if kingSqr is None or kingSqr.rowIdx != enPassantSquare.rowIdx:
+        if  king.square.rowIdx != enPassantSquare.rowIdx:
             return False
 
         # what is the direction of the potential pin (from king to pinner)
-        direction = Direction.LEFT if kingSqr.colIdx > enPassantSquare.colIdx else Direction.RIGHT
+        direction = Direction.LEFT if king.square.colIdx > enPassantSquare.colIdx else Direction.RIGHT
 
         # on the way from own king towards the pinner, the first piece must be the own pawn (that wants to take en passant) or the opponent's pawn
-        firstSquare = self.square.board.find_first_piece_in_dir(kingSqr, direction)
+        firstSquare = self.square.board.find_first_piece_in_dir(king.square, direction)
         if firstSquare is None or (firstSquare != enPassantSquare and firstSquare.piece != self):
             return False
 
