@@ -5,9 +5,7 @@ from constants import PieceType, Color, Direction
 
 class TestSuite_QueenMoves(unittest.TestCase):
     def test_queen_moves_1(self):
-        """
-        queen's moves on an empty board
-        """
+        """Queen's moves on an empty board"""
         for square in ['a1', 'c2', 'e4', 'g7']:
             b1, b2, b3 = Board(), Board(), Board()
             queen = b1.place_piece(square, PieceType.QUEEN, Color.WHITE)
@@ -18,9 +16,7 @@ class TestSuite_QueenMoves(unittest.TestCase):
             self.assertEqual(set(map(lambda x: str(x)[1:], actualMoves)), set(map(lambda x: str(x)[1:], expectedMoves)))
 
     def test_queen_moves_2(self):
-        """
-        queen's moves on a non-empty board
-        """
+        """Queen's moves on a non-empty board"""
         b = Board()
         queen = b.place_piece('g2', PieceType.QUEEN, Color.WHITE)
         b.place_piece('h2', PieceType.KNIGHT, Color.WHITE)
@@ -32,9 +28,7 @@ class TestSuite_QueenMoves(unittest.TestCase):
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
 
     def test_queen_moves_pinned(self):
-        """
-        queen's moves while pinned
-        """
+        """Queen's moves while pinned"""
         # there is a queen and a king lined up, but no pinner
         b = Board()
         queen = b.place_piece('c1', PieceType.QUEEN, Color.WHITE)

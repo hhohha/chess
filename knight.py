@@ -21,17 +21,13 @@ class Knight (Piece):
 
         return potentialMoves
 
-    def get_attacked_squares(self) -> List[Square]:
+    def add_attacked_squares(self) -> None:
         """
-        :return: list of squares attacked by the piece
         """
-        attackedSquares: List[Square] = []
         for (i, j) in [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]:
             square = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
             if square is not None:
-                attackedSquares.append(square)
-
-        return attackedSquares
+                self.attackedSquares.add(square)
 
     def calc_potential_moves_pinned(self, direction: Direction) -> List[Move]:
         return []

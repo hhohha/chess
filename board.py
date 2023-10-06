@@ -1,7 +1,7 @@
 from typing import Optional, Dict, List
 
 from constants import Color, PieceType, Direction
-from piece import Piece, SlidingPiece
+from piece import Piece
 from pawn import Pawn
 from knight import Knight
 from bishop import Bishop
@@ -11,7 +11,7 @@ from king import King
 from square import Square
 from move import Move
 import re
-from utils import letterToPiece, is_same_col_or_row, is_same_diag, reverse_dir, move_in_direction, coord_to_square_idx
+from utils import letterToPiece, is_same_col_or_row, is_same_diag, reverse_dir, move_in_direction, coord_to_square_idx, get_direction
 
 # TODO - refactor
 
@@ -26,7 +26,7 @@ class Board:
         self.squares: List[Square] = [Square(idx, self) for idx in range(64)]
         self.turn: Color = Color.WHITE
 
-        # a square of a pawn that has just moved two squares and can be captured en passant (of there is a pawn next to it)
+        # a square of a pawn that has just moved two squares and can be captured en passant (if there is a pawn next to it)
         # careful - FEN uses the square behind the pawn, but this is the square of the pawn itself
         self.enPassantPawnSquare: Optional[Square] = None
         self.halfMoves: int = 0
@@ -48,6 +48,44 @@ class Board:
         self.blackKnights: List[Knight] = []
         self.whitePawns: List[Pawn] = []
         self.blackPawns: List[Pawn] = []
+
+        # pieces: Dict[Tuple[Optional[PieceType], Optional[Color]], List[Piece]] = {
+        #     (PieceType.PAWN, Color.WHITE): self.whitePawns,
+        #     (PieceType.PAWN, Color.BLACK): self.blackPawns,
+        #     (PieceType.KNIGHT, Color.WHITE): self.whiteKnights,
+        #     (PieceType.KNIGHT, Color.BLACK): self.blackKnights,
+        #     (PieceType.BISHOP, Color.WHITE): self.whiteBishops,
+        #     (PieceType.BISHOP, Color.BLACK): self.blackBishops,
+        #     (PieceType.ROOK, Color.WHITE): self.whiteRooks,
+        #     (PieceType.ROOK, Color.BLACK): self.blackRooks,
+        #     (PieceType.QUEEN, Color.WHITE): self.whiteQueens,
+        #     (PieceType.QUEEN, Color.BLACK): self.blackQueens,
+        #     (PieceType.KING, Color.WHITE): [self.whiteKing],
+        #     (PieceType.KING, Color.BLACK): [self.blackKing],
+        #     (None, Color.WHITE): self.whitePawns + self.whiteKnights + self.whiteBishops + self.whiteRooks + self.whiteQueens + [self.whiteKing],
+        #     (None, Color.BLACK): self.blackPawns + self.blackKnights + self.blackBishops + self.blackRooks + self.blackQueens + [self.blackKing],
+        #     (PieceType.PAWN, None): [],
+        #     (PieceType.KNIGHT, None): [],
+        #     (PieceType.BISHOP, None): [],
+        #     (PieceType.ROOK, None): [],
+        #     (PieceType.QUEEN, None): [],
+        #     (PieceType.KING, None): [],
+        #     (None, None): []
+        # }
+
+    # TODO - this is probably quite ineffective, needs to be optimized if it should be used heavily in the engine
+    def get_all_pieces(self, color: Optional[Color]=None) -> List[Piece]:
+        if color == Color.WHITE:
+            return (self.whitePawns + self.whiteKnights + self.whiteBishops + self.whiteRooks + self.whiteQueens +
+                    ([self.whiteKing] if self.whiteKing else []))
+        elif color == Color.BLACK:
+            return (self.blackPawns + self.blackKnights + self.blackBishops + self.blackRooks + self.blackQueens +
+                    ([self.blackKing] if self.blackKing else []))
+        else:
+            return (self.whitePawns + self.whiteKnights + self.whiteBishops + self.whiteRooks + self.whiteQueens +
+            ([self.whiteKing] if self.whiteKing else []) +
+            self.blackPawns + self.blackKnights + self.blackBishops + self.blackRooks + self.blackQueens +
+            ([self.blackKing] if self.blackKing else []))
 
     def load_FEN(self, fen: str) -> None:
         """
@@ -106,8 +144,8 @@ class Board:
         self.halfMoves = int(halves)
         self.moves = int(fulls)
         
-        #for piece in self.get_pieces():
-        #    piece.update_attacked_squares()
+        for p in self.get_all_pieces():
+            p.update_attacked_squares()
 
         #self.legalMoves.append(list(self.get_all_legal_moves()))
 
@@ -150,12 +188,30 @@ class Board:
         return self.whiteKing if color == Color.WHITE else self.blackKing
 
     def get_square_by_idx(self, idx: int) -> Optional[Square]:
+        """
+        Get a square by its index, e.g. 0 is a1
+        :param idx: square index (0-63)
+        :return: the Square object
+        """
         return self.squares[idx] if 0 <= idx < 64 else None
 
     def get_square_by_coords(self, col: int, row: int) -> Optional[Square]:
+        """
+        Get a square by its coordinates, e.g. (0, 0) is a1
+
+        :param col: column coordinate (0-7)
+        :param row: row coordinate (0-7)
+        :return: the Square object
+        """
         return self.squares[col + row*8] if 0 <= col < 8 and 0 <= row < 8 else None
 
     def get_square_by_name(self, square: str) -> Optional[Square]:
+        """
+        Get a square by its name, e.g. 'a1'
+
+        :param square: square name
+        :return: the Square object
+        """
         assert len(square) == 2, f'Invalid square given {square}'
 
         col, row = square
@@ -352,45 +408,20 @@ class Board:
         else:
             self.enPassantPawnSquare = None
 
-    def get_direction(self, sqr1, sqr2):
-        if sqr1 == sqr2:
-            return None
-
-        if sqr1.colIdx == sqr2.colIdx:
-            if sqr1.rowIdx < sqr2.rowIdx:
-                return Direction.UP
-            else:
-                return Direction.DOWN
-            
-        if sqr1.rowIdx == sqr2.rowIdx:
-            if sqr1.colIdx < sqr2.colIdx:
-                return Direction.RIGHT
-            else:
-                return Direction.LEFT
-            
-        if sqr1.colIdx - sqr2.colIdx == sqr1.rowIdx - sqr2.rowIdx:
-            if sqr1.colIdx > sqr2.colIdx:
-                return Direction.DOWN_LEFT
-            else:
-                return Direction.UP_RIGHT
-            
-        if sqr1.colIdx - sqr2.colIdx == sqr2.rowIdx - sqr1.rowIdx:
-            if sqr1.colIdx > sqr2.colIdx:
-                return Direction.UP_LEFT
-            else:
-                return Direction.DOWN_RIGHT
-
-        return None
         
-    def get_pinned_pieces(self, color: Color) -> Dict[Piece, Direction]:
+    def calc_pinned_pieces(self, color: Color) -> Dict[Piece, Direction]:
         """
         get all pinned pieces of the given color, a pinned piece is the only piece that is between the own king and a sliding piece that would
         otherwise attack the king
         :param color: which color
         :return: a dictionary of pinned pieces and the direction of the pin FROM KING TOWARDS PINNER!!!
         """
+        king = self.get_king(color)
+        if king is None:
+            return {}
+
         pinnedPieces: Dict[Piece, Direction] = {}
-        kingSqr = self.get_king_sqr(color)
+        kingSqr = king.square
 
         # look at all opponent's sliding pieces (rooks, bishops, queens)
         for piece in self.get_sliding_pieces(color.invert()):
@@ -406,7 +437,7 @@ class Board:
                     continue
 
             # go from own king towards the potential pinner, the first piece must be a piece of the same color
-            direction = self.get_direction(kingSqr, piece.square)
+            direction = get_direction(kingSqr, piece.square)
             firstSquare = self.find_first_piece_in_dir(kingSqr, direction)
             if firstSquare is None or firstSquare.piece.color != color:
                 continue
@@ -419,85 +450,168 @@ class Board:
         return pinnedPieces
 
     def get_all_legal_moves(self) -> List[Move]:
+        """
+        :return: list of legal moves
+        """
+        return self.get_all_legal_moves_no_check() if not self.is_in_check(self.turn) else self.get_all_legal_moves_check()
+
+    def get_all_legal_moves_no_check(self) -> List[Move]:
+        """
+        Get all legal moves of the current player provided that the king is not in check
+        :return: list of legal king moves
+        """
         color = self.turn
-        pieces: List[Piece] = self.get_pieces(color)
-        pinnedPieces: Dict[Piece, Direction] = self.get_pinned_pieces(color)
         legalMoves: List[Move] = []
-        
-        if not self.is_in_check(color):
-            for piece in pieces:
-                if piece in pinnedPieces:
-                    legalMoves += piece.calc_potential_moves_pinned(pinnedPieces[piece])
-                else:
-                    #if piece.has_PT:
-                    #    legalMoves += list(map(lambda sqr: cMove(piece, sqr), piece.get_potential_squares()))
-                    #else:
-                    legalMoves += piece.calc_potential_moves()
+        pinnedPieces = self.calc_pinned_pieces(color)
 
-                    
-            # TODO - write this better
+        for piece in self.get_all_pieces(color):
+            if piece in pinnedPieces:
+                legalMoves += piece.calc_potential_moves_pinned(pinnedPieces[piece])
+            else:
+                # if piece.has_PT:
+                #    legalMoves += list(map(lambda sqr: cMove(piece, sqr), piece.get_potential_squares()))
+                # else:
+                legalMoves += piece.calc_potential_moves()
+
+        # castling
+        king = self.get_king(color)
+        if king:
             if self.is_castle_possible(color, Direction.RIGHT):
-                legalMoves.append(Move(self.get_king_sqr(color).piece, self.get_square_by_idx(6 if color == Color.WHITE else 62)))
-                    
+                legalMoves.append(Move(king, self.get_square_by_idx(6 if color == Color.WHITE else 62)))
+
             if self.is_castle_possible(color, Direction.LEFT):
-                legalMoves.append(Move(self.get_king_sqr(color).piece, self.get_square_by_idx(2 if color == Color.WHITE else 58)))
-        
-        else:
-            # king is in check
-            kingSqr = self.get_king_sqr(color)
-            attackers = kingSqr.get_attacked_by(color.invert())
-            
-            # can always (attempt to) move the king
-            kingMoves = kingSqr.piece.calc_potential_moves()
-            invalidSquares = []
-            for piece in attackers:
-                if piece.is_sliding:
-                    # cannot just run from sliding piece in the direction of the attack
-                    direction = reverse_dir(self.get_direction(kingSqr, piece.square))
-                    row, col = move_in_direction(kingSqr.rowIdx, kingSqr.colIdx, direction)
-                    invalidSqr = self.get_square_by_coords(row, col)
-                    if invalidSqr is not None:
-                        invalidSquares.append(invalidSqr)
-
-            for mv in kingMoves:
-                if mv.toSqr not in invalidSquares:
-                    legalMoves.append(mv)
-
-            if len(attackers) == 1:
-                #attacker = attackers.pop()
-                #attackers.add(attacker)
-                attacker = attackers[0]
-
-                # not double check - can also capture the attacker
-                if attacker.is_sliding:
-                    # can also block the attacker
-                    direction = self.get_direction(kingSqr, attacker.square)
-                    target_squares = self.find_first_piece_in_dir(kingSqr, direction, includePath=True)
-                else:
-                    target_squares = [attacker.square]
-
-                for piece in pieces:
-                    if piece.kind != PieceType.KING and piece not in pinnedPieces:
-                        for mv in piece.calc_potential_moves():
-                            if mv.toSqr in target_squares:
-                                legalMoves.append(mv)
-
-                    if self.enPassantPawnSquare is not None and attacker.square == self.enPassantPawnSquare and piece.kind == PieceType.PAWN and piece.square.rowIdx == self.enPassantPawnSquare.rowIdx and abs(piece.square.idx - self.enPassantPawnSquare.idx) == 1 and (piece not in pinnedPieces or pinnedPieces[piece] not in [Direction.UP, Direction.DOWN]):
-                        legalMoves.append(Move(piece, self.get_square_by_coords(self.enPassantPawnSquare.rowIdx + (1 if piece.color == Color.WHITE else -1), self.enPassantPawnSquare.colIdx), isEnPassant=True))
+                legalMoves.append(Move(king, self.get_square_by_idx(2 if color == Color.WHITE else 58)))
         return legalMoves
 
-    def find_path_in_dir(self, square: Square, direction: Direction) -> List[Square]:
-        # TODO - should include the piece itself???
-        path: List[Square] = []
+    def get_all_legal_moves_check(self) -> List[Move]:
+        """
+        Get all legal moves of the current player provided that the king is in check
+        :return: list of legal moves
+        """
+        color = self.turn
+        pinnedPieces = self.calc_pinned_pieces(color)
+        legalMoves = self.get_legal_moves_check_move_king()
+        attackers = self.get_king(color).square.get_attacked_by(color.invert())
+
+        if len(attackers) == 1:
+            # not double-check - can also capture the attacker or block it if it's a sliding piece
+            attacker = attackers.pop()  # there is no convenient way of getting the only element from a set without removing it
+            attackers.add(attacker)
+            legalMoves += self.get_legal_moves_check_captures(attacker, pinnedPieces)
+
+            # if the attacker is a sliding piece, we might be able to block it
+            if attacker.is_sliding():
+                legalMoves += self.get_legal_moves_check_blocks(attacker, pinnedPieces)
+
+        return legalMoves
+
+    def get_legal_moves_check_move_king(self) -> List[Move]:
+        """
+        Get all legal king moves of the current player provided that the king is in check
+        :return: list of legal moves
+        """
+        color = self.turn
+        king = self.get_king(color)
+        assert king is not None, 'King is in check, but no king found'
+        attackers = king.square.get_attacked_by(color.invert())
+
+        # if the king is in check by a sliding piece(s), it cannot move away from that piece, even though that square
+        # is technically not currently attacked
+        inaccessibleDirs = []
+        for piece in attackers:
+            if piece.is_sliding():
+                inaccessibleDirs.append(get_direction(piece.square, king.square))
+
+        return king.calc_potential_moves(inaccessibleDirs)
+
+    def get_legal_moves_check_captures(self, attacker: Piece, pinnedPieces: Dict[Piece, Direction]) -> List[Move]:
+        """
+        Get all legal capture moves of the current player provided that the king is in check (captures of the attacker)
+        :return: list of legal moves
+        """
+        color = self.turn
+        legalMoves: List[Move] = []
+
+        for piece in attacker.square.get_attacked_by(color):
+            # a pinned piece cannot capture the attacker
+            if piece in pinnedPieces:
+                continue
+            if isinstance(piece, Pawn):
+                # if the attacker is captured by a pawn, this can result in a promotion (4 different moves)
+                legalMoves += piece.generate_pawn_move(attacker.square)
+            elif not isinstance(piece, King):
+                # king can also capture the attacker, but that's a king move which is already covered
+                legalMoves.append(Move(piece, attacker.square))
+
+        # the attacker can also be captured en passant
+        if attacker.square == self.enPassantPawnSquare:
+            assert isinstance(attacker, Pawn), 'En passant capture by a non-pawn piece'
+            for offset in [1, -1]:
+                # look to both sides if there is an own pawn that can capture en passant
+                potentialPawnSqr = self.get_square_by_coords(attacker.square.colIdx + offset, attacker.square.rowIdx)
+                if potentialPawnSqr and isinstance(potentialPawnSqr.piece, Pawn) and potentialPawnSqr.piece.color == color:
+                    legalMoves.append(Move(potentialPawnSqr.piece, self.get_square_by_coords(attacker.square.colIdx, attacker.square.rowIdx + (
+                        1 if color == Color.WHITE else -1))))
+
+        return legalMoves
+
+    def get_legal_moves_check_blocks(self, attacker: Piece, pinnedPieces: Dict[Piece, Direction]) -> List[Move]:
+        """
+        Get all legal blocking moves of the current player provided that the king is in check
+        :return: list of legal moves
+        """
+        color = self.turn
+        legalMoves: List[Move] = []
+        king = self.get_king(color)
+
+        direction = get_direction(king.square, attacker.square)
+        # look at all the squares between the king and the attacker - what pieces can access them?
+        for blockingSquare in self.get_squares_in_dir(king.square, direction):
+            for piece in blockingSquare.get_attacked_by(color):
+                # king cannot block, pawn cannot block to a square that it is attacking
+                if not isinstance(piece, (Pawn, King)) and piece not in pinnedPieces:
+                    legalMoves.append(Move(piece, blockingSquare))
+
+            # look one square in the direction of attackers pawns, if there is a defending pawn, it can block the attack
+            # consider potential promotion as well
+            potentialPawnSqr = self.get_square_by_coords(blockingSquare.colIdx, blockingSquare.rowIdx + (-1 if color == Color.WHITE else 1))
+            if potentialPawnSqr is not None and isinstance(potentialPawnSqr.piece, Pawn) and potentialPawnSqr.piece.color == color:
+                legalMoves += potentialPawnSqr.piece.generate_pawn_move(blockingSquare)
+
+            # on row 3 (4 for black) look two squares in the direction of attackers pawns, if there is a defending pawn, it can block the attack
+            if (blockingSquare.rowIdx == 3 and color == Color.WHITE) or (blockingSquare.rowIdx == 4 and color == Color.BLACK):
+                potentialPawnSqr = self.get_square_by_coords(blockingSquare.colIdx, blockingSquare.rowIdx + (-2 if color == Color.WHITE else 2))
+                if potentialPawnSqr is not None and isinstance(potentialPawnSqr.piece, Pawn) and potentialPawnSqr.piece.color == color:
+                    legalMoves.append(Move(potentialPawnSqr.piece, blockingSquare))
+            # pawn taking en passant can never block
+
+        return legalMoves
+
+    def get_squares_in_dir(self, square: Square, direction: Direction) -> List[Square]:
+        """
+        Get all empty squares in the given direction from the given square
+
+        :param square: square to start from
+        :param direction: direction to look in
+        :return: list of squares
+        """
+        squares: List[Square] = []
+        colIdx, rowIdx = move_in_direction(square.colIdx, square.rowIdx, direction)
         while True:
-            colIdx, rowIdx = move_in_direction(square.colIdx, square.rowIdx, direction)
             sqr = self.get_square_by_coords(rowIdx, colIdx)
-            if sqr is not None:
-                path.append(sqr)
             if sqr is None or not sqr.is_free():
-                return path
+                return squares
+            squares.append(sqr)
+            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, direction)
 
     def find_first_piece_in_dir(self, square: Square, direction) -> Optional[Square]:
+        """
+        Find the square with first piece in the given direction from the given square
+
+        :param square: square to start from
+        :param direction: direction to look in
+        :return: the square with the first piece in the given direction, or None if there is no piece in that direction
+        """
         colIdx, rowIdx = move_in_direction(square.colIdx, square.rowIdx, direction)
         while True:
             sqr = self.get_square_by_coords(colIdx, rowIdx)
@@ -506,10 +620,27 @@ class Board:
             colIdx, rowIdx = move_in_direction(colIdx, rowIdx, direction)
 
     def is_in_check(self, color: Color) -> bool:
+        """
+        Is the king of the given color currently in check? Pre-supposes that the attacked squares of all pieces are up-to-date
+
+        :param color: color of the king
+        :return: True if the king is in check, False otherwise
+        """
         king = self.get_king(color)
         return king is not None and king.square.is_attacked_by(color.invert())
     
     def is_castle_possible(self, color: Color, side: Direction) -> bool:
+        """
+        Checks the preconditions for castling:
+            1. king and the rook haven't moved
+            2. king is not in check
+            3. no pieces between the king and the rook
+            4. no square between the king and the rook is attacked by the opponent
+
+        :param color: color of the side to castle
+        :param side: which side to castle are we checking
+        :return: True if castling is possible, False otherwise
+        """
         assert side == Direction.LEFT or side == Direction.RIGHT, f"castling must be to the LEFT or RIGHT, not {side}"
         rookPassSqr: Optional[Square] = None
 

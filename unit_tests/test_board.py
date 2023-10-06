@@ -1,7 +1,7 @@
 import unittest
 
 from board import Board
-from constants import FEN_INIT, PieceType, Color, Direction, FEN_A, FEN_B
+from constants import FEN_INIT, PieceType, Color, Direction, FEN_A, FEN_B, FEN_C
 
 
 class TestSuite_Board(unittest.TestCase):
@@ -74,6 +74,55 @@ class TestSuite_Board(unittest.TestCase):
         self.assertEqual(b.halfMoves, 98)
         self.assertEqual(b.moves, 0)
 
+    def test_find_first_piece_in_dir(self):
+        b = Board()
+        b.load_FEN(FEN_INIT)
+        self.assertEqual(b.find_first_piece_in_dir(b.get_square_by_name('e4'), Direction.UP), b.get_square_by_name('e7'))
+        self.assertEqual(b.find_first_piece_in_dir(b.get_square_by_name('e4'), Direction.UP_LEFT), b.get_square_by_name('b7'))
+        self.assertIsNone(b.find_first_piece_in_dir(b.get_square_by_name('e4'), Direction.RIGHT))
+        self.assertIsNone(b.find_first_piece_in_dir(b.get_square_by_name('e4'), Direction.LEFT))
+        self.assertEqual(b.find_first_piece_in_dir(b.get_square_by_name('e1'), Direction.UP), b.get_square_by_name('e2'))
+        self.assertEqual(b.find_first_piece_in_dir(b.get_square_by_name('e1'), Direction.RIGHT), b.get_square_by_name('f1'))
+        self.assertEqual(b.find_first_piece_in_dir(b.get_square_by_name('e1'), Direction.UP_RIGHT), b.get_square_by_name('f2'))
+
+
+    def test_get_pinned_pieces(self):
+        b = Board()
+        b.load_FEN(FEN_INIT)
+        self.assertEqual(b.calc_pinned_pieces(Color.WHITE), {})
+        self.assertEqual(b.calc_pinned_pieces(Color.BLACK), {})
+
+        b = Board()
+        b.load_FEN(FEN_C)
+
+        pinnedWhite = b.calc_pinned_pieces(Color.WHITE)
+        self.assertEqual(len(pinnedWhite), 1)
+        self.assertEqual(list(pinnedWhite.keys())[0], b.get_square_by_name('b5').piece)
+        self.assertEqual(list(pinnedWhite.values())[0], Direction.RIGHT)
+
+        pinnedBlack = b.calc_pinned_pieces(Color.BLACK)
+        self.assertEqual(len(pinnedBlack), 1)
+        self.assertEqual(list(pinnedBlack.keys())[0], b.get_square_by_name('f4').piece)
+        self.assertEqual(list(pinnedBlack.values())[0], Direction.LEFT)
+
+        # king surrounded by own pawns, all pinned by queens
+        fen1 = 'k7/8/2q1q1q1/3PPP2/2qPKPq1/3PPP2/2q1q1q1/8 w - - 0 0'
+        b.load_FEN(fen1)
+
+        pinnedWhite = b.calc_pinned_pieces(Color.WHITE)
+        self.assertEqual(len(pinnedWhite), 8)
+        self.assertEqual(set(pinnedWhite.keys()), set(b.whitePawns))
+        self.assertEqual(set(pinnedWhite.values()), {Direction.UP, Direction.UP_LEFT, Direction.UP_RIGHT, Direction.LEFT, Direction.RIGHT,
+                                                     Direction.DOWN_LEFT, Direction.DOWN_RIGHT, Direction.DOWN})
+
+        # substitute queens for rooks, only 4 pawns are pinned
+        fen1 = 'k7/8/2r1r1r1/3PPP2/2rPKPr1/3PPP2/2r1r1r1/8 w - - 0 0'
+        b.load_FEN(fen1)
+        pinnedWhite = b.calc_pinned_pieces(Color.WHITE)
+        self.assertEqual(len(pinnedWhite), 4)
+        self.assertEqual(set(pinnedWhite.keys()), {b.get_square_by_name('d4').piece, b.get_square_by_name('f4').piece,
+                                                   b.get_square_by_name('e3').piece, b.get_square_by_name('e5').piece})
+        self.assertEqual(set(pinnedWhite.values()), {Direction.UP, Direction.LEFT, Direction.RIGHT, Direction.DOWN})
 
     def xtest_recalculation(self):
         pass
@@ -82,7 +131,4 @@ class TestSuite_Board(unittest.TestCase):
         pass
 
     def xtest_is_check(self):
-        pass
-
-    def xtest_get_pinned_pieces(self):
         pass

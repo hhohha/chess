@@ -1,7 +1,7 @@
 import unittest
-
+from board import Board
 from constants import Direction
-from utils import move_in_direction, reverse_dir, is_same_col_or_row, is_same_diag, square_idx_to_coord, coord_to_square_idx
+from utils import move_in_direction, reverse_dir, is_same_col_or_row, is_same_diag, square_idx_to_coord, coord_to_square_idx, get_direction
 
 
 class TestSuite_Utils(unittest.TestCase):
@@ -41,7 +41,6 @@ class TestSuite_Utils(unittest.TestCase):
         self.assertEqual(reverse_dir(Direction.DOWN_LEFT), Direction.UP_RIGHT)
 
     def test_is_same_col_row_diag(self):
-        from board import Board
         b = Board()
         self.assertTrue(is_same_col_or_row(b.get_square_by_name('a1'), b.get_square_by_name('a2')))
         self.assertTrue(is_same_col_or_row(b.get_square_by_name('a1'), b.get_square_by_name('a7')))
@@ -71,3 +70,16 @@ class TestSuite_Utils(unittest.TestCase):
 
         self.assertEqual(square_idx_to_coord(28), 'e4')
         self.assertEqual(coord_to_square_idx('e4'), 28)
+
+    def test_get_direction(self):
+        b = Board()
+        self.assertEqual(get_direction(b.get_square_by_name('a1'), b.get_square_by_name('a2')), Direction.UP)
+        self.assertEqual(get_direction(b.get_square_by_name('b7'), b.get_square_by_name('b3')), Direction.DOWN)
+        self.assertIsNone(get_direction(b.get_square_by_name('d3'), b.get_square_by_name('d3')))
+        self.assertEqual(get_direction(b.get_square_by_name('d3'), b.get_square_by_name('f5')), Direction.UP_RIGHT)
+        self.assertEqual(get_direction(b.get_square_by_name('f5'), b.get_square_by_name('d3')), Direction.DOWN_LEFT)
+        self.assertEqual(get_direction(b.get_square_by_name('d3'), b.get_square_by_name('b5')), Direction.UP_LEFT)
+        self.assertEqual(get_direction(b.get_square_by_name('b5'), b.get_square_by_name('d3')), Direction.DOWN_RIGHT)
+        self.assertIsNone(get_direction(b.get_square_by_name('d3'), b.get_square_by_name('f4')))
+
+

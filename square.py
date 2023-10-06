@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, List, TYPE_CHECKING
+from typing import Optional, List, TYPE_CHECKING, Set
 from constants import Color
 
 if TYPE_CHECKING:
@@ -14,8 +14,8 @@ class Square:
         self.colIdx = idx % 8
         self.piece: Optional[Piece] = None
         self.board = board
-        self.attackedByWhites: List[Piece] = []
-        self.attackedByBlacks: List[Piece] = []
+        self.attackedByWhites: Set[Piece] = set()
+        self.attackedByBlacks: Set[Piece] = set()
         self.coordinates: str = chr(self.colIdx + 97) + str(self.rowIdx + 1)
         #self.attackedByWhites = [[]]
         #self.attackedByBlacks = [[]]
@@ -32,7 +32,7 @@ class Square:
     def is_attacked_by(self, color: Color) -> bool:
         return len(self.get_attacked_by(color)) > 0
 
-    def get_attacked_by(self, color: Color) -> List[Piece]:
+    def get_attacked_by(self, color: Color) -> Set[Piece]:
         return self.attackedByWhites if color == Color.WHITE else self.attackedByBlacks
 
     # TODO - color == None may be not efficient - unit_tests, and if so, remove

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Tuple, TYPE_CHECKING
+from typing import Tuple, TYPE_CHECKING, Optional
 from constants import PieceType, Direction
 if TYPE_CHECKING:
     from square import Square
@@ -21,6 +21,25 @@ pieceToLetter = {
     PieceType.QUEEN: 'Q',
     PieceType.KING: 'K'
 }
+
+def get_direction(sqr1: Square, sqr2: Square) -> Optional[Direction]:
+    """Get the direction from a one square on the board to another"""
+    if sqr1 == sqr2:
+        return None
+
+    if sqr1.colIdx == sqr2.colIdx:
+        return Direction.UP if sqr1.rowIdx < sqr2.rowIdx else Direction.DOWN
+
+    if sqr1.rowIdx == sqr2.rowIdx:
+        return Direction.RIGHT if sqr1.colIdx < sqr2.colIdx else Direction.LEFT
+
+    if sqr1.colIdx - sqr2.colIdx == sqr1.rowIdx - sqr2.rowIdx:
+        return Direction.DOWN_LEFT if sqr1.colIdx > sqr2.colIdx else Direction.UP_RIGHT
+
+    if sqr1.colIdx - sqr2.colIdx == sqr2.rowIdx - sqr1.rowIdx:
+        return Direction.UP_LEFT if sqr1.colIdx > sqr2.colIdx else Direction.DOWN_RIGHT
+
+    return None
     
 def kind_to_letter(kind: PieceType) -> str:
     return 'pNBRQK'[kind.value]

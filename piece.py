@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Set
 from constants import Color
 from square import Square
 from utils import *
@@ -11,7 +11,7 @@ class Piece(ABC):
         self.color = color
         self.movesCnt = 0
         self.square = square
-        # self.attacked_squares = [[]]
+        self.attackedSquares: Set[Square] = set()
         # self.id = square.idx
         # self.is_active = True
 
@@ -27,8 +27,18 @@ class Piece(ABC):
         return False
 
     @abstractmethod
-    def get_attacked_squares(self) -> List[Square]:
+    def update_attacked_squares(self) -> None:
         pass
+
+    def update_attacked_squares(self):
+        for sqr in self.attackedSquares:
+            sqr.get_attacked_by(self.color).remove(self)
+
+        self.attackedSquares.clear()
+        self.add_attacked_squares()
+
+        for sqr in self.attackedSquares:
+            sqr.get_attacked_by(self.color).add(self)
 
     #@abstractmethod
     #def add_new_calculation(self):
@@ -91,12 +101,11 @@ class SlidingPiece(Piece, ABC):
                     break
         return potentialMoves
 
-    def get_attacked_squares(self) -> List[Square]:
+    def add_attacked_squares(self) -> None:
         """
-        get squares attacked by the piece
-        :return: list of squares attacked by the piece
+        add squares attacked by the piece
         """
-        attackedSquares: List[Square] = []
+
         for direction in self.get_sliding_directions():
             i, j = 0, 0
             while True:
@@ -107,14 +116,13 @@ class SlidingPiece(Piece, ABC):
                     break  # reached the edge of the board
 
                 if square.piece is None:
-                    attackedSquares.append(square)  # free square
+                    self.attackedSquares.add(square)  # free square
                 elif square.piece.color != self.color:
-                    attackedSquares.append(square)  # capture - can move here but no further
+                    self.attackedSquares.add(square)  # capture - can move here but no further
                     break
                 else:
-                    attackedSquares.append(square)
+                    self.attackedSquares.add(square)
                     break
-        return attackedSquares
 
     def calc_potential_moves_pinned(self, directionFrom: Direction) -> List[Move]:
         """
