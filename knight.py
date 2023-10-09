@@ -36,4 +36,4 @@ class Knight (Piece):
         return 'N' + self.square.getCoord()
 
     def __repr__(self):
-        return 'N' + self.square.getCoord()
+        return f'Knight ({self.color}, {self.square})'

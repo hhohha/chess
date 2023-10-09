@@ -9,6 +9,9 @@ class Bishop (SlidingPiece):
         self.isLight = True     # light piece is a bishop or a knight
         self.slidingDirections: List[Direction] = [Direction.DOWN_LEFT, Direction.DOWN_RIGHT, Direction.UP_LEFT, Direction.UP_RIGHT]
 
+    def is_sliding(self) -> bool:
+        return True
+
     def get_sliding_directions(self) -> List[Direction]:
         return self.slidingDirections
         

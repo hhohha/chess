@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 
 from constants import Color, PieceType, Direction
 from piece import Piece
@@ -29,11 +29,18 @@ class Board:
         # a square of a pawn that has just moved two squares and can be captured en passant (if there is a pawn next to it)
         # careful - FEN uses the square behind the pawn, but this is the square of the pawn itself
         self.enPassantPawnSquare: Optional[Square] = None
-        self.halfMoves: int = 0
-        self.moves: int = 0
+
+        # half moves since last capture or pawn move for each position in history
+        # when undoing a pawn or a capture move, we wouldn't know what this number should be, the move would have to store it
+        # now we simply remove the last number
+        self.halfMoves: List[int] = [0]
+
+        self.moves: int = 1 # move counter starts at 1 according to FEN
         self.analysisDepth: int = 0
         self.piecesRecalculated: List[Piece] = []
-        self.legalMoves: List[Move] = []
+
+        # list of legal moves in every position in history, useful because when we are undoing a move, we just pop the last element
+        self.legalMoves: List[List[Move]] = []
         self.history: List[Move] = []
 
         self.whiteKing: Optional[King] = None
@@ -141,13 +148,13 @@ class Board:
             # we need the square of the pawn, not the square behind it
             self.enPassantPawnSquare = self.get_square_by_idx(coord_to_square_idx(enPassantSqr) + (8 if self.turn == Color.WHITE else -8))
         
-        self.halfMoves = int(halves)
+        self.halfMoves = [int(halves)]
         self.moves = int(fulls)
         
         for p in self.get_all_pieces():
             p.update_attacked_squares()
 
-        #self.legalMoves.append(list(self.get_all_legal_moves()))
+        self.legalMoves = [self.get_all_legal_moves()]
 
     def clear(self):
         self.squares = [Square(idx, self) for idx in range(64)]
@@ -165,7 +172,7 @@ class Board:
         self.blackPawns.clear()
         self.enPassantPawnSquare = None
         self.history.clear()
-        self.halfMoves = 0
+        self.halfMoves = [0]
         self.moves = 0
 
     def get_pieces(self, kind: PieceType, color: Color) -> List[Piece]:
@@ -256,7 +263,7 @@ class Board:
             self.get_pieces(piece.color, sliding=True).remove(piece)
         piece.is_active = False
 
-    def perform_move(self, move, analysis=True):
+    def perform_move(self, move: Move, analysis: bool=True) -> None:
         # TODO - rook and king has moved indicators
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
 
@@ -264,10 +271,11 @@ class Board:
             #self.half_moves = 0
         #else:
             #self.half_moves += 1
-        if self.enPassantPawnSquare:
-            move.pastEP = self.enPassantPawnSquare
+        #if self.enPassantPawnSquare:    # TODO - not sure what this was supposed to do
+        #    move.pastEP = self.enPassantPawnSquare
+
         if self.turn == Color.BLACK:
-            self.moves += 1
+            self.moves += 1   # move counter - incremented with black's move
 
         if toSqr.piece is not None:
             move.pieceTaken = toSqr.piece
@@ -278,8 +286,14 @@ class Board:
             self.remove_piece(self.enPassantPawnSquare.piece)
             self.enPassantPawnSquare.piece = None
 
+        if move.pieceTaken or movPiece.kind == PieceType.PAWN:
+            self.halfMoves.append(0)
+        else:
+            assert len(self.halfMoves) > 0
+            self.halfMoves.append(self.halfMoves[-1] + 1)
+
         toSqr.piece, fromSqr.piece, movPiece.square = movPiece, None, toSqr
-        movPiece.movesCnt += 1
+        movPiece.movesCnt += 1  # each piece has its own move counter, might not be needed
 
         if move.is_castling():
             rookFrom, rookTo = self._get_castle_rook_squares(move)
@@ -372,7 +386,7 @@ class Board:
         self.turn = not self.turn
         self.legalMoves.pop()
 
-    def _get_castle_rook_squares(self, move):
+    def _get_castle_rook_squares(self, move: Move) -> Tuple[int, int]:
         if move.toSqr.idx == 6:
             return 7, 5
         elif move.toSqr.idx == 2:
@@ -453,9 +467,9 @@ class Board:
         """
         :return: list of legal moves
         """
-        return self.get_all_legal_moves_no_check() if not self.is_in_check(self.turn) else self.get_all_legal_moves_check()
+        return self._get_all_legal_moves_no_check() if not self.is_in_check(self.turn) else self._get_all_legal_moves_check()
 
-    def get_all_legal_moves_no_check(self) -> List[Move]:
+    def _get_all_legal_moves_no_check(self) -> List[Move]:
         """
         Get all legal moves of the current player provided that the king is not in check
         :return: list of legal king moves
@@ -483,29 +497,29 @@ class Board:
                 legalMoves.append(Move(king, self.get_square_by_idx(2 if color == Color.WHITE else 58)))
         return legalMoves
 
-    def get_all_legal_moves_check(self) -> List[Move]:
+    def _get_all_legal_moves_check(self) -> List[Move]:
         """
         Get all legal moves of the current player provided that the king is in check
         :return: list of legal moves
         """
         color = self.turn
         pinnedPieces = self.calc_pinned_pieces(color)
-        legalMoves = self.get_legal_moves_check_move_king()
+        legalMoves = self._get_legal_moves_check_move_king()
         attackers = self.get_king(color).square.get_attacked_by(color.invert())
 
         if len(attackers) == 1:
             # not double-check - can also capture the attacker or block it if it's a sliding piece
             attacker = attackers.pop()  # there is no convenient way of getting the only element from a set without removing it
             attackers.add(attacker)
-            legalMoves += self.get_legal_moves_check_captures(attacker, pinnedPieces)
+            legalMoves += self._get_legal_moves_check_captures(attacker, pinnedPieces)
 
             # if the attacker is a sliding piece, we might be able to block it
             if attacker.is_sliding():
-                legalMoves += self.get_legal_moves_check_blocks(attacker, pinnedPieces)
+                legalMoves += self._get_legal_moves_check_blocks(attacker, pinnedPieces)
 
         return legalMoves
 
-    def get_legal_moves_check_move_king(self) -> List[Move]:
+    def _get_legal_moves_check_move_king(self) -> List[Move]:
         """
         Get all legal king moves of the current player provided that the king is in check
         :return: list of legal moves
@@ -524,7 +538,7 @@ class Board:
 
         return king.calc_potential_moves(inaccessibleDirs)
 
-    def get_legal_moves_check_captures(self, attacker: Piece, pinnedPieces: Dict[Piece, Direction]) -> List[Move]:
+    def _get_legal_moves_check_captures(self, attacker: Piece, pinnedPieces: Dict[Piece, Direction]) -> List[Move]:
         """
         Get all legal capture moves of the current player provided that the king is in check (captures of the attacker)
         :return: list of legal moves
@@ -544,7 +558,7 @@ class Board:
                 legalMoves.append(Move(piece, attacker.square))
 
         # the attacker can also be captured en passant
-        if attacker.square == self.enPassantPawnSquare:
+        if self.enPassantPawnSquare and attacker.square == self.enPassantPawnSquare:
             assert isinstance(attacker, Pawn), 'En passant capture by a non-pawn piece'
             for offset in [1, -1]:
                 # look to both sides if there is an own pawn that can capture en passant
@@ -555,7 +569,7 @@ class Board:
 
         return legalMoves
 
-    def get_legal_moves_check_blocks(self, attacker: Piece, pinnedPieces: Dict[Piece, Direction]) -> List[Move]:
+    def _get_legal_moves_check_blocks(self, attacker: Piece, pinnedPieces: Dict[Piece, Direction]) -> List[Move]:
         """
         Get all legal blocking moves of the current player provided that the king is in check
         :return: list of legal moves
@@ -598,7 +612,7 @@ class Board:
         squares: List[Square] = []
         colIdx, rowIdx = move_in_direction(square.colIdx, square.rowIdx, direction)
         while True:
-            sqr = self.get_square_by_coords(rowIdx, colIdx)
+            sqr = self.get_square_by_coords(colIdx, rowIdx)
             if sqr is None or not sqr.is_free():
                 return squares
             squares.append(sqr)

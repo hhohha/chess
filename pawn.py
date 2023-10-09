@@ -9,6 +9,7 @@ class Pawn (Piece):
         super().__init__(PieceType.PAWN, color, square)
         self.isLight = False
 
+        # TODO - these numbers are the same for all pawns of the same player, they should be moved to player class
         if self.color == Color.WHITE:
             self.MOVE_OFFSET = 1      # white pawns move up the board (+1 row), black opposite
             self.BASE_ROW = 1         # white pawns start on row 1, black on row 6
@@ -117,7 +118,7 @@ class Pawn (Piece):
     def generate_pawn_move(self, targetSquare: Square) -> List[Move]:
         """
         normally the pawn has one possible move to the given square, but if it's a promotion, there are 4 possible moves
-        :param square: destination square
+        :param targetSquare: destination square
         :return: a list of possible pawn moves to the given square
         """
         if targetSquare.rowIdx != self.PROMOTION_ROW:
@@ -127,16 +128,15 @@ class Pawn (Piece):
                                                                                              PieceType.QUEEN]]
     
     def add_attacked_squares(self) -> None:
-        """
-        """
+        """add squares attacked by the piece"""
         if self.square.colIdx == 0:
-            self.attackedSquares.add(self.square.board.get_square_by_coords(self.square.rowIdx + self.MOVE_OFFSET, self.square.colIdx + 1))
+            self.attackedSquares.add(self.square.board.get_square_by_coords(self.square.colIdx + 1, self.square.rowIdx + self.MOVE_OFFSET))
         elif self.square.colIdx == 7:
-            self.attackedSquares.add(self.square.board.get_square_by_coords(self.square.rowIdx + self.MOVE_OFFSET, self.square.colIdx - 1))
+            self.attackedSquares.add(self.square.board.get_square_by_coords(self.square.colIdx - 1, self.square.rowIdx + self.MOVE_OFFSET))
         else:
             self.attackedSquares.update({
-                self.square.board.get_square_by_coords(self.square.rowIdx + self.MOVE_OFFSET, self.square.colIdx + 1),
-                self.square.board.get_square_by_coords(self.square.rowIdx + self.MOVE_OFFSET, self.square.colIdx - 1)
+                self.square.board.get_square_by_coords(self.square.colIdx + 1, self.square.rowIdx + self.MOVE_OFFSET),
+                self.square.board.get_square_by_coords(self.square.colIdx - 1, self.square.rowIdx + self.MOVE_OFFSET)
             })
         
     def is_en_passant_pin(self, enPassantSquare: Square) -> bool:
