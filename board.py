@@ -56,6 +56,27 @@ class Board:
         self.whitePawns: List[Pawn] = []
         self.blackPawns: List[Pawn] = []
 
+        # TODO - maybe store the active pieces in a following dict?
+        # TODO - maybe set, not list?
+        # self.whitePieces: Dict[PieceType, List[Piece]] = {
+        #     PieceType.PAWN: [],
+        #     PieceType.KNIGHT: [],
+        #     PieceType.BISHOP: [],
+        #     PieceType.ROOK: [],
+        #     PieceType.QUEEN: [],
+        #     PieceType.KING: []
+        # }
+
+        # self.blackPieces: Dict[PieceType, List[Piece]] = {
+        #     PieceType.PAWN: [],
+        #     PieceType.KNIGHT: [],
+        #     PieceType.BISHOP: [],
+        #     PieceType.ROOK: [],
+        #     PieceType.QUEEN: [],
+        #     PieceType.KING: []
+        # }
+
+        # TODO - or store them like this? Which is the most effective way???
         # pieces: Dict[Tuple[Optional[PieceType], Optional[Color]], List[Piece]] = {
         #     (PieceType.PAWN, Color.WHITE): self.whitePawns,
         #     (PieceType.PAWN, Color.BLACK): self.blackPawns,
@@ -257,15 +278,18 @@ class Board:
 
         return square.piece
 
-    def remove_piece(self, piece):
-        self.get_pieces(piece.color).remove(piece)
-        if piece.is_sliding:
-            self.get_pieces(piece.color, sliding=True).remove(piece)
-        piece.is_active = False
+    def remove_piece(self, piece: Piece) -> None:
+        """
+        the removed piece is no longer pointed to by any square or the list of pieces of the board,
+        it is however pointed to by the move that it was taken in, thus the move can be undone
+        """
+        assert piece in self.get_pieces(piece.kind, piece.color), f'Cannot remove piece {piece}, not found'
+        self.get_pieces(piece.kind, piece.color).remove(piece)
+        piece.isActive = False
 
     def perform_move(self, move: Move, analysis: bool=True) -> None:
         # TODO - rook and king has moved indicators
-        fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
+        fromSqr, toSqr, movingPiece = move.fromSqr, move.toSqr, move.piece
 
         #if toSqr.piece is not None or movPiece.kind == PAWN:
             #self.half_moves = 0
@@ -277,23 +301,23 @@ class Board:
         if self.turn == Color.BLACK:
             self.moves += 1   # move counter - incremented with black's move
 
-        if toSqr.piece is not None:
+        if toSqr.piece is not None:  # if taking a piece, store the ref in the move and remove it...
             move.pieceTaken = toSqr.piece
             self.remove_piece(toSqr.piece)
 
-        if move.isEnPassant:
+        if move.isEnPassant:         # ... and the same for taking en passant
             move.pieceTaken = self.enPassantPawnSquare.piece
             self.remove_piece(self.enPassantPawnSquare.piece)
             self.enPassantPawnSquare.piece = None
 
-        if move.pieceTaken or movPiece.kind == PieceType.PAWN:
+        if move.pieceTaken or movingPiece.kind == PieceType.PAWN:  # half-moves counter since the last pawn move or capture
             self.halfMoves.append(0)
         else:
             assert len(self.halfMoves) > 0
             self.halfMoves.append(self.halfMoves[-1] + 1)
 
-        toSqr.piece, fromSqr.piece, movPiece.square = movPiece, None, toSqr
-        movPiece.movesCnt += 1  # each piece has its own move counter, might not be needed
+        toSqr.piece, fromSqr.piece, movingPiece.square = movingPiece, None, toSqr   # update pointers
+        movingPiece.movesCnt += 1  # each piece has its own move counter, might not be needed
 
         if move.is_castling():
             rookFrom, rookTo = self._get_castle_rook_squares(move)
@@ -301,14 +325,14 @@ class Board:
             self.get_square_by_idx(rookFrom).piece = None
             self.get_square_by_idx(rookTo).piece.square = self.get_square_by_idx(rookTo)
 
-        self._update_en_passant_rights(move)
+        self._update_en_passant_rights(move)  # if a pawn was moved 2 squares forward, maybe it can be taken e.p.
 
         if move.isPromotion:
-            self.change_piece_kind(movPiece, move.newPiece)
+            self.change_piece_kind(movingPiece, move.newPiece)
 
         self.turn = not self.turn
 
-        self.recalculation(move, analysis)
+        self.recalculation(move, analysis)   # TODO - redo this
         self.legalMoves.append(self.get_all_legal_moves())
 
     def recalculation(self, move, analysis):
@@ -338,6 +362,7 @@ class Board:
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
 
         # TODO - move counters
+        # TODO - redo this so that moveEP can be removed, it looks redundant
         if move.pastEP:
             self.enPassantPawnSquare = move.pastEP
 
@@ -396,32 +421,33 @@ class Board:
         else:
             return 56, 59
 
-    def change_piece_kind(self, piece, newKind):
-        # doesn't work for king
-        if piece.is_sliding and newKind in [PieceType.PAWN, PieceType.KNIGHT]:
-            self.get_pieces(piece.color, sliding=True).remove(piece)
-        elif not piece.isSliding and newKind in [PieceType.BISHOP, PieceType.ROOK, PieceType.QUEEN]:
-            self.get_pieces(piece.color, sliding=True).append(piece)
+    def change_piece_kind(self, piece: Piece, newKind: PieceType) -> None:
+        """
+        changes a piece to a different kind of piece, it is meant for pawn promotion, but there may be other funny uses
+        does not currently work with king
+        :param piece: which piece to turn to another kind
+        :param newKind: new kind of the piece
+        """
+        # this doesn't work for king
+        self.get_pieces(piece.kind, piece.color).remove(piece)
+        self.get_pieces(newKind, piece.color).append(piece)
+
         piece.kind = newKind
-        piece.__class__ = [Pawn, Knight, Bishop, Rook, Queen, King][newKind]
-        #piece.__init__(piece.color, piece.square)
+        piece.__class__ = [Pawn, Knight, Bishop, Rook, Queen, King][newKind.value()]
+        piece.__init__(piece.color, piece.square)  #TODO - do we need to run this???
 
-# TODO - FIX THIS !!!
-#        if PieceWithPotenialSquares in piece.__class__.__bases__:
-#            piece.has_PT = True
-#            piece.potential_squares = [[]]
-#        else:
-#            piece.has_PT = False
+        # if PieceWithPotenialSquares in piece.__class__.__bases__:
+        #     piece.has_PT = True
+        #     piece.potential_squares = [[]]
+        # else:
+        #     piece.has_PT = False
 
-        piece.is_sliding = newKind in [PieceType.BISHOP, PieceType.ROOK, PieceType.QUEEN]
-        piece.is_light = newKind in [PieceType.KNIGHT, PieceType.BISHOP]
-
-    def _update_en_passant_rights(self, move):
-        if move.piece.kind == PieceType.PAWN and abs(move.toSqr.idx - move.fromSqr.idx) == 16:
-            self.enPassantPawnSquare = move.toSqr
-        else:
-            self.enPassantPawnSquare = None
-
+    def _update_en_passant_rights(self, move: Move) -> None:
+        """
+        If the current move is a 2 square pawn move, remember that it can be taken e.p.
+        :param move: the move currenly being made
+        """
+        self.enPassantPawnSquare = move.toSqr if move.piece.kind == PieceType.PAWN and abs(move.toSqr.idx - move.fromSqr.idx) == 16 else None
         
     def calc_pinned_pieces(self, color: Color) -> Dict[Piece, Direction]:
         """

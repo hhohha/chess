@@ -12,8 +12,9 @@ class Piece(ABC):
         self.movesCnt = 0
         self.square = square
         self.attackedSquares: Set[Square] = set()
+        self.isActive = True   # TODO - is this attribute actually necessary, cannot we simply not point to this piece?
         # self.id = square.idx
-        # self.is_active = True
+
 
     @abstractmethod
     def calc_potential_moves(self):

@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from piece import Piece
 
 class Move:
+    # TODO - isPromotion looks redundant - if so, remove it
     __slots__ = 'piece', 'toSqr', 'fromSqr', 'newPiece', 'pieceTaken', 'isEnPassant', 'isPromotion'#, 'pastEP'
 
     def __init__(self, piece: Piece, toSqr: Square, newPiece: Optional[PieceType]=None, pieceTaken: Optional[Piece]=None, isEnPassant: bool=False,
