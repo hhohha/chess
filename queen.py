@@ -17,7 +17,7 @@ class Queen (SlidingPiece):
         return True
 
     def __str__(self):
-        return 'Q' + self.square.getCoord()
+        return f'Q{self.square.name}'
 
     def __repr__(self):
         return f'Queen({self.color}, {self.square})'

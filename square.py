@@ -16,23 +16,22 @@ class Square:
         self.board = board
         self.attackedByWhites: Set[Piece] = set()
         self.attackedByBlacks: Set[Piece] = set()
-        self.coordinates: str = chr(self.colIdx + 97) + str(self.rowIdx + 1)
+        self.name: str = chr(self.colIdx + 97) + str(self.rowIdx + 1)
         #self.attackedByWhites = [[]]
         #self.attackedByBlacks = [[]]
         
     def __str__(self) -> str:
-        return self.coordinates
+        return self.name
 
     def is_free(self) -> bool:
         return self.piece is None
-
-    def getCoord(self) -> str:
-        return self.coordinates
     
     def is_attacked_by(self, color: Color) -> bool:
         return len(self.get_attacked_by(color)) > 0
 
-    def get_attacked_by(self, color: Color) -> Set[Piece]:
+    def get_attacked_by(self, color: Optional[Color]=None) -> Set[Piece]:
+        if color is None:
+            return self.attackedByWhites | self.attackedByBlacks
         return self.attackedByWhites if color == Color.WHITE else self.attackedByBlacks
 
     # TODO - color == None may be not efficient - unit_tests, and if so, remove

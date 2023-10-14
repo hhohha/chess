@@ -22,8 +22,8 @@ class Knight (Piece):
         return potentialMoves
 
     def add_attacked_squares(self) -> None:
-        """
-        """
+        """calculates squares attacked by the piece"""
+        self.attackedSquares.clear()
         for (i, j) in [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]:
             square = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
             if square is not None:
@@ -33,7 +33,7 @@ class Knight (Piece):
         return []
 
     def __str__(self):
-        return 'N' + self.square.getCoord()
+        return f'N{self.square.name}'
 
     def __repr__(self):
         return f'Knight ({self.color}, {self.square})'

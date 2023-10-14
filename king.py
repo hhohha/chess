@@ -10,7 +10,6 @@ class King(Piece):
     def __init__(self, color: Color, square: Square):
         super().__init__(PieceType.KING, color, square)
         self.isLight = False
-        self.hasMoved = False
 
     def calc_potential_moves(self, inaccessibleDirs: Optional[List[Direction]]=None) -> List[Move]:
         """
@@ -37,7 +36,9 @@ class King(Piece):
         assert False, "king cannot be pinned"
         return []
     
-    def add_attacked_squares(self) -> None:
+    def calc_attacked_squares(self) -> None:
+        """calculates squares attacked by the piece"""
+        self.attackedSquares.clear()
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
             square = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
             if square is not None:
@@ -45,7 +46,7 @@ class King(Piece):
 
 
     def __str__(self):
-        return 'K' + self.square.getCoord()
+        return f'K{self.square.name}'
 
     def __repr__(self):
         return f'King ({self.color}, {self.square})'

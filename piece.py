@@ -34,8 +34,7 @@ class Piece(ABC):
             sqr.get_attacked_by(self.color).remove(self)
 
         # calculate new attacked squares
-        self.attackedSquares.clear()
-        self.add_attacked_squares()
+        self.attackedSquares = self.calc_attacked_squares()
 
         # add the piece to all squares that it newly attacks
         for sqr in self.attackedSquares:
@@ -68,7 +67,7 @@ class Piece(ABC):
         return id(self)
 
 class SlidingPiece(Piece, ABC):
-    def isSliding(self) -> bool:
+    def is_sliding(self) -> bool:
         return True
 
     @abstractmethod
@@ -102,8 +101,9 @@ class SlidingPiece(Piece, ABC):
                     break
         return potentialMoves
 
-    def add_attacked_squares(self) -> None:
-        """add squares attacked by the piece"""
+    def calc_attacked_squares(self) -> None:
+        """calculates squares attacked by the piece"""
+        self.attackedSquares.clear()
         for direction in self.get_sliding_directions():
             i, j = 0, 0
             while True:

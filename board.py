@@ -151,19 +151,19 @@ class Board:
         # if cannot castle, mark the respective rook to have moved
         cornerPiece = self.get_square_by_name('h1').piece
         if not 'K' in castling and cornerPiece is not None and cornerPiece.color == Color.WHITE and cornerPiece.kind == PieceType.ROOK:
-            cornerPiece.hasMoved = True
+            cornerPiece.moveCnt = 1
 
         cornerPiece = self.get_square_by_name('a1').piece
         if not 'Q' in castling and cornerPiece is not None and cornerPiece.color == Color.WHITE and cornerPiece.kind == PieceType.ROOK:
-            cornerPiece.hasMoved = True
+            cornerPiece.moveCnt = 1
 
         cornerPiece = self.get_square_by_name('h8').piece
         if not 'k' in castling and cornerPiece is not None and cornerPiece.color == Color.BLACK and cornerPiece.kind == PieceType.ROOK:
-            cornerPiece.hasMoved = True
+            cornerPiece.moveCnt = 1
 
         cornerPiece = self.get_square_by_name('a8').piece
         if not 'q' in castling and cornerPiece is not None and cornerPiece.color == Color.BLACK and cornerPiece.kind == PieceType.ROOK:
-            cornerPiece.hasMoved = True
+            cornerPiece.moveCnt = 1
 
         if enPassantSqr != '-':
             # we need the square of the pawn, not the square behind it
@@ -280,15 +280,21 @@ class Board:
 
     def remove_piece(self, piece: Piece) -> None:
         """
+        removes a piece from the board, usually during a piece capture
         the removed piece is no longer pointed to by any square or the list of pieces of the board,
         it is however pointed to by the move that it was taken in, thus the move can be undone
+        :param piece: the piece being removed
         """
         assert piece in self.get_pieces(piece.kind, piece.color), f'Cannot remove piece {piece}, not found'
         self.get_pieces(piece.kind, piece.color).remove(piece)
         piece.isActive = False
 
     def perform_move(self, move: Move, analysis: bool=True) -> None:
-        # TODO - rook and king has moved indicators
+        """
+        performs a move on the board
+        :param move: the move being performed
+        :param analysis: is this an actual move or just a move for analysis?
+        """
         fromSqr, toSqr, movingPiece = move.fromSqr, move.toSqr, move.piece
 
         #if toSqr.piece is not None or movPiece.kind == PAWN:
@@ -308,7 +314,6 @@ class Board:
         if move.isEnPassant:         # ... and the same for taking en passant
             move.pieceTaken = self.enPassantPawnSquare.piece
             self.remove_piece(self.enPassantPawnSquare.piece)
-            self.enPassantPawnSquare.piece = None
 
         if move.pieceTaken or movingPiece.kind == PieceType.PAWN:  # half-moves counter since the last pawn move or capture
             self.halfMoves.append(0)
@@ -335,29 +340,43 @@ class Board:
         self.recalculation(move, analysis)   # TODO - redo this
         self.legalMoves.append(self.get_all_legal_moves())
 
-    def recalculation(self, move, analysis):
-        recalc_pieces = {move.piece}
-        recalc_pieces.update(piece for piece in move.fromSqr.get_attacked_by() if piece.is_sliding)
-        recalc_pieces.update(piece for piece in move.toSqr.get_attacked_by() if piece.is_sliding)
+    def recalculation(self, move: Move, analysis: bool) -> None:
+        """
+        recalculates which squares are attacked by which pieces after a move
+        not all pieces must be recalculated, only those that are affected by the move
+            1. the moving piece
+            2. the piece being taken
+            3. the pieces that were previously blocked by the moving piece
+            4. the pieces that are now blocked by the moving piece
+            5. if the move is castling, the rook and the pieces now blocked by the rook (before the rook couldn't block anyone, it was in the corner)
+            6. if the move is en passant, the pieces previously blocked by the captured pawn
+        :param move: the move being made
+        :param analysis: is this an actual move or just a move for analysis?
+        """
+        piecesToRecalc = {move.piece} | {piece for piece in move.fromSqr.get_attacked_by() if piece.is_sliding()}
 
         if move.pieceTaken is not None:
-            recalc_pieces.add(move.pieceTaken)
+            piecesToRecalc.add(move.pieceTaken)
         if move.is_castling():
-            rookFrom, rookTo = self._get_castle_rook_squares(move)
-            recalc_pieces.update(piece for piece in self.get_square_by_idx(rookFrom).get_attacked_by() if piece.is_sliding)
-            recalc_pieces.update(piece for piece in self.get_square_by_idx(rookTo).get_attacked_by() if piece.is_sliding)
+            _, rookTo = self._get_castle_rook_squares(move)
+            piecesToRecalc.update(piece for piece in self.get_square_by_idx(rookTo).get_attacked_by() if piece.is_sliding())
 
         if move.isEnPassant:
-            recalc_pieces.update(piece for piece in move.pieceTaken.square.get_attacked_by() if piece.is_sliding)
+            piecesToRecalc.update(piece for piece in move.pieceTaken.square.get_attacked_by() if piece.is_sliding)
 
-        self.piecesRecalculated.append(recalc_pieces)
+        #self.piecesRecalculated.append(piecesToRecalc)
 
-        for piece in recalc_pieces:
-            if analysis:
-                piece.add_new_calculation()
+        for piece in piecesToRecalc:
+            #if analysis:
+            #    piece.add_new_calculation()
             piece.update_attacked_squares()
 
     def undo_move(self, move, analysis=True):
+        """
+        undoes a move on the board
+        :param move: the move being undone
+        :param analysis: is this an actual move or just a move for analysis?
+        """
         # TODO - rook and king has moved indicators
         fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
 
@@ -703,10 +722,10 @@ class Board:
                 passingSqrs = [self.get_square_by_idx(58), self.get_square_by_idx(59)]
                 rookPassSqr = self.get_square_by_idx(57)
 
-        if kingSqr.piece is None or not isinstance(kingSqr.piece, King) or kingSqr.piece.color != color or kingSqr.piece.hasMoved:
+        if kingSqr.piece is None or not isinstance(kingSqr.piece, King) or kingSqr.piece.color != color or kingSqr.piece.movesCnt > 0:
             return False
 
-        if rookSqr.piece is None or not isinstance(rookSqr.piece, Rook) or rookSqr.piece.color != color or rookSqr.piece.hasMoved:
+        if rookSqr.piece is None or not isinstance(rookSqr.piece, Rook) or rookSqr.piece.color != color or rookSqr.piece.movesCnt > 0:
             return False
 
         if self.is_in_check(color):

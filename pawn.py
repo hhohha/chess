@@ -127,17 +127,17 @@ class Pawn (Piece):
             return [Move(self, targetSquare, isPromotion=True, newPiece=piece) for piece in [PieceType.KNIGHT, PieceType.BISHOP, PieceType.ROOK,
                                                                                              PieceType.QUEEN]]
     
-    def add_attacked_squares(self) -> None:
-        """add squares attacked by the piece"""
+    def calc_attacked_squares(self) -> None:
+        """calculates squares attacked by the piece"""
         if self.square.colIdx == 0:
-            self.attackedSquares.add(self.square.board.get_square_by_coords(self.square.colIdx + 1, self.square.rowIdx + self.MOVE_OFFSET))
+            self.attackedSquares = {self.square.board.get_square_by_coords(self.square.colIdx + 1, self.square.rowIdx + self.MOVE_OFFSET)}
         elif self.square.colIdx == 7:
-            self.attackedSquares.add(self.square.board.get_square_by_coords(self.square.colIdx - 1, self.square.rowIdx + self.MOVE_OFFSET))
+            self.attackedSquares = {self.square.board.get_square_by_coords(self.square.colIdx - 1, self.square.rowIdx + self.MOVE_OFFSET)}
         else:
-            self.attackedSquares.update({
+            self.attackedSquares = {
                 self.square.board.get_square_by_coords(self.square.colIdx + 1, self.square.rowIdx + self.MOVE_OFFSET),
                 self.square.board.get_square_by_coords(self.square.colIdx - 1, self.square.rowIdx + self.MOVE_OFFSET)
-            })
+            }
         
     def is_en_passant_pin(self, enPassantSquare: Square) -> bool:
         """
@@ -184,7 +184,7 @@ class Pawn (Piece):
         
     
     def __str__(self):
-        return 'p' + self.square.getCoord()
+        return f'p{self.square.name}'
 
     def __repr__(self):
         return f'Pawn({self.color}, {self.square})'
