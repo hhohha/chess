@@ -17,11 +17,15 @@ class Piece(ABC):
 
 
     @abstractmethod
-    def calc_potential_moves(self):
+    def calc_potential_moves(self) -> None:
         pass
 
     @abstractmethod
-    def calc_potential_moves_pinned(self, direction: Direction):
+    def calc_potential_moves_pinned(self, direction: Direction) -> None:
+        pass
+
+    @abstractmethod
+    def calc_attacked_squares(self) -> None:
         pass
 
     def is_sliding(self) -> bool:
@@ -34,7 +38,7 @@ class Piece(ABC):
             sqr.get_attacked_by(self.color).remove(self)
 
         # calculate new attacked squares
-        self.attackedSquares = self.calc_attacked_squares()
+        self.calc_attacked_squares()
 
         # add the piece to all squares that it newly attacks
         for sqr in self.attackedSquares:
@@ -126,7 +130,7 @@ class SlidingPiece(Piece, ABC):
         """
         what are potential moves if the piece is pinned in the given direction
 
-        :param directionFrom: direction from pinner to king
+        :param directionFrom: direction from king to pinner!!!
         :return: list of potential moves
         """
         if directionFrom not in self.get_sliding_directions():
@@ -137,7 +141,7 @@ class SlidingPiece(Piece, ABC):
         colIdx, rowIdx = self.square.colIdx, self.square.rowIdx
         while True:
             # can move towards the king but cannot capture
-            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, directionFrom)
+            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, reverse_dir(directionFrom))
             sqr = self.square.board.get_square_by_coords(colIdx, rowIdx)
             assert sqr is not None, f"piece {self} is actually not pinned"
 
@@ -149,7 +153,7 @@ class SlidingPiece(Piece, ABC):
         colIdx, rowIdx = self.square.colIdx, self.square.rowIdx
         while True:
             # a piece can move in the direction of the pinner including its capture
-            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, reverse_dir(directionFrom))
+            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, directionFrom)
             sqr = self.square.board.get_square_by_coords(colIdx, rowIdx)
             assert sqr is not None, f"piece {self} is actually not pinned"
 

@@ -1,10 +1,11 @@
+from __future__ import annotations
 from enum import Enum
 
 class Color(Enum):
     WHITE = 0
     BLACK = 1
 
-    def invert(self):
+    def invert(self) -> Color:
         return Color.BLACK if self == Color.WHITE else Color.WHITE
 
 class PieceType(Enum):

@@ -21,7 +21,7 @@ class Knight (Piece):
 
         return potentialMoves
 
-    def add_attacked_squares(self) -> None:
+    def calc_attacked_squares(self) -> None:
         """calculates squares attacked by the piece"""
         self.attackedSquares.clear()
         for (i, j) in [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]:

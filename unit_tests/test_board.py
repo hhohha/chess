@@ -15,16 +15,16 @@ class TestSuite_Board(unittest.TestCase):
         self.assertIsNone(sqr)
 
         sqr = b.get_square_by_idx(0)
-        self.assertEqual(sqr.coordinates, 'a1')
+        self.assertEqual(sqr.name, 'a1')
 
         sqr = b.get_square_by_coords(1, 8)
         self.assertIsNone(sqr)
 
         sqr = b.get_square_by_coords(0, 7)
-        self.assertEqual(sqr.coordinates, 'a8')
+        self.assertEqual(sqr.name, 'a8')
 
         sqr = b.get_square_by_coords(7, 7)
-        self.assertEqual(sqr.coordinates, 'h8')
+        self.assertEqual(sqr.name, 'h8')
 
     def test_is_castle_possible(self):
         b = Board()
@@ -53,7 +53,7 @@ class TestSuite_Board(unittest.TestCase):
 
         self.assertEqual(b.turn, Color.WHITE)
         self.assertIsNone(b.enPassantPawnSquare)
-        self.assertEqual(b.halfMoves, 0)
+        self.assertEqual(b.halfMoves, [0])
         self.assertEqual(b.moves, 1)
 
         b.load_FEN(FEN_A)
@@ -71,7 +71,7 @@ class TestSuite_Board(unittest.TestCase):
         self.assertEqual(set(b.blackPawns), {b.get_square_by_name('d2').piece})
         self.assertEqual(b.turn, Color.WHITE)
         self.assertIsNone(b.enPassantPawnSquare)
-        self.assertEqual(b.halfMoves, 98)
+        self.assertEqual(b.halfMoves, [98])
         self.assertEqual(b.moves, 0)
 
     def test_find_first_piece_in_dir(self):

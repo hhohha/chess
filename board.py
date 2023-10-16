@@ -151,19 +151,19 @@ class Board:
         # if cannot castle, mark the respective rook to have moved
         cornerPiece = self.get_square_by_name('h1').piece
         if not 'K' in castling and cornerPiece is not None and cornerPiece.color == Color.WHITE and cornerPiece.kind == PieceType.ROOK:
-            cornerPiece.moveCnt = 1
+            cornerPiece.movesCnt = 1
 
         cornerPiece = self.get_square_by_name('a1').piece
         if not 'Q' in castling and cornerPiece is not None and cornerPiece.color == Color.WHITE and cornerPiece.kind == PieceType.ROOK:
-            cornerPiece.moveCnt = 1
+            cornerPiece.movesCnt = 1
 
         cornerPiece = self.get_square_by_name('h8').piece
         if not 'k' in castling and cornerPiece is not None and cornerPiece.color == Color.BLACK and cornerPiece.kind == PieceType.ROOK:
-            cornerPiece.moveCnt = 1
+            cornerPiece.movesCnt = 1
 
         cornerPiece = self.get_square_by_name('a8').piece
         if not 'q' in castling and cornerPiece is not None and cornerPiece.color == Color.BLACK and cornerPiece.kind == PieceType.ROOK:
-            cornerPiece.moveCnt = 1
+            cornerPiece.movesCnt = 1
 
         if enPassantSqr != '-':
             # we need the square of the pawn, not the square behind it
@@ -335,7 +335,7 @@ class Board:
         if move.isPromotion:
             self.change_piece_kind(movingPiece, move.newPiece)
 
-        self.turn = not self.turn
+        self.turn = self.turn.invert()
 
         self.recalculation(move, analysis)   # TODO - redo this
         self.legalMoves.append(self.get_all_legal_moves())
@@ -377,58 +377,59 @@ class Board:
         :param move: the move being undone
         :param analysis: is this an actual move or just a move for analysis?
         """
-        # TODO - rook and king has moved indicators
-        fromSqr, toSqr, movPiece = move.fromSqr, move.toSqr, move.piece
-
-        # TODO - move counters
-        # TODO - redo this so that moveEP can be removed, it looks redundant
-        if move.pastEP:
-            self.enPassantPawnSquare = move.pastEP
+        fromSqr, toSqr, movingPiece = move.fromSqr, move.toSqr, move.piece
 
         if move.pieceTaken is not None:
-            move.pieceTaken.is_active = True
             if move.isEnPassant:
-                # restore the taken piece
+                # restore the piece taken en passant
+                # it's column is the same as the takers destination square, it's row as the taker's starting square
+                self.enPassantPawnSquare = self.get_square_by_coords(toSqr.colIdx, fromSqr.rowIdx)
                 self.enPassantPawnSquare.piece = move.pieceTaken
-                # remove the piece from toSqr
-                move.toSqr.piece = None
-                # place piece to fromSqr
-                move.piece.square = fromSqr
-                fromSqr.piece = move.piece
-            else:
-                # restore the taken piece to toSqr
-                toSqr.piece = move.pieceTaken
-                if move.pieceTaken.is_sliding:
-                    self.get_pieces(move.pieceTaken.color, sliding=True).append(move.pieceTaken)
 
-            self.get_pieces(move.pieceTaken.color).append(move.pieceTaken)
+                # remove the piece from toSqr
+                toSqr.piece = None
+
+                # place piece to fromSqr
+                movingPiece.square = fromSqr
+                fromSqr.piece = movingPiece
+            else:
+                # standard capture - just restore the taken piece to toSqr
+                toSqr.piece = move.pieceTaken
+
+            move.pieceTaken.isActive = True
+            self.get_pieces(move.pieceTaken.kind, movingPiece.color.invert()).append(move.pieceTaken)
 
         else:
             toSqr.piece = None
 
-        fromSqr.piece = movPiece
-        movPiece.square = fromSqr
-        movPiece.movesCnt -= 1
+        fromSqr.piece, movingPiece.square = movingPiece, fromSqr   # restore the moving piece to fromSqr
+        movingPiece.movesCnt -= 1
 
         if move.isPromotion:
-            self.change_piece_kind(movPiece, PieceType.PAWN)
+            # undo promotion, also moves the piece to the right list
+            self.change_piece_kind(movingPiece, PieceType.PAWN)
 
-        if move.is_castling():
-            # rookTo and rookFrom are just switched here
-            rookTo, rookFrom = self._get_castle_rook_squares(move)
+        if move.is_castling():   # undo the rook move
+            rookTo, rookFrom = self._get_castle_rook_squares(move)   # rookTo and rookFrom are just switched here
             self.get_square_by_idx(rookTo).piece = self.get_square_by_idx(rookFrom).piece
             self.get_square_by_idx(rookFrom).piece = None
             self.get_square_by_idx(rookTo).piece.square = self.get_square_by_idx(rookTo)
 
-        for piece in self.piecesRecalculated[-1]:
-            if analysis:
-                piece.remove_last_calculation()
-            else:
-                piece.update_attacked_squares()
-        self.piecesRecalculated.pop()
+        if movingPiece.color == Color.BLACK:   # update move counter only when black moves
+            self.moves -= 1
+        self.halfMoves.pop()          # we remember the previous position's half moves counter
 
-        self.turn = not self.turn
-        self.legalMoves.pop()
+        #for piece in self.piecesRecalculated[-1]:
+        #    if analysis:
+        #        piece.remove_last_calculation()
+        #    else:
+        #        piece.update_attacked_squares()
+        #self.piecesRecalculated.pop()
+
+        self.recalculation(move, analysis)  # TODO - redo this to remember calculations of previous positions
+
+        self.turn = self.turn.invert()
+        self.legalMoves.pop()       # we remember the previous position's legal moves
 
     def _get_castle_rook_squares(self, move: Move) -> Tuple[int, int]:
         if move.toSqr.idx == 6:
@@ -452,7 +453,7 @@ class Board:
         self.get_pieces(newKind, piece.color).append(piece)
 
         piece.kind = newKind
-        piece.__class__ = [Pawn, Knight, Bishop, Rook, Queen, King][newKind.value()]
+        piece.__class__ = [Pawn, Knight, Bishop, Rook, Queen, King][newKind.value]
         piece.__init__(piece.color, piece.square)  #TODO - do we need to run this???
 
         # if PieceWithPotenialSquares in piece.__class__.__bases__:
@@ -703,44 +704,48 @@ class Board:
         assert side == Direction.LEFT or side == Direction.RIGHT, f"castling must be to the LEFT or RIGHT, not {side}"
         rookPassSqr: Optional[Square] = None
 
+        # based on color and side, get the king and the rook squares, also the king passing squares and the rook passing square
+        # the king passing squares need to be empty and not attacked by the opponent
+        # the rook passing square needs (just b1 or b8) to be empty
         if color == Color.WHITE:
-            kingSqr = self.get_square_by_idx(4)
+            kingSqr = self.get_square_by_idx(4) # e1
             if side == Direction.RIGHT:
-                rookSqr = self.get_square_by_idx(7)
-                passingSqrs = [self.get_square_by_idx(5), self.get_square_by_idx(6)]
+                rookSqr = self.get_square_by_idx(7) # h1
+                passingSqrs = [self.get_square_by_idx(5), self.get_square_by_idx(6)]  # f1, g1
             else:
-                rookSqr = self.get_square_by_idx(0)
-                passingSqrs = [self.get_square_by_idx(2), self.get_square_by_idx(3)]
-                rookPassSqr = self.get_square_by_idx(1)
+                rookSqr = self.get_square_by_idx(0) # a1
+                passingSqrs = [self.get_square_by_idx(2), self.get_square_by_idx(3)] # c1, d1
+                rookPassSqr = self.get_square_by_idx(1) # b1
         else:
-            kingSqr = self.get_square_by_idx(60)
+            kingSqr = self.get_square_by_idx(60) # e8
             if side == Direction.RIGHT:
-                rookSqr = self.get_square_by_idx(63)
-                passingSqrs = [self.get_square_by_idx(61), self.get_square_by_idx(62)]
+                rookSqr = self.get_square_by_idx(63) # h8
+                passingSqrs = [self.get_square_by_idx(61), self.get_square_by_idx(62)] # f8, g8
             else:
-                rookSqr = self.get_square_by_idx(56)
-                passingSqrs = [self.get_square_by_idx(58), self.get_square_by_idx(59)]
-                rookPassSqr = self.get_square_by_idx(57)
+                rookSqr = self.get_square_by_idx(56) # a8
+                passingSqrs = [self.get_square_by_idx(58), self.get_square_by_idx(59)] # c8, d8
+                rookPassSqr = self.get_square_by_idx(57) # b8
 
+        # the king must be on its place and not moved
         if kingSqr.piece is None or not isinstance(kingSqr.piece, King) or kingSqr.piece.color != color or kingSqr.piece.movesCnt > 0:
             return False
-
+        # the rook must be on its place and not moved
         if rookSqr.piece is None or not isinstance(rookSqr.piece, Rook) or rookSqr.piece.color != color or rookSqr.piece.movesCnt > 0:
             return False
-
+        # the king cannot be in check
         if self.is_in_check(color):
             return False
-
+        # if castling queenside, the rook passing square must be empty
         if side == Direction.LEFT and rookPassSqr is not None and rookPassSqr.piece is not None:
             return False
-
+        # the king passing squares must be empty and not attacked by the opponent
         for sqr in passingSqrs:
             if sqr.piece is not None or sqr.is_attacked_by(color.invert()):
                 return False
 
         return True
 
-    def generate_successors(self, depth):
+    def generate_successors(self, depth: int) -> int:
         if depth == 0:
             return 1
 

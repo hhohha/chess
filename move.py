@@ -26,7 +26,7 @@ class Move:
         return self.piece == other.piece and self.fromSqr == other.fromSqr and self.toSqr == other.toSqr and self.newPiece == other.newPiece
     
     def __str__(self) -> str:
-        return f'{self.piece}-{self.toSqr}{pieceToLetter[self.newPiece] if self.newPiece else ""}'
+        return f'{str(self.piece)[0]}{self.fromSqr}-{self.toSqr}{pieceToLetter[self.newPiece] if self.newPiece else ""}'
 
     def __hash__(self) -> int:
         return hash((self.piece, self.fromSqr, self.toSqr, self.newPiece))
