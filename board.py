@@ -169,7 +169,7 @@ class Board:
 
         if enPassantSqr != '-':
             # we need the square of the pawn, not the square behind it
-            self.enPassantPawnSquare[-1] = self.get_square_by_idx(coord_to_square_idx(enPassantSqr) + (8 if self.turn == Color.WHITE else -8))
+            self.enPassantPawnSquare[-1] = self.get_square_by_idx(coord_to_square_idx(enPassantSqr) + (8 if self.turn == Color.BLACK else -8))
         
         self.halfMoves = [int(halves)]
         self.moves = int(fulls)
@@ -312,6 +312,7 @@ class Board:
         if move.isEnPassant:         # ... and the same for taking en passant
             move.pieceTaken = self.enPassantPawnSquare[-1].piece
             self.remove_piece(self.enPassantPawnSquare[-1].piece)
+            move.pieceTaken.square.piece = None
 
         if move.pieceTaken or movingPiece.kind == PieceType.PAWN:  # half-moves counter since the last pawn move or capture
             self.halfMoves.append(0)
@@ -638,7 +639,7 @@ class Board:
                 legalMoves += potentialPawnSqr.piece.generate_pawn_move(blockingSquare)
 
             # on row 3 (4 for black) look two squares in the direction of attackers pawns, if there is a defending pawn, it can block the attack
-            if (blockingSquare.rowIdx == 3 and color == Color.WHITE) or (blockingSquare.rowIdx == 4 and color == Color.BLACK):
+            if potentialPawnSqr is not None and potentialPawnSqr.piece is None and (blockingSquare.rowIdx == 3 and color == Color.WHITE) or (blockingSquare.rowIdx == 4 and color == Color.BLACK):
                 potentialPawnSqr = self.get_square_by_coords(blockingSquare.colIdx, blockingSquare.rowIdx + (-2 if color == Color.WHITE else 2))
                 if potentialPawnSqr is not None and isinstance(potentialPawnSqr.piece, Pawn) and potentialPawnSqr.piece.color == color:
                     legalMoves.append(Move(potentialPawnSqr.piece, blockingSquare))

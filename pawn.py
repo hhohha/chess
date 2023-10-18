@@ -23,7 +23,6 @@ class Pawn (Piece):
 
     def calc_potential_moves(self) -> List[Move]:
         """
-        TODO - do we need the ownPieces parameter?
         potential moves of a piece are not necessarily legal moves, checks and pins are not considered
         the potential moves consists of possible (1) moves forward, (2) captures left, (3) captures right and (4) en passant
         :return: a list of all potential moves for this piece
@@ -181,8 +180,7 @@ class Pawn (Piece):
 
         # all conditions are met, the pawn is pinned
         return True
-        
-    
+
     def __str__(self):
         return f'p{self.square.name}'
 

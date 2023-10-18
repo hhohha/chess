@@ -1,6 +1,5 @@
-from typing import List, Optional, Set
+from typing import List, Set
 from constants import Color
-from square import Square
 from utils import *
 from abc import ABC, abstractmethod
 from move import Move

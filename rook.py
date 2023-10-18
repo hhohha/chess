@@ -10,9 +10,6 @@ class Rook (SlidingPiece):
         self.isLight = False    # light piece is a bishop or a knight
         self.slidingDirections: List[Direction] = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT]
 
-    def is_sliding(self) -> bool:
-        return True
-
     def get_sliding_directions(self) -> List[Direction]:
         return self.slidingDirections
         

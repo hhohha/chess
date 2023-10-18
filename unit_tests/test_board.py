@@ -125,19 +125,6 @@ class TestSuite_Board(unittest.TestCase):
                                                    b.get_square_by_name('e3').piece, b.get_square_by_name('e5').piece})
         self.assertEqual(set(pinnedWhite.values()), {Direction.UP, Direction.LEFT, Direction.RIGHT, Direction.DOWN})
 
-    def test_my(self):
-        b = Board()
-        b.load_FEN(FEN_D)
-        m = Move(b.get_square_by_name('b4').piece, b.get_square_by_name('c5'))
-        b.perform_move(m)
-
-        m = Move(b.get_square_by_name('a3').piece, b.get_square_by_name('c5'))
-        b.perform_move(m)
-
-        moves = b.get_all_legal_moves()
-        for move in moves:
-            print(move)
-        print(f'moves cnt: {len(moves)}')
 
     def xtest_recalculation(self):
         pass
