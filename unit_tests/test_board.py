@@ -1,7 +1,8 @@
 import unittest
 
 from board import Board
-from constants import FEN_INIT, PieceType, Color, Direction, FEN_A, FEN_B, FEN_C
+from constants import FEN_INIT, PieceType, Color, Direction, FEN_A, FEN_B, FEN_C, FEN_D
+from move import Move
 
 
 class TestSuite_Board(unittest.TestCase):
@@ -52,7 +53,7 @@ class TestSuite_Board(unittest.TestCase):
                                              b.get_square_by_name('g2').piece, b.get_square_by_name('h2').piece})
 
         self.assertEqual(b.turn, Color.WHITE)
-        self.assertIsNone(b.enPassantPawnSquare)
+        self.assertIsNone(b.enPassantPawnSquare[-1])
         self.assertEqual(b.halfMoves, [0])
         self.assertEqual(b.moves, 1)
 
@@ -70,7 +71,7 @@ class TestSuite_Board(unittest.TestCase):
         self.assertEqual(set(b.whitePawns), set())
         self.assertEqual(set(b.blackPawns), {b.get_square_by_name('d2').piece})
         self.assertEqual(b.turn, Color.WHITE)
-        self.assertIsNone(b.enPassantPawnSquare)
+        self.assertIsNone(b.enPassantPawnSquare[-1])
         self.assertEqual(b.halfMoves, [98])
         self.assertEqual(b.moves, 0)
 
@@ -123,6 +124,20 @@ class TestSuite_Board(unittest.TestCase):
         self.assertEqual(set(pinnedWhite.keys()), {b.get_square_by_name('d4').piece, b.get_square_by_name('f4').piece,
                                                    b.get_square_by_name('e3').piece, b.get_square_by_name('e5').piece})
         self.assertEqual(set(pinnedWhite.values()), {Direction.UP, Direction.LEFT, Direction.RIGHT, Direction.DOWN})
+
+    def test_my(self):
+        b = Board()
+        b.load_FEN(FEN_D)
+        m = Move(b.get_square_by_name('b4').piece, b.get_square_by_name('c5'))
+        b.perform_move(m)
+
+        m = Move(b.get_square_by_name('a3').piece, b.get_square_by_name('c5'))
+        b.perform_move(m)
+
+        moves = b.get_all_legal_moves()
+        for move in moves:
+            print(move)
+        print(f'moves cnt: {len(moves)}')
 
     def xtest_recalculation(self):
         pass

@@ -9,12 +9,12 @@ class Pawn (Piece):
         super().__init__(PieceType.PAWN, color, square)
         self.isLight = False
 
-        # TODO - these numbers are the same for all pawns of the same player, they should be moved to player class
+        # TODO - these numbers are the same for all pawns of the same player, they should be moved somewhere
         if self.color == Color.WHITE:
-            self.MOVE_OFFSET = 1      # white pawns move up the board (+1 row), black opposite
-            self.BASE_ROW = 1         # white pawns start on row 1, black on row 6
-            self.PROMOTION_ROW = 7    # white pawns promote on row 7, black on row 0
-            self.EN_PASSANT_ROW = 4   # white pawns can take en passant on row 4, black on row 3
+            self.MOVE_OFFSET = 1  # white pawns move up the board (+1 row), black opposite
+            self.BASE_ROW = 1  # white pawns start on row 1, black on row 6
+            self.PROMOTION_ROW = 7  # white pawns promote on row 7, black on row 0
+            self.EN_PASSANT_ROW = 4  # white pawns can take en passant on row 4, black on row 3
         else:
             self.MOVE_OFFSET = -1
             self.BASE_ROW = 6
@@ -37,7 +37,7 @@ class Pawn (Piece):
         """
         potentialMoves: List[Move] = []
 
-        enPassantSquare = self.square.board.enPassantPawnSquare  # if en passant is possible, the enPassantSquare is the square behind the pawn
+        enPassantSquare = self.square.board.enPassantPawnSquare[-1] # if en passant is possible, the enPassantSquare is the square behind the pawn
 
         # if en passant is possible and the pawn to take is next to this pawn, add the en passant move
         if (enPassantSquare is not None and self.square.rowIdx == self.EN_PASSANT_ROW and abs(self.square.idx - enPassantSquare.idx) == 1 and
@@ -100,7 +100,7 @@ class Pawn (Piece):
             potentialMoves += self.get_capture_moves(self.MOVE_OFFSET)
 
             # a diagonally pinned pawn can even capture en passant, en passant pin special pin is impossible in this case (the pawn is already pinned)
-            enPassant = self.square.board.enPassantPawnSquare
+            enPassant = self.square.board.enPassantPawnSquare[-1]
             if enPassant is not None and self.square.rowIdx == self.EN_PASSANT_ROW and enPassant.idx - self.square.idx == self.MOVE_OFFSET:
                 potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.colIdx, enPassant.rowIdx + self.MOVE_OFFSET),
                                            isEnPassant=True))
@@ -108,7 +108,7 @@ class Pawn (Piece):
         else: # direction is LEFT_UP or RIGHT_DOWN
             # capture in the other direction is analogous to the previous case
             potentialMoves += self.get_capture_moves(-self.MOVE_OFFSET)
-            enPassant = self.square.board.enPassantPawnSquare
+            enPassant = self.square.board.enPassantPawnSquare[-1]
             if enPassant is not None and self.square.rowIdx == self.EN_PASSANT_ROW and self.square.idx - enPassant.idx == self.MOVE_OFFSET:
                 potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.colIdx, enPassant.rowIdx + self.MOVE_OFFSET),
                                            isEnPassant=True))
@@ -124,7 +124,7 @@ class Pawn (Piece):
         if targetSquare.rowIdx != self.PROMOTION_ROW:
             return [Move(self, targetSquare)]
         else:
-            return [Move(self, targetSquare, isPromotion=True, newPiece=piece) for piece in [PieceType.KNIGHT, PieceType.BISHOP, PieceType.ROOK,
+            return [Move(self, targetSquare, newPiece=piece) for piece in [PieceType.KNIGHT, PieceType.BISHOP, PieceType.ROOK,
                                                                                              PieceType.QUEEN]]
     
     def calc_attacked_squares(self) -> None:

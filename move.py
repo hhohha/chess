@@ -8,19 +8,17 @@ if TYPE_CHECKING:
     from piece import Piece
 
 class Move:
-    # TODO - isPromotion looks redundant - if so, remove it
-    __slots__ = 'piece', 'toSqr', 'fromSqr', 'newPiece', 'pieceTaken', 'isEnPassant', 'isPromotion'#, 'pastEP'
+    # TODO - isEnPassant looks like it could be represented via a method and not a slot
+    __slots__ = 'piece', 'toSqr', 'fromSqr', 'newPiece', 'pieceTaken', 'isEnPassant'
 
-    def __init__(self, piece: Piece, toSqr: Square, newPiece: Optional[PieceType]=None, pieceTaken: Optional[Piece]=None, isEnPassant: bool=False,
-                 isPromotion: bool=False):
+    def __init__(self, piece: Piece, toSqr: Square, newPiece: Optional[PieceType]=None, pieceTaken: Optional[Piece]=None, isEnPassant: bool=False):
+        #TODO - asserts
         self.piece = piece
         self.toSqr = toSqr
         self.fromSqr: Square = piece.square
         self.newPiece = newPiece
         self.pieceTaken = pieceTaken
         self.isEnPassant = isEnPassant
-        self.isPromotion = isPromotion
-        #self.pastEP = None
     
     def __eq__(self, other: Move) -> bool:
         return self.piece == other.piece and self.fromSqr == other.fromSqr and self.toSqr == other.toSqr and self.newPiece == other.newPiece
@@ -35,4 +33,8 @@ class Move:
         return self.piece.kind == PieceType.KING and abs(self.fromSqr.idx - self.toSqr.idx) == 2
 
     def __repr__(self) -> str:
-        return f'Move({self.piece}, {self.toSqr}, {self.newPiece}, {self.pieceTaken}, {self.isEnPassant}, {self.isPromotion})'
+        return f'Move({self.piece}, {self.toSqr}, {self.newPiece}, {self.pieceTaken}, {self.isEnPassant})'
+
+    def is_promotion(self) -> bool:
+        return self.newPiece is not None
+

@@ -30,6 +30,7 @@ from utils import letter_to_piece
 # - unit tests
 # - consider some automatic tests
 # - in color_pieces - first is always the king (instead of special variable)
+# - create Move object from string
 #
 # ENGINE IMPLEMENTATION
 # - probably break cBoard to cGame and cPosition??

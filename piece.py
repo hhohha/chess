@@ -9,12 +9,14 @@ class Piece(ABC):
     def __init__(self, kind: PieceType, color: Color, square: Square):
         self.kind = kind
         self.color = color
-        self.movesCnt = 0
         self.square = square
-        self.attackedSquares: Set[Square] = set()
         self.isActive = True   # TODO - is this attribute actually necessary, cannot we simply not point to this piece?
-        # self.id = square.idx
+        if not hasattr(self, 'movesCnt'):
+            self.movesCnt = 0
+        if not hasattr(self, 'attackedSquares'):
+            self.attackedSquares: Set[Square] = set()
 
+        # self.id = square.idx
 
     @abstractmethod
     def calc_potential_moves(self) -> None:

@@ -58,7 +58,7 @@ class Game:
         self.legal_moves = self.board.legal_moves[-1]
 
     def perform_move(self, move):
-        if move.isPromotion:
+        if move.is_promotion():
             move.newPiece = self.displayer.get_promoted_piece_from_dialog()
 
         self.board.perform_move(move)

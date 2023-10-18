@@ -24,6 +24,8 @@ positions.append(Position(5, 'r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3
 positions.append(Position(6, 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8', [1, 44, 1486, 62379, 2103487, 89941194, 0]))# FEN_B
 positions.append(Position(7, 'r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10', [1, 46, 2079, 89890, 3894594, 164075551, 6923051137]))# FEN_F
 
+#positions.append(Position(8, 'r3k2r/Pppp1ppp/1b3nbN/nPB5/B1P1P3/q4N2/Pp1P2PP/R2Q1RK1 b kq - 0 1', [1, 42, 1, 1, 1, 1, 1]))
+
 def test_position(position: Position, depth: int) -> None:
     for dpt in range(1, depth + 1):
         board = Board()
@@ -41,8 +43,8 @@ def test_position(position: Position, depth: int) -> None:
             break
 
 def main():
-    #depthArg = 1
-    depthArg = int(sys.argv[1])
+    depthArg = 3
+    #depthArg = int(sys.argv[1])
 
     total_start = time()
     for p in positions:

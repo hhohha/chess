@@ -26,9 +26,11 @@ class Board:
         self.squares: List[Square] = [Square(idx, self) for idx in range(64)]
         self.turn: Color = Color.WHITE
 
-        # a square of a pawn that has just moved two squares and can be captured en passant (if there is a pawn next to it)
+        # a list of squares of a pawn that has just moved two squares and can be captured en passant (if there is a pawn next to it)
+        # the list stores the history of en passant options for the purpose of undoing moves
         # careful - FEN uses the square behind the pawn, but this is the square of the pawn itself
-        self.enPassantPawnSquare: Optional[Square] = None
+        #
+        self.enPassantPawnSquare: List[Optional[Square]] = [None]
 
         # half moves since last capture or pawn move for each position in history
         # when undoing a pawn or a capture move, we wouldn't know what this number should be, the move would have to store it
@@ -167,7 +169,7 @@ class Board:
 
         if enPassantSqr != '-':
             # we need the square of the pawn, not the square behind it
-            self.enPassantPawnSquare = self.get_square_by_idx(coord_to_square_idx(enPassantSqr) + (8 if self.turn == Color.WHITE else -8))
+            self.enPassantPawnSquare[-1] = self.get_square_by_idx(coord_to_square_idx(enPassantSqr) + (8 if self.turn == Color.WHITE else -8))
         
         self.halfMoves = [int(halves)]
         self.moves = int(fulls)
@@ -191,7 +193,7 @@ class Board:
         self.blackKnights.clear()
         self.whitePawns.clear()
         self.blackPawns.clear()
-        self.enPassantPawnSquare = None
+        self.enPassantPawnSquare = [None]
         self.history.clear()
         self.halfMoves = [0]
         self.moves = 0
@@ -286,6 +288,9 @@ class Board:
         :param piece: the piece being removed
         """
         assert piece in self.get_pieces(piece.kind, piece.color), f'Cannot remove piece {piece}, not found'
+        for sqr in piece.attackedSquares:
+            sqr.get_attacked_by(piece.color).remove(piece)
+        piece.attackedSquares.clear()
         self.get_pieces(piece.kind, piece.color).remove(piece)
         piece.isActive = False
 
@@ -297,13 +302,6 @@ class Board:
         """
         fromSqr, toSqr, movingPiece = move.fromSqr, move.toSqr, move.piece
 
-        #if toSqr.piece is not None or movPiece.kind == PAWN:
-            #self.half_moves = 0
-        #else:
-            #self.half_moves += 1
-        #if self.enPassantPawnSquare:    # TODO - not sure what this was supposed to do
-        #    move.pastEP = self.enPassantPawnSquare
-
         if self.turn == Color.BLACK:
             self.moves += 1   # move counter - incremented with black's move
 
@@ -312,8 +310,8 @@ class Board:
             self.remove_piece(toSqr.piece)
 
         if move.isEnPassant:         # ... and the same for taking en passant
-            move.pieceTaken = self.enPassantPawnSquare.piece
-            self.remove_piece(self.enPassantPawnSquare.piece)
+            move.pieceTaken = self.enPassantPawnSquare[-1].piece
+            self.remove_piece(self.enPassantPawnSquare[-1].piece)
 
         if move.pieceTaken or movingPiece.kind == PieceType.PAWN:  # half-moves counter since the last pawn move or capture
             self.halfMoves.append(0)
@@ -332,7 +330,7 @@ class Board:
 
         self._update_en_passant_rights(move)  # if a pawn was moved 2 squares forward, maybe it can be taken e.p.
 
-        if move.isPromotion:
+        if move.is_promotion():
             self.change_piece_kind(movingPiece, move.newPiece)
 
         self.turn = self.turn.invert()
@@ -353,9 +351,9 @@ class Board:
         :param move: the move being made
         :param analysis: is this an actual move or just a move for analysis?
         """
-        piecesToRecalc = {move.piece} | {piece for piece in move.fromSqr.get_attacked_by() if piece.is_sliding()}
+        piecesToRecalc = {move.piece} | {piece for piece in move.fromSqr.get_attacked_by() if piece.is_sliding()} | {piece for piece in move.toSqr.get_attacked_by() if piece.is_sliding()}
 
-        if move.pieceTaken is not None:
+        if move.pieceTaken is not None and move.pieceTaken.isActive:
             piecesToRecalc.add(move.pieceTaken)
         if move.is_castling():
             _, rookTo = self._get_castle_rook_squares(move)
@@ -383,8 +381,8 @@ class Board:
             if move.isEnPassant:
                 # restore the piece taken en passant
                 # it's column is the same as the takers destination square, it's row as the taker's starting square
-                self.enPassantPawnSquare = self.get_square_by_coords(toSqr.colIdx, fromSqr.rowIdx)
-                self.enPassantPawnSquare.piece = move.pieceTaken
+                self.enPassantPawnSquare[-1] = self.get_square_by_coords(toSqr.colIdx, fromSqr.rowIdx)
+                self.enPassantPawnSquare[-1].piece = move.pieceTaken
 
                 # remove the piece from toSqr
                 toSqr.piece = None
@@ -405,8 +403,7 @@ class Board:
         fromSqr.piece, movingPiece.square = movingPiece, fromSqr   # restore the moving piece to fromSqr
         movingPiece.movesCnt -= 1
 
-        if move.isPromotion:
-            # undo promotion, also moves the piece to the right list
+        if move.is_promotion():            # undo promotion, also moves the piece to the right list
             self.change_piece_kind(movingPiece, PieceType.PAWN)
 
         if move.is_castling():   # undo the rook move
@@ -418,6 +415,8 @@ class Board:
         if movingPiece.color == Color.BLACK:   # update move counter only when black moves
             self.moves -= 1
         self.halfMoves.pop()          # we remember the previous position's half moves counter
+
+        self.enPassantPawnSquare.pop()
 
         #for piece in self.piecesRecalculated[-1]:
         #    if analysis:
@@ -454,7 +453,7 @@ class Board:
 
         piece.kind = newKind
         piece.__class__ = [Pawn, Knight, Bishop, Rook, Queen, King][newKind.value]
-        piece.__init__(piece.color, piece.square)  #TODO - do we need to run this???
+        piece.__init__(piece.color, piece.square)
 
         # if PieceWithPotenialSquares in piece.__class__.__bases__:
         #     piece.has_PT = True
@@ -467,7 +466,7 @@ class Board:
         If the current move is a 2 square pawn move, remember that it can be taken e.p.
         :param move: the move currenly being made
         """
-        self.enPassantPawnSquare = move.toSqr if move.piece.kind == PieceType.PAWN and abs(move.toSqr.idx - move.fromSqr.idx) == 16 else None
+        self.enPassantPawnSquare.append(move.toSqr if move.piece.kind == PieceType.PAWN and abs(move.toSqr.idx - move.fromSqr.idx) == 16 else None)
         
     def calc_pinned_pieces(self, color: Color) -> Dict[Piece, Direction]:
         """
@@ -604,7 +603,7 @@ class Board:
                 legalMoves.append(Move(piece, attacker.square))
 
         # the attacker can also be captured en passant
-        if self.enPassantPawnSquare and attacker.square == self.enPassantPawnSquare:
+        if self.enPassantPawnSquare[-1] and attacker.square == self.enPassantPawnSquare[-1]:
             assert isinstance(attacker, Pawn), 'En passant capture by a non-pawn piece'
             for offset in [1, -1]:
                 # look to both sides if there is an own pawn that can capture en passant
@@ -752,10 +751,17 @@ class Board:
         total = 0
         for move in self.legalMoves[-1]:
             self.analysisDepth += 1
+            #if depth == 2:
+            #    print(f'{">>>"*self.analysisDepth} MOVE: {move}    ', end='')
             self.perform_move(move)
-            total += self.generate_successors(depth - 1)
+            n = self.generate_successors(depth - 1)
+            total += n
+            #if depth == 2:
+            #    print('cnt: ', n)
+
             self.analysisDepth -= 1
             self.undo_move(move)
+
 
         return total
 
