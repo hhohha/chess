@@ -70,9 +70,7 @@ class TestSuite_RookMoves(unittest.TestCase):
             rook.calc_potential_moves_pinned(Direction.RIGHT)
 
     def test_rook_moves_pinned_2(self):
-        """
-        rook's moves while pinned
-        """
+        """rook's moves while pinned"""
 
         # correct pin, bad direction
         b = Board()
@@ -81,9 +79,9 @@ class TestSuite_RookMoves(unittest.TestCase):
         b.place_piece('e1', PieceType.QUEEN, Color.BLACK)
 
         with self.assertRaises(AssertionError):
-            rook.calc_potential_moves_pinned(Direction.RIGHT)
+            rook.calc_potential_moves_pinned(Direction.LEFT)
 
         # correct pin and direction
-        actualMoves = rook.calc_potential_moves_pinned(Direction.LEFT)
+        actualMoves = rook.calc_potential_moves_pinned(Direction.RIGHT)
         expectedMoves = ['Rc1-b1', 'Rc1-d1', 'Rc1-e1']
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))

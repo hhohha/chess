@@ -44,6 +44,6 @@ class TestSuite_QueenMoves(unittest.TestCase):
         queen = b.place_piece('c1', PieceType.QUEEN, Color.WHITE)
         b.place_piece('e1', PieceType.ROOK, Color.BLACK)
         b.place_piece('b1', PieceType.KING, Color.WHITE)
-        actualMoves = queen.calc_potential_moves_pinned(Direction.LEFT)
+        actualMoves = queen.calc_potential_moves_pinned(Direction.RIGHT)
         expectedMoves = ['Qc1-d1', 'Qc1-e1']
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))

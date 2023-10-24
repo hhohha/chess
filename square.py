@@ -1,11 +1,10 @@
 from __future__ import annotations
-from typing import Optional, List, TYPE_CHECKING, Set
+from typing import Optional, TYPE_CHECKING, Set
 from constants import Color
 
 if TYPE_CHECKING:
     from board import Board
     from piece import Piece
-
 
 class Square:
     def __init__(self, idx: int, board: Board):
@@ -34,7 +33,7 @@ class Square:
             return self.attackedByWhites | self.attackedByBlacks
         return self.attackedByWhites if color == Color.WHITE else self.attackedByBlacks
 
-    # TODO - color == None may be not efficient - unit_tests, and if so, remove
+    # TODO - color == None may be not efficient - tests, and if so, remove
     # def get_attacked_by(self, color=None):
     #     if color == Color.WHITE:
     #         return self.attackedByWhites[-1]
@@ -42,7 +41,9 @@ class Square:
     #         return self.attackedByBlacks[-1]
     #     return self.attackedByWhites[-1] + self.attackedByBlacks[-1]
 
-    def __eq__(self, other: Square) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Square):
+            return NotImplemented
         return self.idx == other.idx
     
     def __hash__(self) -> int:

@@ -12,7 +12,7 @@ class Move:
 
     def __init__(self, piece: Piece, toSqr: Square, newPiece: Optional[PieceType] = None, pieceTaken: Optional[Piece] = None,
                  isEnPassant: bool = False):
-        assert (piece.kind == PieceType.PAWN and toSqr.rowIdx in [0, 7]) == newPiece is not None, f'Invalid promotion move: {self}'
+        assert (piece.kind == PieceType.PAWN and toSqr.rowIdx in [0, 7]) == (newPiece is not None), f'Invalid promotion move: {piece}{toSqr}'
         self.piece = piece
         self.toSqr = toSqr
         self.fromSqr: Square = piece.square
@@ -20,7 +20,9 @@ class Move:
         self.pieceTaken = pieceTaken
         self.isEnPassant = isEnPassant
     
-    def __eq__(self, other: Move) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Move):
+            return NotImplemented
         return self.piece == other.piece and self.fromSqr == other.fromSqr and self.toSqr == other.toSqr and self.newPiece == other.newPiece
     
     def __str__(self) -> str:

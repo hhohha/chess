@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Tuple, Sequence
 
 from constants import Color, PieceType, Direction
 from piece import Piece
@@ -107,9 +107,9 @@ class Board:
     def get_all_pieces(self, color: Optional[Color]=None) -> List[Piece]:
         if color == Color.WHITE:
             return (self.whitePawns + self.whiteKnights + self.whiteBishops + self.whiteRooks + self.whiteQueens +
-                    ([self.whiteKing] if self.whiteKing else []))
+                      ([self.whiteKing] if self.whiteKing else []))
         elif color == Color.BLACK:
-            return (self.blackPawns + self.blackKnights + self.blackBishops + self.blackRooks + self.blackQueens +
+            return  (self.blackPawns + self.blackKnights + self.blackBishops + self.blackRooks + self.blackQueens +
                     ([self.blackKing] if self.blackKing else []))
         else:
             return (self.whitePawns + self.whiteKnights + self.whiteBishops + self.whiteRooks + self.whiteQueens +
@@ -118,10 +118,7 @@ class Board:
             ([self.blackKing] if self.blackKing else []))
 
     def load_FEN(self, fen: str) -> None:
-        """
-        load a position from a FEN string
-        :param fen: string in a FEN format
-        """
+        """load a position from a FEN string"""
         self.clear()
         
         if not re.match(r'^([rnbqkpRNBQKP1-8]*/){7}[rnbqkpRNBQKP1-8]* [wb] (-|[KQkq]{1,4}) (-|[a-h][36]) [0-9]+ [0-9]+$', fen):
@@ -169,7 +166,7 @@ class Board:
 
         if enPassantSqr != '-':
             # we need the square of the pawn, not the square behind it
-            self.enPassantPawnSquare[-1] = self.get_square_by_idx(coord_to_square_idx(enPassantSqr) + (8 if self.turn == Color.BLACK else -8))
+            self.enPassantPawnSquare[-1] = self.get_square_by_idx_opt(coord_to_square_idx(enPassantSqr) + (8 if self.turn == Color.BLACK else -8))
         
         self.halfMoves = [int(halves)]
         self.moves = int(fulls)
@@ -217,33 +214,28 @@ class Board:
     def get_king(self, color: Color) -> Optional[King]:
         return self.whiteKing if color == Color.WHITE else self.blackKing
 
-    def get_square_by_idx(self, idx: int) -> Optional[Square]:
-        """
-        Get a square by its index, e.g. 0 is a1
-        :param idx: square index (0-63)
-        :return: the Square object
-        """
+    def get_square_by_idx_opt(self, idx: int) -> Optional[Square]:
+        """Get a square by its index, e.g. 0 is a1"""
         return self.squares[idx] if 0 <= idx < 64 else None
 
-    def get_square_by_coords(self, col: int, row: int) -> Optional[Square]:
-        """
-        Get a square by its coordinates, e.g. (0, 0) is a1
+    def get_square_by_idx(self, idx: int) -> Square:
+        """Analogous to get_square_by_idx_opt, but assumes the index is valid"""
+        assert 0 <= idx < 64, f'Invalid square index {idx}'
+        return self.squares[idx]
 
-        :param col: column coordinate (0-7)
-        :param row: row coordinate (0-7)
-        :return: the Square object
-        """
+    def get_square_by_coords_opt(self, col: int, row: int) -> Optional[Square]:
+        """Get a square by its coordinates, e.g. (0, 0) is a1"""
         return self.squares[col + row*8] if 0 <= col < 8 and 0 <= row < 8 else None
 
+    def get_square_by_coords(self, col: int, row: int) -> Square:
+        """Analogous to get_square_by_coords_opt, but assumes the coordinates are valid"""
+        assert 0 <= col < 8 and 0 <= row < 8, f'Invalid square coordinates ({col}, {row})'
+        return self.squares[col + row*8]
+
     def get_square_by_name(self, square: str) -> Optional[Square]:
-        """
-        Get a square by its name, e.g. 'a1'
+        """Get a square by its name, e.g. 'a1'"""
 
-        :param square: square name
-        :return: the Square object
-        """
         assert len(square) == 2, f'Invalid square given {square}'
-
         col, row = square
         assert 'a' <= col <= 'h' and '1' <=  row <= '8', f'Invalid square given {square}'
 
@@ -254,7 +246,7 @@ class Board:
         if isinstance(sqr, str):
             square = self.get_square_by_name(sqr)
         else:
-            square = self.get_square_by_idx(sqr)
+            square = self.get_square_by_idx_opt(sqr)
 
         if kind == PieceType.PAWN: square.piece = Pawn(color, square)
         elif kind == PieceType.KNIGHT: square.piece = Knight(color, square)
@@ -325,9 +317,9 @@ class Board:
 
         if move.is_castling():
             rookFrom, rookTo = self._get_castle_rook_squares(move)
-            self.get_square_by_idx(rookTo).piece = self.get_square_by_idx(rookFrom).piece
-            self.get_square_by_idx(rookFrom).piece = None
-            self.get_square_by_idx(rookTo).piece.square = self.get_square_by_idx(rookTo)
+            self.get_square_by_idx_opt(rookTo).piece = self.get_square_by_idx_opt(rookFrom).piece
+            self.get_square_by_idx_opt(rookFrom).piece = None
+            self.get_square_by_idx_opt(rookTo).piece.square = self.get_square_by_idx_opt(rookTo)
 
         self._update_en_passant_rights(move)  # if a pawn was moved 2 squares forward, maybe it can be taken e.p.
 
@@ -358,7 +350,7 @@ class Board:
             piecesToRecalc.add(move.pieceTaken)
         if move.is_castling():
             _, rookTo = self._get_castle_rook_squares(move)
-            piecesToRecalc.update(piece for piece in self.get_square_by_idx(rookTo).get_attacked_by() if piece.is_sliding())
+            piecesToRecalc.update(piece for piece in self.get_square_by_idx_opt(rookTo).get_attacked_by() if piece.is_sliding())
 
         if move.isEnPassant:
             piecesToRecalc.update(piece for piece in move.pieceTaken.square.get_attacked_by() if piece.is_sliding)
@@ -382,7 +374,7 @@ class Board:
             if move.isEnPassant:
                 # restore the piece taken en passant
                 # it's column is the same as the takers destination square, it's row as the taker's starting square
-                self.enPassantPawnSquare[-1] = self.get_square_by_coords(toSqr.colIdx, fromSqr.rowIdx)
+                self.enPassantPawnSquare[-1] = self.get_square_by_coords_opt(toSqr.colIdx, fromSqr.rowIdx)
                 self.enPassantPawnSquare[-1].piece = move.pieceTaken
 
                 # remove the piece from toSqr
@@ -409,9 +401,9 @@ class Board:
 
         if move.is_castling():   # undo the rook move
             rookTo, rookFrom = self._get_castle_rook_squares(move)   # rookTo and rookFrom are just switched here
-            self.get_square_by_idx(rookTo).piece = self.get_square_by_idx(rookFrom).piece
-            self.get_square_by_idx(rookFrom).piece = None
-            self.get_square_by_idx(rookTo).piece.square = self.get_square_by_idx(rookTo)
+            self.get_square_by_idx_opt(rookTo).piece = self.get_square_by_idx_opt(rookFrom).piece
+            self.get_square_by_idx_opt(rookFrom).piece = None
+            self.get_square_by_idx_opt(rookTo).piece.square = self.get_square_by_idx_opt(rookTo)
 
         if movingPiece.color == Color.BLACK:   # update move counter only when black moves
             self.moves -= 1
@@ -498,12 +490,12 @@ class Board:
 
             # go from own king towards the potential pinner, the first piece must be a piece of the same color
             direction = get_direction(kingSqr, piece.square)
-            firstSquare = self.find_first_piece_in_dir(kingSqr, direction)
+            firstSquare = self.find_first_occupied_square_in_dir(kingSqr, direction)
             if firstSquare is None or firstSquare.piece.color != color:
                 continue
 
             # the second piece must be the potential pinner - then all conditions are met, the first piece is pinned
-            secondSquare = self.find_first_piece_in_dir(firstSquare, direction)
+            secondSquare = self.find_first_occupied_square_in_dir(firstSquare, direction)
             if secondSquare.piece == piece:
                 pinnedPieces[firstSquare.piece] = direction
                 
@@ -537,10 +529,10 @@ class Board:
         king = self.get_king(color)
         if king:
             if self.is_castle_possible(color, Direction.RIGHT):
-                legalMoves.append(Move(king, self.get_square_by_idx(6 if color == Color.WHITE else 62)))
+                legalMoves.append(Move(king, self.get_square_by_idx_opt(6 if color == Color.WHITE else 62)))
 
             if self.is_castle_possible(color, Direction.LEFT):
-                legalMoves.append(Move(king, self.get_square_by_idx(2 if color == Color.WHITE else 58)))
+                legalMoves.append(Move(king, self.get_square_by_idx_opt(2 if color == Color.WHITE else 58)))
         return legalMoves
 
     def _get_all_legal_moves_check(self) -> List[Move]:
@@ -608,9 +600,9 @@ class Board:
             assert isinstance(attacker, Pawn), 'En passant capture by a non-pawn piece'
             for offset in [1, -1]:
                 # look to both sides if there is an own pawn that can capture en passant
-                potentialPawnSqr = self.get_square_by_coords(attacker.square.colIdx + offset, attacker.square.rowIdx)
+                potentialPawnSqr = self.get_square_by_coords_opt(attacker.square.colIdx + offset, attacker.square.rowIdx)
                 if potentialPawnSqr and isinstance(potentialPawnSqr.piece, Pawn) and potentialPawnSqr.piece.color == color:
-                    legalMoves.append(Move(potentialPawnSqr.piece, self.get_square_by_coords(attacker.square.colIdx, attacker.square.rowIdx + (
+                    legalMoves.append(Move(potentialPawnSqr.piece, self.get_square_by_coords_opt(attacker.square.colIdx, attacker.square.rowIdx + (
                         1 if color == Color.WHITE else -1))))
 
         return legalMoves
@@ -634,13 +626,13 @@ class Board:
 
             # look one square in the direction of attackers pawns, if there is a defending pawn, it can block the attack
             # consider potential promotion as well
-            potentialPawnSqr = self.get_square_by_coords(blockingSquare.colIdx, blockingSquare.rowIdx + (-1 if color == Color.WHITE else 1))
+            potentialPawnSqr = self.get_square_by_coords_opt(blockingSquare.colIdx, blockingSquare.rowIdx + (-1 if color == Color.WHITE else 1))
             if potentialPawnSqr is not None and isinstance(potentialPawnSqr.piece, Pawn) and potentialPawnSqr.piece.color == color:
                 legalMoves += potentialPawnSqr.piece.generate_pawn_move(blockingSquare)
 
             # on row 3 (4 for black) look two squares in the direction of attackers pawns, if there is a defending pawn, it can block the attack
             if potentialPawnSqr is not None and potentialPawnSqr.piece is None and (blockingSquare.rowIdx == 3 and color == Color.WHITE) or (blockingSquare.rowIdx == 4 and color == Color.BLACK):
-                potentialPawnSqr = self.get_square_by_coords(blockingSquare.colIdx, blockingSquare.rowIdx + (-2 if color == Color.WHITE else 2))
+                potentialPawnSqr = self.get_square_by_coords_opt(blockingSquare.colIdx, blockingSquare.rowIdx + (-2 if color == Color.WHITE else 2))
                 if potentialPawnSqr is not None and isinstance(potentialPawnSqr.piece, Pawn) and potentialPawnSqr.piece.color == color:
                     legalMoves.append(Move(potentialPawnSqr.piece, blockingSquare))
             # pawn taking en passant can never block
@@ -658,13 +650,13 @@ class Board:
         squares: List[Square] = []
         colIdx, rowIdx = move_in_direction(square.colIdx, square.rowIdx, direction)
         while True:
-            sqr = self.get_square_by_coords(colIdx, rowIdx)
+            sqr = self.get_square_by_coords_opt(colIdx, rowIdx)
             if sqr is None or not sqr.is_free():
                 return squares
             squares.append(sqr)
             colIdx, rowIdx = move_in_direction(colIdx, rowIdx, direction)
 
-    def find_first_piece_in_dir(self, square: Square, direction) -> Optional[Square]:
+    def find_first_occupied_square_in_dir(self, square: Square, direction) -> Optional[Square]:
         """
         Find the square with first piece in the given direction from the given square
 
@@ -674,7 +666,7 @@ class Board:
         """
         colIdx, rowIdx = move_in_direction(square.colIdx, square.rowIdx, direction)
         while True:
-            sqr = self.get_square_by_coords(colIdx, rowIdx)
+            sqr = self.get_square_by_coords_opt(colIdx, rowIdx)
             if sqr is None or not sqr.is_free():
                 return sqr
             colIdx, rowIdx = move_in_direction(colIdx, rowIdx, direction)
@@ -708,23 +700,23 @@ class Board:
         # the king passing squares need to be empty and not attacked by the opponent
         # the rook passing square needs (just b1 or b8) to be empty
         if color == Color.WHITE:
-            kingSqr = self.get_square_by_idx(4) # e1
+            kingSqr = self.get_square_by_idx_opt(4) # e1
             if side == Direction.RIGHT:
-                rookSqr = self.get_square_by_idx(7) # h1
-                passingSqrs = [self.get_square_by_idx(5), self.get_square_by_idx(6)]  # f1, g1
+                rookSqr = self.get_square_by_idx_opt(7) # h1
+                passingSqrs = [self.get_square_by_idx_opt(5), self.get_square_by_idx_opt(6)]  # f1, g1
             else:
-                rookSqr = self.get_square_by_idx(0) # a1
-                passingSqrs = [self.get_square_by_idx(2), self.get_square_by_idx(3)] # c1, d1
-                rookPassSqr = self.get_square_by_idx(1) # b1
+                rookSqr = self.get_square_by_idx_opt(0) # a1
+                passingSqrs = [self.get_square_by_idx_opt(2), self.get_square_by_idx_opt(3)] # c1, d1
+                rookPassSqr = self.get_square_by_idx_opt(1) # b1
         else:
-            kingSqr = self.get_square_by_idx(60) # e8
+            kingSqr = self.get_square_by_idx_opt(60) # e8
             if side == Direction.RIGHT:
-                rookSqr = self.get_square_by_idx(63) # h8
-                passingSqrs = [self.get_square_by_idx(61), self.get_square_by_idx(62)] # f8, g8
+                rookSqr = self.get_square_by_idx_opt(63) # h8
+                passingSqrs = [self.get_square_by_idx_opt(61), self.get_square_by_idx_opt(62)] # f8, g8
             else:
-                rookSqr = self.get_square_by_idx(56) # a8
-                passingSqrs = [self.get_square_by_idx(58), self.get_square_by_idx(59)] # c8, d8
-                rookPassSqr = self.get_square_by_idx(57) # b8
+                rookSqr = self.get_square_by_idx_opt(56) # a8
+                passingSqrs = [self.get_square_by_idx_opt(58), self.get_square_by_idx_opt(59)] # c8, d8
+                rookPassSqr = self.get_square_by_idx_opt(57) # b8
 
         # the king must be on its place and not moved
         if kingSqr.piece is None or not isinstance(kingSqr.piece, King) or kingSqr.piece.color != color or kingSqr.piece.movesCnt > 0:

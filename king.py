@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Set
 from constants import PieceType, Color, Direction
 from move import Move
 from piece import Piece
@@ -25,7 +25,7 @@ class King(Piece):
         for direction in Direction:
             if direction in inaccessibleDirs:
                 continue
-            square = self.square.board.get_square_by_coords(*move_in_direction(self.square.colIdx, self.square.rowIdx, direction))
+            square = self.square.board.get_square_by_coords_opt(*move_in_direction(self.square.colIdx, self.square.rowIdx, direction))
             # the square must exist (not off the board), must not be occupied by a piece of the same color and must not be attacked by the opponent
             if square is not None and (square.piece is None or square.piece.color != self.color) and not square.is_attacked_by(self.color.invert()):
                 potentialMoves.append(Move(self, square))
@@ -36,13 +36,14 @@ class King(Piece):
         assert False, "king cannot be pinned"
         return []
     
-    def calc_attacked_squares(self) -> None:
+    def calc_attacked_squares(self) -> Set[Square]:
         """calculates squares attacked by the piece"""
-        self.attackedSquares.clear()
+        attackedSquares: Set[Square] = set()
         for i, j in [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]:
-            square = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
+            square = self.square.board.get_square_by_coords_opt(self.square.colIdx + i, self.square.rowIdx + j)
             if square is not None:
-                self.attackedSquares.add(square)
+                attackedSquares.add(square)
+        return attackedSquares
 
 
     def __str__(self):

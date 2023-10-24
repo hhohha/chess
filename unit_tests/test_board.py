@@ -9,22 +9,22 @@ class TestSuite_Board(unittest.TestCase):
     def test_square_coords(self):
         b = Board()
 
-        sqr = b.get_square_by_idx(-1)
+        sqr = b.get_square_by_idx_opt(-1)
         self.assertIsNone(sqr)
 
-        sqr = b.get_square_by_idx(64)
+        sqr = b.get_square_by_idx_opt(64)
         self.assertIsNone(sqr)
 
-        sqr = b.get_square_by_idx(0)
+        sqr = b.get_square_by_idx_opt(0)
         self.assertEqual(sqr.name, 'a1')
 
-        sqr = b.get_square_by_coords(1, 8)
+        sqr = b.get_square_by_coords_opt(1, 8)
         self.assertIsNone(sqr)
 
-        sqr = b.get_square_by_coords(0, 7)
+        sqr = b.get_square_by_coords_opt(0, 7)
         self.assertEqual(sqr.name, 'a8')
 
-        sqr = b.get_square_by_coords(7, 7)
+        sqr = b.get_square_by_coords_opt(7, 7)
         self.assertEqual(sqr.name, 'h8')
 
     def test_is_castle_possible(self):
@@ -78,13 +78,13 @@ class TestSuite_Board(unittest.TestCase):
     def test_find_first_piece_in_dir(self):
         b = Board()
         b.load_FEN(FEN_INIT)
-        self.assertEqual(b.find_first_piece_in_dir(b.get_square_by_name('e4'), Direction.UP), b.get_square_by_name('e7'))
-        self.assertEqual(b.find_first_piece_in_dir(b.get_square_by_name('e4'), Direction.UP_LEFT), b.get_square_by_name('b7'))
-        self.assertIsNone(b.find_first_piece_in_dir(b.get_square_by_name('e4'), Direction.RIGHT))
-        self.assertIsNone(b.find_first_piece_in_dir(b.get_square_by_name('e4'), Direction.LEFT))
-        self.assertEqual(b.find_first_piece_in_dir(b.get_square_by_name('e1'), Direction.UP), b.get_square_by_name('e2'))
-        self.assertEqual(b.find_first_piece_in_dir(b.get_square_by_name('e1'), Direction.RIGHT), b.get_square_by_name('f1'))
-        self.assertEqual(b.find_first_piece_in_dir(b.get_square_by_name('e1'), Direction.UP_RIGHT), b.get_square_by_name('f2'))
+        self.assertEqual(b.find_first_occupied_square_in_dir(b.get_square_by_name('e4'), Direction.UP), b.get_square_by_name('e7'))
+        self.assertEqual(b.find_first_occupied_square_in_dir(b.get_square_by_name('e4'), Direction.UP_LEFT), b.get_square_by_name('b7'))
+        self.assertIsNone(b.find_first_occupied_square_in_dir(b.get_square_by_name('e4'), Direction.RIGHT))
+        self.assertIsNone(b.find_first_occupied_square_in_dir(b.get_square_by_name('e4'), Direction.LEFT))
+        self.assertEqual(b.find_first_occupied_square_in_dir(b.get_square_by_name('e1'), Direction.UP), b.get_square_by_name('e2'))
+        self.assertEqual(b.find_first_occupied_square_in_dir(b.get_square_by_name('e1'), Direction.RIGHT), b.get_square_by_name('f1'))
+        self.assertEqual(b.find_first_occupied_square_in_dir(b.get_square_by_name('e1'), Direction.UP_RIGHT), b.get_square_by_name('f2'))
 
 
     def test_get_pinned_pieces(self):

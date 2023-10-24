@@ -104,30 +104,30 @@ def main():
             
             if selectedButton is None:
                 if window.Element(event).ImageData != icons.empty:
-                    if game.board.get_square_by_idx(eventSqr).piece.color == game.board.turn:
+                    if game.board.get_square_by_idx_opt(eventSqr).piece.color == game.board.turn:
                         selectedButton = eventSqr
-                        potentialMoves = game.board.get_square_by_idx(selectedButton).piece.get_legal_moves()
+                        potentialMoves = game.board.get_square_by_idx_opt(selectedButton).piece.get_legal_moves()
                         potentialSquares = list(map(lambda mv: mv.toSqr, potentialMoves))
-                        game.displayHandler.light_squares([game.board.get_square_by_idx(selectedButton)], 2)
+                        game.displayHandler.light_squares([game.board.get_square_by_idx_opt(selectedButton)], 2)
                         game.displayHandler.light_squares(potentialSquares, 1)
 
             elif selectedButton == eventSqr:
                 game.displayHandler.unlight_squares()
                 selectedButton = None
-            elif game.board.get_square_by_idx(eventSqr).piece and game.board.get_square_by_idx(selectedButton).piece.color == game.board.get_square_by_idx(eventSqr).piece.color:
+            elif game.board.get_square_by_idx_opt(eventSqr).piece and game.board.get_square_by_idx_opt(selectedButton).piece.color == game.board.get_square_by_idx_opt(eventSqr).piece.color:
                 game.displayHandler.unlight_squares()
                 selectedButton = eventSqr
-                potentialMoves = game.board.get_square_by_idx(selectedButton).piece.get_legal_moves()
+                potentialMoves = game.board.get_square_by_idx_opt(selectedButton).piece.get_legal_moves()
                 potentialSquares = list(map(lambda mv: mv.toSqr, potentialMoves))
-                game.displayHandler.light_squares([game.board.get_square_by_idx(selectedButton)], 2)
+                game.displayHandler.light_squares([game.board.get_square_by_idx_opt(selectedButton)], 2)
                 game.displayHandler.light_squares(potentialSquares, 1)
             else:
-                if not game.board.get_square_by_idx(eventSqr) in potentialSquares:
+                if not game.board.get_square_by_idx_opt(eventSqr) in potentialSquares:
                     continue
                    
                 game.displayHandler.unlight_squares()
                 #move = cMove(game.board.get_square_by_idx(selected_button).piece, game.board.get_square_by_idx(eventSqr)
-                moves = list(filter(lambda x: x.piece == game.board.get_square_by_idx(selectedButton).piece and x.toSqr == game.board.get_square_by_idx(eventSqr), potentialSquares))
+                moves = list(filter(lambda x: x.piece == game.board.get_square_by_idx_opt(selectedButton).piece and x.toSqr == game.board.get_square_by_idx_opt(eventSqr), potentialSquares))
                 if len(moves) > 0:
                     game.perform_move(moves[0])
                     selectedButton = None

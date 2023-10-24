@@ -1,8 +1,12 @@
-from typing import List, Set
+from __future__ import annotations
+from typing import List, Set, TYPE_CHECKING
 from constants import Color
 from utils import *
 from abc import ABC, abstractmethod
 from move import Move
+
+if TYPE_CHECKING:
+    from square import Square
 
 class Piece(ABC):
     def __init__(self, kind: PieceType, color: Color, square: Square):
@@ -18,15 +22,15 @@ class Piece(ABC):
         # self.id = square.idx
 
     @abstractmethod
-    def calc_potential_moves(self) -> None:
+    def calc_potential_moves(self) -> List[Move]:
         pass
 
     @abstractmethod
-    def calc_potential_moves_pinned(self, direction: Direction) -> None:
+    def calc_potential_moves_pinned(self, direction: Direction) -> List[Move]:
         pass
 
     @abstractmethod
-    def calc_attacked_squares(self) -> None:
+    def calc_attacked_squares(self) -> Set[Square]:
         pass
 
     def is_sliding(self) -> bool:
@@ -39,7 +43,7 @@ class Piece(ABC):
             sqr.get_attacked_by(self.color).remove(self)
 
         # calculate new attacked squares
-        self.calc_attacked_squares()
+        self.attackedSquares = self.calc_attacked_squares()
 
         # add the piece to all squares that it newly attacks
         for sqr in self.attackedSquares:
@@ -60,10 +64,14 @@ class Piece(ABC):
     #def calc_attacked_squares(self):
     #   return list(map(lambda mv: mv.toSqr, self.calc_potential_moves(ownPieces=True)))
 
-    def get_legal_moves(self):
+    def get_legal_moves(self) -> List[Move]:
+        """
+        Gets legal moves of the piece by filtering all current legal moves, not performance critical since it is used by UI only
+        :return: list of legal moves of the piece
+        """
         if self.square.board.turn != self.color:
             return []
-        return list(filter(lambda move: move.fromSqr == self.square, self.square.board.legal_moves[-1]))
+        return list(filter(lambda move: move.fromSqr == self.square, self.square.board.legalMoves[-1]))
 
     #def __eq__(self, other):
     #    return self.id == other.id
@@ -92,7 +100,7 @@ class SlidingPiece(Piece, ABC):
             i, j = 0, 0
             while True:
                 i, j = move_in_direction(i, j, direction)
-                square: Optional[Square] = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
+                square: Optional[Square] = self.square.board.get_square_by_coords_opt(self.square.colIdx + i, self.square.rowIdx + j)
 
                 if square is None:
                     break  # reached the edge of the board
@@ -106,35 +114,37 @@ class SlidingPiece(Piece, ABC):
                     break
         return potentialMoves
 
-    def calc_attacked_squares(self) -> None:
+    def calc_attacked_squares(self) -> Set[Square]:
         """calculates squares attacked by the piece"""
-        self.attackedSquares.clear()
+
+        attackedSquares: Set[Square] = set()
         for direction in self.get_sliding_directions():
             i, j = 0, 0
             while True:
                 i, j = move_in_direction(i, j, direction)
-                square: Optional[Square] = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
+                square: Optional[Square] = self.square.board.get_square_by_coords_opt(self.square.colIdx + i, self.square.rowIdx + j)
 
                 if square is None:
                     break  # reached the edge of the board
 
                 if square.piece is None:
-                    self.attackedSquares.add(square)  # free square
+                    attackedSquares.add(square)  # free square
                 elif square.piece.color != self.color:
-                    self.attackedSquares.add(square)  # capture - can move here but no further
+                    attackedSquares.add(square)  # capture - can move here but no further
                     break
                 else:
-                    self.attackedSquares.add(square)
+                    attackedSquares.add(square)
                     break
+        return attackedSquares
 
-    def calc_potential_moves_pinned(self, directionFrom: Direction) -> List[Move]:
+    def calc_potential_moves_pinned(self, directionFromKingToPinner: Direction) -> List[Move]:
         """
         what are potential moves if the piece is pinned in the given direction
 
-        :param directionFrom: direction from king to pinner!!!
+        :param directionFromKingToPinner: direction from king to pinner!!!
         :return: list of potential moves
         """
-        if directionFrom not in self.get_sliding_directions():
+        if directionFromKingToPinner not in self.get_sliding_directions():
             return [] # a piece is pinned in a direction in which it cannot move
 
         potentialMoves: List[Move] = []
@@ -142,11 +152,11 @@ class SlidingPiece(Piece, ABC):
         colIdx, rowIdx = self.square.colIdx, self.square.rowIdx
         while True:
             # can move towards the king but cannot capture
-            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, reverse_dir(directionFrom))
-            sqr = self.square.board.get_square_by_coords(colIdx, rowIdx)
+            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, reverse_dir(directionFromKingToPinner))
+            sqr = self.square.board.get_square_by_coords_opt(colIdx, rowIdx)
             assert sqr is not None, f"piece {self} is actually not pinned"
 
-            if not sqr.is_free():
+            if sqr.piece is not None:
                 assert sqr.piece.color == self.color and sqr.piece.kind == PieceType.KING, f"piece {self} is actually not pinned"
                 break
             potentialMoves.append(Move(self, sqr))
@@ -154,12 +164,12 @@ class SlidingPiece(Piece, ABC):
         colIdx, rowIdx = self.square.colIdx, self.square.rowIdx
         while True:
             # a piece can move in the direction of the pinner including its capture
-            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, directionFrom)
-            sqr = self.square.board.get_square_by_coords(colIdx, rowIdx)
+            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, directionFromKingToPinner)
+            sqr = self.square.board.get_square_by_coords_opt(colIdx, rowIdx)
             assert sqr is not None, f"piece {self} is actually not pinned"
 
             potentialMoves.append(Move(self, sqr))
-            if not sqr.is_free():
+            if sqr.piece is not None:
                 assert sqr.piece.color != self.color and sqr.piece.is_sliding(), f"piece {self} is actually not pinned"
                 break
 

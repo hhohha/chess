@@ -41,13 +41,12 @@ def test_position(position: Position, depth: int) -> None:
             break
 
 def main():
-    depthArg = 4
+    depthArg = 3
     #depthArg = int(sys.argv[1])
 
     total_start = time()
     for p in positions:
-        if p.id in [2, 6, 7]:
-            test_position(p, depthArg)
+        test_position(p, depthArg)
 
     total_end = time()
     print('total time needed:  ', round(total_end - total_start, 4), 'sec')

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Set
 from constants import Color, PieceType, Direction
 from move import Move
 from piece import Piece
@@ -15,19 +15,20 @@ class Knight (Piece):
         """
         potentialMoves = []
         for (i, j) in [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]:
-            square = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
+            square = self.square.board.get_square_by_coords_opt(self.square.colIdx + i, self.square.rowIdx + j)
             if square is not None and (square.piece is None or square.piece.color != self.color):
                 potentialMoves.append(Move(self, square))
 
         return potentialMoves
 
-    def calc_attacked_squares(self) -> None:
+    def calc_attacked_squares(self) -> Set[Square]:
         """calculates squares attacked by the piece"""
-        self.attackedSquares.clear()
+        attackedSquares: Set[Square] = set()
         for (i, j) in [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]:
-            square = self.square.board.get_square_by_coords(self.square.colIdx + i, self.square.rowIdx + j)
+            square = self.square.board.get_square_by_coords_opt(self.square.colIdx + i, self.square.rowIdx + j)
             if square is not None:
-                self.attackedSquares.add(square)
+                attackedSquares.add(square)
+        return attackedSquares
 
     def calc_potential_moves_pinned(self, direction: Direction) -> List[Move]:
         return []

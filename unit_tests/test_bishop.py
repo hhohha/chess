@@ -75,6 +75,6 @@ class TestSuite_BishopMoves(unittest.TestCase):
 
         b.place_piece('a1', PieceType.KING, Color.BLACK)
         b.place_piece('e5', PieceType.QUEEN, Color.WHITE)
-        actualMoves = bishop.calc_potential_moves_pinned(Direction.DOWN_LEFT)
+        actualMoves = bishop.calc_potential_moves_pinned(Direction.UP_RIGHT)
         expectedMoves = ['Bc3-b2', 'Bc3-d4', 'Bc3-e5']
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
