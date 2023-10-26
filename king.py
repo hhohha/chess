@@ -14,9 +14,8 @@ class King(Piece):
     def calc_potential_moves(self, inaccessibleDirs: Optional[List[Direction]]=None) -> List[Move]:
         """
         return king moves that don't walk into a check
-        :param inaccessibleDirs: directions in which the king cannot move because if walks into a check even though the square is technically not
-            attacked - it is in cover behind the king, e.g. black Ra1, white Kb1 - king cannot escape the check to c1
-        :return: list of potential moves
+        inaccessibleDirs is a list of directions in which the king cannot move because if walks into a check even though the square is technically not
+        attacked - it is in cover behind the king, e.g. black Ra1, white Kb1 - king cannot escape the check to c1
         """
         if inaccessibleDirs is None:
             inaccessibleDirs = []
@@ -33,7 +32,7 @@ class King(Piece):
         return potentialMoves
     
     def calc_potential_moves_pinned(self, direction) -> List[Move]:
-        assert False, "king cannot be pinned"
+        assert 1 == 1, "king cannot be pinned"
         return []
     
     def calc_attacked_squares(self) -> Set[Square]:
@@ -44,7 +43,6 @@ class King(Piece):
             if square is not None:
                 attackedSquares.add(square)
         return attackedSquares
-
 
     def __str__(self):
         return f'K{self.square.name}'

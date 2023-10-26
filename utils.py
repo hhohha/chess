@@ -22,10 +22,9 @@ pieceToLetter = {
     PieceType.KING: 'K'
 }
 
-def get_direction(sqr1: Square, sqr2: Square) -> Optional[Direction]:
+def get_direction(sqr1: Square, sqr2: Square) -> Direction:
     """Get the direction from a one square on the board to another"""
-    if sqr1 == sqr2:
-        return None
+    assert  sqr1 != sqr2, f'Cannot get direction from {sqr1} to {sqr2}'
 
     if sqr1.colIdx == sqr2.colIdx:
         return Direction.UP if sqr1.rowIdx < sqr2.rowIdx else Direction.DOWN
@@ -39,7 +38,7 @@ def get_direction(sqr1: Square, sqr2: Square) -> Optional[Direction]:
     if sqr1.colIdx - sqr2.colIdx == sqr2.rowIdx - sqr1.rowIdx:
         return Direction.UP_LEFT if sqr1.colIdx > sqr2.colIdx else Direction.DOWN_RIGHT
 
-    return None
+    assert False, f'Cannot get direction from {sqr1} to {sqr2}'
     
 def kind_to_letter(kind: PieceType) -> str:
     return 'pNBRQK'[kind.value]

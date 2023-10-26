@@ -5,9 +5,8 @@ from constants import PieceType, Color, Direction
 
 class TestSuite_KnightMoves(unittest.TestCase):
     def test_knight_moves_1(self):
-        """
-        knight's moves on an empty board
-        """
+        """knight's moves on an empty board"""
+
         b = Board()
         knight = b.place_piece('a1', PieceType.KNIGHT, Color.WHITE)
         actualMoves = knight.calc_potential_moves()
@@ -21,9 +20,8 @@ class TestSuite_KnightMoves(unittest.TestCase):
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
 
     def test_knight_moves_2(self):
-        """
-        knight's moves on a non-empty board
-        """
+        """knight's moves on a non-empty board"""
+
         b = Board()
         knight = b.place_piece('c1', PieceType.KNIGHT, Color.WHITE)
         b.place_piece('d3', PieceType.PAWN, Color.WHITE)
@@ -33,9 +31,8 @@ class TestSuite_KnightMoves(unittest.TestCase):
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
 
     def test_knight_moves_pinned(self):
-        """
-        knight's moves while pinned
-        """
+        """knight's moves while pinned"""
+
         b = Board()
         knight = b.place_piece('c1', PieceType.KNIGHT, Color.WHITE)
         actualMoves = knight.calc_potential_moves_pinned(Direction.UP)

@@ -10,9 +10,7 @@ class Knight (Piece):
         self.isLight = True
 
     def calc_potential_moves(self) -> List[Move]:
-        """
-        :return: list of knight's potential moves
-        """
+        """calculate a list of potential moves"""
         potentialMoves = []
         for (i, j) in [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]:
             square = self.square.board.get_square_by_coords_opt(self.square.colIdx + i, self.square.rowIdx + j)
@@ -31,6 +29,7 @@ class Knight (Piece):
         return attackedSquares
 
     def calc_potential_moves_pinned(self, direction: Direction) -> List[Move]:
+        """calculate a list of potential moves when pinned - a pinned knight can never move"""
         return []
 
     def __str__(self):

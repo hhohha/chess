@@ -5,9 +5,8 @@ from constants import PieceType, Color, Direction
 
 class TestSuite_BishopMoves(unittest.TestCase):
     def test_bishop_moves_1(self):
-        """
-        bishop's moves on an empty board
-        """
+        """bishop's moves on an empty board"""
+
         b = Board()
         bishop = b.place_piece('a1', PieceType.BISHOP, Color.WHITE)
         actualMoves = bishop.calc_potential_moves()
@@ -27,9 +26,8 @@ class TestSuite_BishopMoves(unittest.TestCase):
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
 
     def test_bishop_moves_2(self):
-        """
-        bishop's moves on a non-empty board
-        """
+        """bishop's moves on a non-empty board"""
+
         b = Board()
         b.place_piece('a1', PieceType.KNIGHT, Color.WHITE)
         b.place_piece('c3', PieceType.ROOK, Color.BLACK)
@@ -56,9 +54,8 @@ class TestSuite_BishopMoves(unittest.TestCase):
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
 
     def test_bishop_moves_pinned(self):
-        """
-        bishop's moves on a board while pinned
-        """
+        """bishop's moves on a board while pinned"""
+
         b = Board()
         bishop = b.place_piece('c3', PieceType.BISHOP, Color.BLACK)
         actualMoves = bishop.calc_potential_moves_pinned(Direction.LEFT)

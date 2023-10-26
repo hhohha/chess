@@ -1,13 +1,11 @@
 import unittest
 from board import Board
-from constants import PieceType, Color, Direction
+from constants import PieceType, Color
 
 
 class TestSuite_KingMoves(unittest.TestCase):
     def test_king_moves(self):
-        """
-        king's moves on an empty board
-        """
+        """king's moves on an empty board"""
         b = Board()
         king = b.place_piece('a1', PieceType.KING, Color.WHITE)
         actualMoves = king.calc_potential_moves()

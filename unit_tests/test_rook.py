@@ -5,9 +5,8 @@ from constants import PieceType, Color, Direction
 
 class TestSuite_RookMoves(unittest.TestCase):
     def test_rook_moves_1(self):
-        """
-        rook's moves on an empty board
-        """
+        """rook's moves on an empty board"""
+
         b = Board()
         rook = b.place_piece('b3', PieceType.ROOK, Color.WHITE)
         actualMoves = rook.calc_potential_moves()
@@ -15,9 +14,8 @@ class TestSuite_RookMoves(unittest.TestCase):
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
 
     def test_rook_moves_2(self):
-        """
-        rook's moves on a non-empty board
-        """
+        """rook's moves on a non-empty board"""
+
         b = Board()
         rook = b.place_piece('e4', PieceType.ROOK, Color.WHITE)
         b.place_piece('e5', PieceType.ROOK, Color.WHITE)
@@ -29,9 +27,8 @@ class TestSuite_RookMoves(unittest.TestCase):
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
 
     def test_rook_moves_pinned(self):
-        """
-        rook's moves while pinned
-        """
+        """rook's moves while pinned"""
+
         b = Board()
         rook = b.place_piece('e4', PieceType.ROOK, Color.WHITE)
         actualMoves = rook.calc_potential_moves_pinned(Direction.UP_LEFT)
