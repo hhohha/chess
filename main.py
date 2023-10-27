@@ -7,7 +7,8 @@ from constants import *
 from display_handler import DisplayHandler
 
 from game import Game
-from utils import letter_to_piece
+from move import Move
+from utils import letterToPiece
 
 
 # TO FIX
@@ -44,8 +45,6 @@ from utils import letter_to_piece
 # - position maps
 # - ...
 
-# TODO - sliding pieces as first indexes in pieces list (after king)
-# TODO - refactor
 def main():
     boardLayout = [[
         sg.Button(image_data=icons.empty,
@@ -92,45 +91,51 @@ def main():
             game.clear()
         elif event[:4] == 'new_':
             newPiece = event[4:]
-        elif event[:3] == 'sqr':
+        elif event[:3] == 'sqr': # click on a square
             eventSqr = int(event[3:])
-            
+
+            # we are not moving but placing a new piece on the board
             if newPiece is not None:
                 color = Color.WHITE if newPiece[0] == 'w' else Color.BLACK
-                kind = letter_to_piece(newPiece[1])
+                kind = letterToPiece[newPiece[1]]
                 game.place_piece(eventSqr, kind, color)
                 newPiece = None
-                continue
             
-            if selectedButton is None:
-                if window.Element(event).ImageData != icons.empty:
-                    if game.board.get_square_by_idx_opt(eventSqr).piece.color == game.board.turn:
+            elif selectedButton is None:
+                # selected button is None - we are selecting a piece to be moved
+                if window.Element(event).ImageData != icons.empty:  # there must be a piece on the square...
+                    if game.board.get_square_by_idx_opt(eventSqr).piece.color == game.board.turn:  # ...of the color whose turn it is
                         selectedButton = eventSqr
+
+                        #now light up the possible destination squares
                         potentialMoves = game.board.get_square_by_idx_opt(selectedButton).piece.get_legal_moves()
                         potentialSquares = list(map(lambda mv: mv.toSqr, potentialMoves))
                         game.displayHandler.light_squares([game.board.get_square_by_idx_opt(selectedButton)], 2)
                         game.displayHandler.light_squares(potentialSquares, 1)
 
             elif selectedButton == eventSqr:
+                # clicked the same button twice - just unselect the piece - unlight potential moves
                 game.displayHandler.unlight_squares()
                 selectedButton = None
+
             elif game.board.get_square_by_idx_opt(eventSqr).piece and game.board.get_square_by_idx_opt(selectedButton).piece.color == game.board.get_square_by_idx_opt(eventSqr).piece.color:
+                # we clicked on a different piece of the same color - select it instead
                 game.displayHandler.unlight_squares()
                 selectedButton = eventSqr
                 potentialMoves = game.board.get_square_by_idx_opt(selectedButton).piece.get_legal_moves()
                 potentialSquares = list(map(lambda mv: mv.toSqr, potentialMoves))
                 game.displayHandler.light_squares([game.board.get_square_by_idx_opt(selectedButton)], 2)
                 game.displayHandler.light_squares(potentialSquares, 1)
-            else:
-                if not game.board.get_square_by_idx_opt(eventSqr) in potentialSquares:
-                    continue
-                   
+            elif game.board.get_square_by_idx_opt(eventSqr) in potentialSquares:
+                # clicked on a square where the selected piece can move - let's move the piece
                 game.displayHandler.unlight_squares()
-                #move = cMove(game.board.get_square_by_idx(selected_button).piece, game.board.get_square_by_idx(eventSqr)
-                moves = list(filter(lambda x: x.piece == game.board.get_square_by_idx_opt(selectedButton).piece and x.toSqr == game.board.get_square_by_idx_opt(eventSqr), potentialSquares))
-                if len(moves) > 0:
-                    game.perform_move(moves[0])
-                    selectedButton = None
+                move = Move(game.board.get_square_by_idx(selectedButton).piece, game.board.get_square_by_idx(eventSqr))
+                game.perform_move(move)
+                selectedButton = None
+            else:
+                # only other possibility - clicked on a square where the selected piece cannot move - do nothing
+                pass
+
     window.close()
 
 if __name__ == '__main__':

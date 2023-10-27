@@ -1,8 +1,4 @@
-#!/usr/bin/pypy3
-
 from board import Board
-from move import cMove
-from constants import *
 import cProfile
 
 # TODO - refactor ???
@@ -16,5 +12,5 @@ def main():
     print('cnt:', n)
 
 
-#cProfile.run('main()')
-main()   #15sec
+cProfile.run('main()')
+#main()   #15sec

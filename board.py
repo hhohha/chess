@@ -57,7 +57,13 @@ class Board:
         self.whitePawns: List[Pawn] = []
         self.blackPawns: List[Pawn] = []
 
+    def get_current_legal_moves(self) -> List[Move]:
+        """Get the current list of legal moves"""
+        assert len(self.legalMoves) > 0, 'No legal moves found'
+        return self.legalMoves[-1]
+
     def get_all_pieces(self, color: Optional[Color]=None) -> chain[Piece]:
+        """Get a list of all pieces of a given color, if no color is given, return all pieces"""
         if color == Color.WHITE:
             return chain(self.whitePawns, self.whiteKnights, self.whiteBishops, self.whiteRooks, self.whiteQueens,
                          [self.whiteKing] if self.whiteKing else [])
@@ -130,6 +136,7 @@ class Board:
         self.legalMoves = [self.get_all_legal_moves()]
 
     def clear(self):
+        """clear the board"""
         self.squares = [Square(idx, self) for idx in range(64)]
         self.whiteKing = None
         self.blackKing = None
@@ -149,6 +156,7 @@ class Board:
         self.moves = 0
 
     def add_piece_to_list(self, piece: Piece) -> None:
+        """Add a piece to the correct list of pieces of the given kind and color (not for kings)"""
         if piece.color == Color.WHITE:
             if isinstance(piece, Pawn): self.whitePawns.append(piece)
             elif isinstance(piece, Knight): self.whiteKnights.append(piece)
@@ -165,6 +173,7 @@ class Board:
             else: assert False, f'There is no list of type {type(piece)}'
 
     def remove_piece_from_list(self, piece: Piece) -> None:
+        """Remove a piece from the correct list of pieces of the given kind and color (not for kings)"""
         if piece.color == Color.WHITE:
             if isinstance(piece, Pawn): self.whitePawns.remove(piece)
             elif isinstance(piece, Knight): self.whiteKnights.remove(piece)
@@ -197,10 +206,12 @@ class Board:
         assert False, f'Invalid piece kind {kind}'
 
     def get_sliding_pieces(self, color: Color) -> chain[Piece]:
+        """Get a list of sliding pieces of a given color"""
         return chain(self.whiteBishops, self.whiteRooks, self.whiteQueens) if color == Color.WHITE else chain(self.blackBishops,
                                                                                                               self.blackRooks, self.blackQueens)
 
     def get_king(self, color: Color) -> Optional[King]:
+        """Get the king of a given color"""
         return self.whiteKing if color == Color.WHITE else self.blackKing
 
     def get_square_by_idx_opt(self, idx: int) -> Optional[Square]:
@@ -231,9 +242,15 @@ class Board:
         idx = (ord(col) - 97) + (int(row) - 1)*8
         return self.squares[idx]
 
-    def place_piece(self, sqr: int | str, kind: PieceType, color: Color) -> Piece:
+    def place_piece(self, sqr: int | str | Square, kind: PieceType, color: Color) -> Piece:
+        """
+        Create a piece of a given kind and color and place it on a given square - not performance critical, not used in the engine
+        returns pointer to the created piece
+        """
         if isinstance(sqr, str):
             square = self.get_square_by_name(sqr)
+        elif isinstance(sqr, Square):
+            square = sqr
         else:
             square = self.get_square_by_idx(sqr)
 
@@ -256,10 +273,6 @@ class Board:
                 self.blackKing = square.piece
         else:
             self.add_piece_to_list(square.piece)
-            #self.get_pieces(kind, color).append(square.piece)
-            #self.get_pieces(color).append(square.piece)
-            #if square.piece.is_sliding():
-            #    self.get_pieces(color, sliding=True).append(square.piece)
 
         return square.piece
 
@@ -268,22 +281,17 @@ class Board:
         removes a piece from the board, usually during a piece capture
         the removed piece is no longer pointed to by any square or the list of pieces of the board,
         it is however pointed to by the move that it was taken in, thus the move can be undone
-        :param piece: the piece being removed
         """
         assert piece in self.get_pieces(piece.kind, piece.color), f'Cannot remove piece {piece}, not found'
         for sqr in piece.attackedSquares:
             sqr.get_attacked_by(piece.color).remove(piece)
         piece.attackedSquares.clear()
         self.remove_piece_from_list(piece)
-        #self.get_pieces(piece.kind, piece.color).remove(piece)
         piece.isActive = False
 
     def perform_move(self, move: Move, analysis: bool=True) -> None:
-        """
-        performs a move on the board
-        :param move: the move being performed
-        :param analysis: is this an actual move or just a move for analysis?
-        """
+        """performs a move on the board"""
+
         fromSqr, toSqr, movingPiece = move.fromSqr, move.toSqr, move.piece
 
         if self.turn == Color.BLACK:
@@ -424,6 +432,8 @@ class Board:
         self.legalMoves.pop()       # we remember the previous position's legal moves
 
     def _get_castle_rook_squares(self, move: Move) -> Tuple[int, int]:
+        """get the from and to squares of the rook that is castling"""
+        assert move.toSqr.idx in [6, 2, 62, 58], f'Invalid castling move {move}'
         if move.toSqr.idx == 6:
             return 7, 5
         elif move.toSqr.idx == 2:
@@ -439,8 +449,6 @@ class Board:
         does not currently work with king
         """
 
-        #self.get_pieces(piece.kind, piece.color).remove(piece)
-        #self.get_pieces(newKind, piece.color).append(piece)
         self.remove_piece_from_list(piece)
 
         piece.kind = newKind
