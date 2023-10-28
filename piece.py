@@ -13,7 +13,7 @@ class Piece(ABC):
         self.kind = kind
         self.color = color
         self.square = square
-        self.isActive = True   # TODO - is this attribute actually necessary, cannot we simply not point to this piece?
+        self.isActive = True
         if not hasattr(self, 'movesCnt'):
             self.movesCnt = 0
         if not hasattr(self, 'attackedSquares'):

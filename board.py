@@ -131,7 +131,10 @@ class Board:
         self.moves = int(fulls)
         
         for p in self.get_all_pieces():
-            p.update_attacked_squares()
+            if p.kind == PieceType.KNIGHT:
+                p.recalculate()
+            else:
+                p.update_attacked_squares()
 
         self.legalMoves = [self.get_all_legal_moves()]
 
@@ -229,7 +232,9 @@ class Board:
 
     def get_square_by_coords(self, col: int, row: int) -> Square:
         """Analogous to get_square_by_coords_opt, but assumes the coordinates are valid"""
-        assert 0 <= col < 8 and 0 <= row < 8, f'Invalid square coordinates ({col}, {row})'
+        if not 0 <= col < 8 or not 0 <= row < 8:
+            print(f'Invalid square coordinates ({col}, {row}),   history: {self.history}')
+        assert 0 <= col < 8 and 0 <= row < 8, f'Invalid square coordinates ({col}, {row}),   history: {self.history}'
         return self.squares[col + row*8]
 
     def get_square_by_name(self, square: str) -> Square:
@@ -291,7 +296,7 @@ class Board:
 
     def perform_move(self, move: Move, analysis: bool=True) -> None:
         """performs a move on the board"""
-
+        self.history.append(move)
         fromSqr, toSqr, movingPiece = move.fromSqr, move.toSqr, move.piece
 
         if self.turn == Color.BLACK:
@@ -332,6 +337,7 @@ class Board:
             assert move.newPiece is not None, f'Invalid promotion move {move}'
             self.change_piece_kind(movingPiece, move.newPiece)
 
+
         self.turn = self.turn.invert()
 
         self.recalculation(move, analysis)   # TODO - redo this
@@ -350,24 +356,28 @@ class Board:
         :param move: the move being made
         :param analysis: is this an actual move or just a move for analysis?
         """
-        piecesToRecalc = {move.piece} | {piece for piece in move.fromSqr.get_attacked_by() if piece.is_sliding()} | {piece for piece in move.toSqr.get_attacked_by() if piece.is_sliding()}
+        piecesToRecalc = ({move.piece} | {piece for piece in move.fromSqr.get_attacked_by() if piece.is_sliding() or piece.kind == PieceType.KNIGHT}
+                          | {piece for piece in move.toSqr.get_attacked_by() if piece.is_sliding() or piece.kind == PieceType.KNIGHT})
 
         if move.pieceTaken is not None and move.pieceTaken.isActive:
             piecesToRecalc.add(move.pieceTaken)
         if move.is_castling():
             _, rookTo = self._get_castle_rook_squares(move)
-            piecesToRecalc.update(piece for piece in self.get_square_by_idx(rookTo).get_attacked_by() if piece.is_sliding())
+            piecesToRecalc.update(piece for piece in self.get_square_by_idx(rookTo).get_attacked_by() if piece.is_sliding() or piece.kind == PieceType.KNIGHT)
 
         if move.isEnPassant:
             assert move.pieceTaken is not None, f'Invalid en passant move {move}'
-            piecesToRecalc.update(piece for piece in move.pieceTaken.square.get_attacked_by() if piece.is_sliding)
+            piecesToRecalc.update(piece for piece in move.pieceTaken.square.get_attacked_by() if piece.is_sliding() or piece.kind == PieceType.KNIGHT)
 
         #self.piecesRecalculated.append(piecesToRecalc)
 
         for piece in piecesToRecalc:
             #if analysis:
             #    piece.add_new_calculation()
-            piece.update_attacked_squares()
+            if piece.kind == PieceType.KNIGHT:
+                piece.recalculate()
+            else:
+                piece.update_attacked_squares()
 
     def undo_move(self, move, analysis=True):
         """
@@ -429,6 +439,7 @@ class Board:
         self.recalculation(move, analysis)  # TODO - redo this to remember calculations of previous positions
 
         self.turn = self.turn.invert()
+        self.history.pop()
         self.legalMoves.pop()       # we remember the previous position's legal moves
 
     def _get_castle_rook_squares(self, move: Move) -> Tuple[int, int]:
@@ -534,7 +545,10 @@ class Board:
                 # if piece.has_PT:
                 #    legalMoves += list(map(lambda sqr: cMove(piece, sqr), piece.get_potential_squares()))
                 # else:
-                legalMoves += piece.calc_potential_moves()
+                if piece.kind ==  PieceType.KNIGHT:
+                    legalMoves += piece.potentialMoves
+                else:
+                    legalMoves += piece.calc_potential_moves()
 
         # castling
         king = self.get_king(color)
