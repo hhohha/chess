@@ -18,51 +18,19 @@ class Piece(ABC):
             self.movesCnt = 0
         if not hasattr(self, 'attackedSquares'):
             self.attackedSquares: Set[Square] = set()
-
-        # self.id = square.idx
+        if not hasattr(self, 'potentialMoves'):
+            self.potentialMoves: List[Move] = []
 
     @abstractmethod
-    def calc_potential_moves(self) -> List[Move]:
+    def recalculate(self) -> None:
         pass
 
     @abstractmethod
     def calc_potential_moves_pinned(self, direction: Direction) -> List[Move]:
         pass
 
-    @abstractmethod
-    def calc_attacked_squares(self) -> Set[Square]:
-        pass
-
     def is_sliding(self) -> bool:
         return False
-
-    def update_attacked_squares(self) -> None:
-        """updates which squares are attacked by the piece - both stored in the piece and in the square class"""
-        # remove the piece from all squares that it previously attacked
-        for sqr in self.attackedSquares:
-            sqr.get_attacked_by(self.color).remove(self)
-
-        # calculate new attacked squares
-        self.attackedSquares = self.calc_attacked_squares()
-
-        # add the piece to all squares that it newly attacks
-        for sqr in self.attackedSquares:
-            sqr.get_attacked_by(self.color).add(self)
-
-    #@abstractmethod
-    #def add_new_calculation(self):
-    #    self.attacked_squares.append([])
-
-    #@abstractmethod
-    #def remove_last_calculation(self):
-    #    self.attacked_squares.pop()
-
-    #@abstractmethod
-    #def update_attacked_squares(self):
-    #    pass
-
-    #def calc_attacked_squares(self):
-    #   return list(map(lambda mv: mv.toSqr, self.calc_potential_moves(ownPieces=True)))
 
     def get_legal_moves(self) -> List[Move]:
         """
@@ -72,9 +40,6 @@ class Piece(ABC):
         if self.square.board.turn != self.color:
             return []
         return list(filter(lambda move: move.fromSqr == self.square, self.square.board.legalMoves[-1]))
-
-    #def __eq__(self, other):
-    #    return self.id == other.id
     
     def __hash__(self):
         return id(self)
@@ -87,15 +52,20 @@ class SlidingPiece(Piece, ABC):
     def get_sliding_directions(self) -> List[Direction]:
         pass
 
-    def calc_potential_moves(self) -> List[Move]:
+    def recalculate(self) -> None:
         """
+        updates potential moves and attacked squares
         potential moves are all possible moves without considering checks and pins,
         e.i. potential moves can be impossible if the king is in check or the piece is pinned
         with ownPieces=True, the potential moves are all possible moves including captures of own pieces - to see if a piece is covered
-
-        :return: list of potential moves
+        for most pieces the difference between potential moves and attacked squares is that piece can attack squares with the piece of the same color
         """
-        potentialMoves: List[Move] = []
+        for sqr in self.attackedSquares:
+            sqr.get_attacked_by(self.color).remove(self)
+
+        self.potentialMoves.clear()
+        self.attackedSquares.clear()
+
         for direction in self.get_sliding_directions():
             i, j = 0, 0
             while True:
@@ -104,38 +74,19 @@ class SlidingPiece(Piece, ABC):
 
                 if square is None:
                     break  # reached the edge of the board
-
                 if square.piece is None:
-                    potentialMoves.append(Move(self, square))  # free square
+                    self.attackedSquares.add(square)
+                    self.potentialMoves.append(Move(self, square))
                 elif square.piece.color != self.color:
-                    potentialMoves.append(Move(self, square))  # capture - can move here but no further
+                    self.attackedSquares.add(square)
+                    self.potentialMoves.append(Move(self, square))
                     break
                 else:
+                    self.attackedSquares.add(square)
                     break
-        return potentialMoves
 
-    def calc_attacked_squares(self) -> Set[Square]:
-        """calculates squares attacked by the piece"""
-
-        attackedSquares: Set[Square] = set()
-        for direction in self.get_sliding_directions():
-            i, j = 0, 0
-            while True:
-                i, j = move_in_direction(i, j, direction)
-                square: Optional[Square] = self.square.board.get_square_by_coords_opt(self.square.colIdx + i, self.square.rowIdx + j)
-
-                if square is None:
-                    break  # reached the edge of the board
-
-                if square.piece is None:
-                    attackedSquares.add(square)  # free square
-                elif square.piece.color != self.color:
-                    attackedSquares.add(square)  # capture - can move here but no further
-                    break
-                else:
-                    attackedSquares.add(square)
-                    break
-        return attackedSquares
+        for sqr in self.attackedSquares:
+            sqr.get_attacked_by(self.color).add(self)
 
     def calc_potential_moves_pinned(self, directionFromKingToPinner: Direction) -> List[Move]:
         """
@@ -174,74 +125,3 @@ class SlidingPiece(Piece, ABC):
                 break
 
         return potentialMoves
-
-# class PieceWithPotenialSquares(Piece):
-#     def __init__(self, kind: PieceType, color: Color, square: Square):
-#         super().__init__(kind, color, square)
-#         self.potential_squares = [[]]
-#         self.has_PT = True
-#
-#     def get_potential_squares(self):
-#         return self.potential_squares[-1]
-#
-#     def add_new_calculation(self):
-#         for sqr in self.get_attacked_squares():
-#             sqr.get_attacked_by(self.color).remove(self)
-#         self.attacked_squares.append([])
-#         self.potential_squares.append([])
-#
-#     def remove_last_calculation(self):
-#         for sqr in self.get_attacked_squares():
-#            sqr.get_attacked_by(self.color).remove(self)
-#         self.attacked_squares.pop()
-#         for sqr in self.get_attacked_squares():
-#             if self not in sqr.get_attacked_by(self.color):
-#                 sqr.get_attacked_by(self.color).append(self)
-#         self.potential_squares.pop()
-#
-#     def update_attacked_squares(self):
-#         self.get_potential_squares().clear()
-#         if not self.is_active:
-#             for sqr in self.get_attacked_squares():
-#                 sqr.get_attacked_by(self.color).remove(self)
-#             self.get_attacked_squares().clear()
-#             return
-#
-#         self.get_attacked_squares().clear()
-#
-#         for sqr in self.calc_attacked_squares():
-#             self.get_attacked_squares().append(sqr)
-#             if sqr.piece is None or sqr.piece.color != self.color:
-#                 self.get_potential_squares().append(sqr)
-#
-#             sqr.get_attacked_by(self.color).append(self)
-#
-#
-# class cPieceWithoutPS(Piece):
-#     def __init__(self, kind, color, square):
-#         super().__init__(kind, color, square)
-#         self.has_PT = False
-#
-#     def add_new_calculation(self):
-#         for sqr in self.get_attacked_squares():
-#             sqr.get_attacked_by(self.color).remove(self)
-#         self.attacked_squares.append([])
-#
-#     def remove_last_calculation(self):
-#         for sqr in self.get_attacked_squares():
-#            sqr.get_attacked_by(self.color).remove(self)
-#         self.attacked_squares.pop()
-#         for sqr in self.get_attacked_squares():
-#             if self not in sqr.get_attacked_by(self.color):
-#                 sqr.get_attacked_by(self.color).append(self)
-#
-#     def update_attacked_squares(self):
-#         if not self.is_active:
-#             for sqr in self.get_attacked_squares():
-#                 sqr.get_attacked_by(self.color).remove(self)
-#             self.get_attacked_squares().clear()
-#             return
-#
-#         for sqr in self.calc_attacked_squares():
-#             self.get_attacked_squares().append(sqr)
-#             sqr.get_attacked_by(self.color).append(self)

@@ -82,3 +82,9 @@ class TestSuite_RookMoves(unittest.TestCase):
         actualMoves = rook.calc_potential_moves_pinned(Direction.RIGHT)
         expectedMoves = ['Rc1-b1', 'Rc1-d1', 'Rc1-e1']
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
+
+    def test_my(self):
+        b = Board()
+        b.load_FEN('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0')
+        moves = b.calc_all_legal_moves()
+        print(moves)

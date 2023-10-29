@@ -45,20 +45,3 @@ class TestSuite_KnightMoves(unittest.TestCase):
 
         actualMoves = knight.calc_potential_moves_pinned(Direction.DOWN_RIGHT)
         self.assertEqual(set(map(str, actualMoves)), set(expectedMoves))
-
-    def test_my(self):
-        b = Board()
-        wk = b.place_piece('h1', PieceType.KING, Color.WHITE)
-        wk.update_attacked_squares()
-
-        bk = b.place_piece('h3', PieceType.KING, Color.BLACK)
-        bk.update_attacked_squares()
-
-        wn = b.place_piece('f1', PieceType.KNIGHT, Color.WHITE)
-        wn.recalculate()
-
-        moves = b.get_all_legal_moves()
-        m = Move(wn, b.get_square_by_name('g3'))
-        b.perform_move(m)
-
-        print('done')

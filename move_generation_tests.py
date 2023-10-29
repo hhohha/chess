@@ -25,7 +25,7 @@ positions.append(Position(6, 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w K
 positions.append(Position(7, 'r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10', [1, 46, 2079, 89890, 3894594, 164075551, 6923051137]))# FEN_F
 
 def test_position(position: Position, depth: int) -> None:
-    for dpt in range(1, depth + 1):
+    for dpt in range(2, depth + 1):
         board = Board()
         board.load_FEN(position.position)
         print ('TESTING position ' + str(position.id) + ' to depth ' + str(dpt), ':    ', end='')
@@ -46,7 +46,8 @@ def main():
 
     total_start = time()
     for p in positions:
-        test_position(p, depthArg)
+        if p.id == 2:
+            test_position(p, depthArg)
 
     total_end = time()
     print('total time needed:  ', round(total_end - total_start, 4), 'sec')

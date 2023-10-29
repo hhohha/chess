@@ -33,14 +33,6 @@ class Square:
             return self.attackedByWhites | self.attackedByBlacks
         return self.attackedByWhites if color == Color.WHITE else self.attackedByBlacks
 
-    # TODO - color == None may be not efficient - tests, and if so, remove
-    # def get_attacked_by(self, color=None):
-    #     if color == Color.WHITE:
-    #         return self.attackedByWhites[-1]
-    #     if color == Color.BLACK:
-    #         return self.attackedByBlacks[-1]
-    #     return self.attackedByWhites[-1] + self.attackedByBlacks[-1]
-
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Square):
             return NotImplemented

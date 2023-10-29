@@ -131,12 +131,9 @@ class Board:
         self.moves = int(fulls)
         
         for p in self.get_all_pieces():
-            if p.kind == PieceType.KNIGHT:
-                p.recalculate()
-            else:
-                p.update_attacked_squares()
+            p.recalculate()
 
-        self.legalMoves = [self.get_all_legal_moves()]
+        self.legalMoves = [self.calc_all_legal_moves()]
 
     def clear(self):
         """clear the board"""
@@ -296,6 +293,7 @@ class Board:
 
     def perform_move(self, move: Move, analysis: bool=True) -> None:
         """performs a move on the board"""
+
         self.history.append(move)
         fromSqr, toSqr, movingPiece = move.fromSqr, move.toSqr, move.piece
 
@@ -307,7 +305,11 @@ class Board:
             self.remove_piece(toSqr.piece)
 
         if move.isEnPassant:         # ... and the same for taking en passant
-            assert len(self.enPassantPawnSquare) > 0 and self.enPassantPawnSquare[-1] is not None
+            try:
+                assert len(self.enPassantPawnSquare) > 0 and self.enPassantPawnSquare[-1] is not None
+            except AssertionError as e:
+                print(f'history: {self.history}')
+                raise e
             assert self.enPassantPawnSquare[-1].piece is not None
             move.pieceTaken = self.enPassantPawnSquare[-1].piece
             self.remove_piece(self.enPassantPawnSquare[-1].piece)
@@ -341,7 +343,7 @@ class Board:
         self.turn = self.turn.invert()
 
         self.recalculation(move, analysis)   # TODO - redo this
-        self.legalMoves.append(self.get_all_legal_moves())
+        self.legalMoves.append(self.calc_all_legal_moves())
 
     def recalculation(self, move: Move, analysis: bool) -> None:
         """
@@ -369,22 +371,11 @@ class Board:
             assert move.pieceTaken is not None, f'Invalid en passant move {move}'
             piecesToRecalc.update(piece for piece in move.pieceTaken.square.get_attacked_by() if piece.is_sliding() or piece.kind == PieceType.KNIGHT)
 
-        #self.piecesRecalculated.append(piecesToRecalc)
-
         for piece in piecesToRecalc:
-            #if analysis:
-            #    piece.add_new_calculation()
-            if piece.kind == PieceType.KNIGHT:
-                piece.recalculate()
-            else:
-                piece.update_attacked_squares()
+            piece.recalculate()
 
     def undo_move(self, move, analysis=True):
-        """
-        undoes a move on the board
-        :param move: the move being undone
-        :param analysis: is this an actual move or just a move for analysis?
-        """
+        """undoes a move on the board"""
         fromSqr, toSqr, movingPiece = move.fromSqr, move.toSqr, move.piece
 
         if move.pieceTaken is not None:
@@ -523,17 +514,12 @@ class Board:
                 
         return pinnedPieces
 
-    def get_all_legal_moves(self) -> List[Move]:
-        """
-        :return: list of legal moves
-        """
-        return self._get_all_legal_moves_no_check() if not self.is_in_check(self.turn) else self._get_all_legal_moves_check()
+    def calc_all_legal_moves(self) -> List[Move]:
+        """calculate list of legal moves"""
+        return self._calc_all_legal_moves_no_check() if not self.is_in_check(self.turn) else self._calc_all_legal_moves_check()
 
-    def _get_all_legal_moves_no_check(self) -> List[Move]:
-        """
-        Get all legal moves of the current player provided that the king is not in check
-        :return: list of legal king moves
-        """
+    def _calc_all_legal_moves_no_check(self) -> List[Move]:
+        """Get all legal moves of the current player provided that the king is not in check"""
         color = self.turn
         legalMoves: List[Move] = []
         pinnedPieces = self.calc_pinned_pieces(color)
@@ -541,14 +527,10 @@ class Board:
         for piece in self.get_all_pieces(color):
             if piece in pinnedPieces:
                 legalMoves += piece.calc_potential_moves_pinned(pinnedPieces[piece])
+            elif piece.kind == King:
+                legalMoves += piece.calc_moves_avoiding_check()
             else:
-                # if piece.has_PT:
-                #    legalMoves += list(map(lambda sqr: cMove(piece, sqr), piece.get_potential_squares()))
-                # else:
-                if piece.kind ==  PieceType.KNIGHT:
-                    legalMoves += piece.potentialMoves
-                else:
-                    legalMoves += piece.calc_potential_moves()
+                legalMoves += piece.potentialMoves
 
         # castling
         king = self.get_king(color)
@@ -560,7 +542,7 @@ class Board:
                 legalMoves.append(Move(king, self.get_square_by_idx(2 if color == Color.WHITE else 58)))
         return legalMoves
 
-    def _get_all_legal_moves_check(self) -> List[Move]:
+    def _calc_all_legal_moves_check(self) -> List[Move]:
         """
         Get all legal moves of the current player provided that the king is in check
         :return: list of legal moves
@@ -598,12 +580,15 @@ class Board:
 
         # if the king is in check by a sliding piece(s), it cannot move away from that piece, even though that square
         # is technically not currently attacked
-        inaccessibleDirs = []
+        inaccessibleSquares: List[Square] = []
         for piece in attackers:
             if piece.is_sliding():
-                inaccessibleDirs.append(get_direction(piece.square, king.square))
+                direction = get_direction(piece.square, king.square)
+                sqr = self.get_square_by_coords_opt(*move_in_direction(king.square.colIdx, king.square.rowIdx, direction))
+                if sqr:
+                    inaccessibleSquares.append(sqr)
 
-        return king.calc_potential_moves(inaccessibleDirs)
+        return king.calc_moves_avoiding_check(inaccessibleSquares)
 
     def _get_legal_moves_check_captures(self, attacker: Piece, pinnedPieces: Dict[Piece, Direction]) -> List[Move]:
         """
