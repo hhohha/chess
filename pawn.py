@@ -71,6 +71,28 @@ class Pawn (Piece):
             return self.generate_pawn_move(square)
         return []
 
+    def get_potential_moves(self) -> List[Move]:
+        moves: List[Move] = []
+
+        # if the square in front of the pawn is empty, it can move there
+        sqr = self.square.board.get_square_by_coords(self.square.colIdx, self.square.rowIdx + self.MOVE_OFFSET)
+        if sqr.piece is None:
+            moves += self.generate_pawn_move(sqr)
+
+            # if the pawn is on the base row and the square two steps in front of it is empty, it can move there
+            if self.square.rowIdx == self.BASE_ROW:
+                sqr = self.square.board.get_square_by_coords(self.square.colIdx, self.square.rowIdx + 2 * self.MOVE_OFFSET)
+                if sqr.piece is None:
+                    moves.append(Move(self, sqr))
+
+        # if en passant is possible, add it to the potential moves
+        enPassantSqr = self.square.board.enPassantPawnSquare[-1]
+        if enPassantSqr is not None and self.square.rowIdx == self.EN_PASSANT_ROW and abs(self.square.idx - enPassantSqr.idx) == 1:
+            toSqr = self.square.board.get_square_by_coords(enPassantSqr.colIdx, enPassantSqr.rowIdx + self.MOVE_OFFSET)
+            self.potentialMoves.append(Move(self, toSqr, isEnPassant=True))
+
+        return moves + self.potentialMoves
+
     def calc_potential_moves_pinned(self, direction: Direction) -> List[Move]:
         """the piece is pinned in the given direction, it can potentially still move in the pin and the opposite direction"""
 
@@ -118,6 +140,7 @@ class Pawn (Piece):
             sqr.get_attacked_by(self.color).remove(self)
 
         self.potentialMoves.clear()
+        self.attackedSquares.clear()
         if self.square.colIdx == 0:
             sqr = self.square.board.get_square_by_coords(self.square.colIdx + 1, self.square.rowIdx + self.MOVE_OFFSET)
             self.attackedSquares = {sqr}
@@ -135,39 +158,9 @@ class Pawn (Piece):
                 if sqr.piece is not None and sqr.piece.color != self.color:
                     self.potentialMoves += self.generate_pawn_move(sqr)
 
-        # if the square in front of the pawn is empty, it can move there
-        sqr = self.square.board.get_square_by_coords(self.square.colIdx, self.square.rowIdx + self.MOVE_OFFSET)
-        if sqr.piece is None:
-            self.potentialMoves += self.generate_pawn_move(sqr)
-
-            # if the pawn is on the base row and the square two steps in front of it is empty, it can move there
-            if self.square.rowIdx == self.BASE_ROW:
-                sqr = self.square.board.get_square_by_coords(self.square.colIdx, self.square.rowIdx + 2 * self.MOVE_OFFSET)
-                if sqr.piece is None:
-                    self.potentialMoves.append(Move(self, sqr))
-
-        # if en passant is possible, add it to the potential moves
-        enPassantSqr = self.square.board.enPassantPawnSquare[-1]
-        if enPassantSqr is not None and self.square.rowIdx == self.EN_PASSANT_ROW and abs(self.square.idx - enPassantSqr.idx) == 1:
-            toSqr = self.square.board.get_square_by_coords(enPassantSqr.colIdx, enPassantSqr.rowIdx + self.MOVE_OFFSET)
-            self.potentialMoves.append(Move(self, toSqr, isEnPassant=True))
-
         for sqr in self.attackedSquares:
             sqr.get_attacked_by(self.color).add(self)
 
-    # def calc_attacked_squares(self) -> Set[Square]:
-    #     """calculates squares attacked by the piece"""
-    #
-    #     if self.square.colIdx == 0:
-    #         return {self.square.board.get_square_by_coords(self.square.colIdx + 1, self.square.rowIdx + self.MOVE_OFFSET)}
-    #     elif self.square.colIdx == 7:
-    #         return {self.square.board.get_square_by_coords(self.square.colIdx - 1, self.square.rowIdx + self.MOVE_OFFSET)}
-    #     else:
-    #         return {
-    #             self.square.board.get_square_by_coords(self.square.colIdx + 1, self.square.rowIdx + self.MOVE_OFFSET),
-    #             self.square.board.get_square_by_coords(self.square.colIdx - 1, self.square.rowIdx + self.MOVE_OFFSET)
-    #         }
-        
     def is_en_passant_pin(self, enPassantSquare: Square) -> bool:
         """
         checks very specific situation when the pawn is not technically pinned - there is another pawn in the path, but taking en passant would

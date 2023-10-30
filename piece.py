@@ -29,6 +29,9 @@ class Piece(ABC):
     def calc_potential_moves_pinned(self, direction: Direction) -> List[Move]:
         pass
 
+    def get_potential_moves(self) -> List[Move]:
+        return self.potentialMoves
+
     def is_sliding(self) -> bool:
         return False
 

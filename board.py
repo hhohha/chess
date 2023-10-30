@@ -358,18 +358,17 @@ class Board:
         :param move: the move being made
         :param analysis: is this an actual move or just a move for analysis?
         """
-        piecesToRecalc = ({move.piece} | {piece for piece in move.fromSqr.get_attacked_by() if piece.is_sliding() or piece.kind == PieceType.KNIGHT}
-                          | {piece for piece in move.toSqr.get_attacked_by() if piece.is_sliding() or piece.kind == PieceType.KNIGHT})
+        piecesToRecalc = ({move.piece} | {piece for piece in move.fromSqr.get_attacked_by()} | {piece for piece in move.toSqr.get_attacked_by()})
 
         if move.pieceTaken is not None and move.pieceTaken.isActive:
             piecesToRecalc.add(move.pieceTaken)
         if move.is_castling():
             _, rookTo = self._get_castle_rook_squares(move)
-            piecesToRecalc.update(piece for piece in self.get_square_by_idx(rookTo).get_attacked_by() if piece.is_sliding() or piece.kind == PieceType.KNIGHT)
+            piecesToRecalc.update(piece for piece in self.get_square_by_idx(rookTo).get_attacked_by())
 
         if move.isEnPassant:
             assert move.pieceTaken is not None, f'Invalid en passant move {move}'
-            piecesToRecalc.update(piece for piece in move.pieceTaken.square.get_attacked_by() if piece.is_sliding() or piece.kind == PieceType.KNIGHT)
+            piecesToRecalc.update(piece for piece in move.pieceTaken.square.get_attacked_by())
 
         for piece in piecesToRecalc:
             piece.recalculate()
@@ -499,7 +498,8 @@ class Board:
             firstSquare = self.find_first_occupied_square_in_dir(kingSqr, direction)
 
             if firstSquare is None:
-                continue
+                assert False, "the potential pinner is not on the board"
+                #continue
 
             assert firstSquare.piece is not None
             if firstSquare.piece.color != color:
@@ -527,10 +527,10 @@ class Board:
         for piece in self.get_all_pieces(color):
             if piece in pinnedPieces:
                 legalMoves += piece.calc_potential_moves_pinned(pinnedPieces[piece])
-            elif piece.kind == King:
+            elif piece.kind == PieceType.KING:
                 legalMoves += piece.calc_moves_avoiding_check()
             else:
-                legalMoves += piece.potentialMoves
+                legalMoves += piece.get_potential_moves()
 
         # castling
         king = self.get_king(color)

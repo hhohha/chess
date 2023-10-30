@@ -1,6 +1,7 @@
 import unittest
 from board import Board
 from constants import PieceType, Color, Direction
+from move import Move
 
 
 class TestSuite_RookMoves(unittest.TestCase):
@@ -85,6 +86,17 @@ class TestSuite_RookMoves(unittest.TestCase):
 
     def test_my(self):
         b = Board()
-        b.load_FEN('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0')
+        b.load_FEN('8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 0')
         moves = b.calc_all_legal_moves()
-        print(moves)
+
+        move = Move(b.get_square_by_name('g2').piece, b.get_square_by_name('g3'))
+
+        print(f'performing move: {move}')
+
+        b.perform_move(move)
+
+        moves = b.calc_all_legal_moves()
+
+        for move in moves:
+            print(move)
+        print('')

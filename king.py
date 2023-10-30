@@ -30,9 +30,9 @@ class King(Piece):
 
     def calc_moves_avoiding_check(self, inaccessibleSquares: Optional[List[Square]]=None) -> List[Move]:
         """return king moves that don't walk into a check"""
-        moves = list(filter(lambda m: not m.toSquare.is_attacked_by(self.color.invert()), self.potentialMoves))
+        moves = list(filter(lambda m: not m.toSqr.is_attacked_by(self.color.invert()), self.potentialMoves))
         if inaccessibleSquares:
-            moves = list(filter(lambda m: m.toSquare not in inaccessibleSquares, moves))
+            moves = list(filter(lambda m: m.toSqr not in inaccessibleSquares, moves))
         return moves
 
 
