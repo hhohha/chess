@@ -6,5 +6,5 @@
 
 int main() {
     Board b;
-    std::cout << "" << std::endl;
+    std::cout << __cplusplus << std::endl;
 }

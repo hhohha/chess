@@ -11,6 +11,10 @@ Move::Move(Piece *piece, Square *toSqr)
 
 }
 
+bool Move::operator==(Move &other) {
+    return _piece == other._piece && _fromSqr == other._fromSqr && _toSqr == other._toSqr && _newPiece == other._newPiece;
+}
+
 bool Move::is_promotion() {
     return _newPiece.has_value();
 }

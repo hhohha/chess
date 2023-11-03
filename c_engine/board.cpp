@@ -9,6 +9,26 @@ Board::Board() {
     }
 }
 
+void Board::clear() {
+    for (auto &sqr : _squares) {
+        sqr._piece = nullptr;
+    }
+
+    _whitePawns.clear();
+    _blackPawns.clear();
+    _whiteKnights.clear();
+    _blackKnights.clear();
+    _whiteBishops.clear();
+    _blackBishops.clear();
+    _whiteRooks.clear();
+    _blackRooks.clear();
+    _whiteQueens.clear();
+    _blackQueens.clear();
+    _whiteKing = std::nullopt;
+    _blackKing = std::nullopt;
+
+}
+
 Square *Board::get_square(Coordinate c) {
     if (0 <= c.col < 8 && 0 <= c.row < 8)
         return &_squares[c.col*8 + c.row];

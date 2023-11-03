@@ -12,6 +12,8 @@ class Move {
 public:
     Move(Piece *piece, Square *toSqr);
 
+    bool operator==(Move &other);
+
     bool is_promotion();
     bool is_castling();
     std::string str();
