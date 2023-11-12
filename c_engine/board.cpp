@@ -3,6 +3,31 @@
 #include "move.h"
 #include "utils.h"
 
+// PieceIterator(Board *board, Color color, Piece *ptr = nullptr);
+PieceIterator::PieceIterator(Board *board, Color color, bool end)
+    : _board(board)
+    , _color(color) {
+
+        if (!end) {
+            if (color == Color::WHITE) {
+                _ptr = _board->_whitePawns[0];
+            } else {
+                _ptr = _board->_blackPawns[0];
+            }
+        }
+
+    }
+
+
+// Piece *operator*() const;
+// Piece *operator->();
+
+// PieceIterator &operator++();
+// PieceIterator operator++(int);
+
+// bool operator==(const PieceIterator &other);
+// bool operator!=(const PieceIterator &other);
+
 Board::Board() {
     for(unsigned i = 0; i < 64; ++i) {
         _squares.push_back(Square(i, this));

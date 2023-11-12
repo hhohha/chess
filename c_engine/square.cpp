@@ -21,7 +21,7 @@ bool Square::is_attacked_by(Color color) {
     return color == Color::WHITE ? !_attackedByWhites.empty() : !_attackedByBlacks.empty();
 }
 
-std::vector<Piece *> Square::get_attacked_by(Color color) {
+std::vector<Piece *> &Square::get_attacked_by(Color color) {
     return color == Color::WHITE ? _attackedByWhites : _attackedByBlacks;
 }
 

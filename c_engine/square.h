@@ -18,7 +18,7 @@ public:
 
     bool is_attacked_by(Color color);
 
-    std::vector<Piece *> get_attacked_by(Color color);
+    std::vector<Piece *> &get_attacked_by(Color color);
 
     std::string str();
 

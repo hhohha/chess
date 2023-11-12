@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+#include "piece.h"
+#include "constants.h"
+
 class Coordinate;
 
 class Move;
@@ -14,6 +17,32 @@ class Bishop;
 class Rook;
 class Queen;
 class King;
+class Board;
+
+class PieceIterator {
+    using iterator_category = std::input_iterator_tag;
+    using difference_type   = std::ptrdiff_t;
+    using value_type        = Piece;
+    using pointer           = Piece*;
+    using reference         = Piece&;
+
+public:
+    PieceIterator(Board *board, Color color, bool end = false);
+/*
+    Piece *operator*() const;
+    Piece *operator->();
+
+    PieceIterator &operator++();
+    PieceIterator operator++(int);
+
+    bool operator==(const PieceIterator &other);
+    bool operator!=(const PieceIterator &other);
+    */
+private: 
+    Board *_board;
+    Color _color;
+    Piece *_ptr;
+};
 
 class Board {
 public:
@@ -28,7 +57,7 @@ public:
 
     std::vector<Move *> *get_current_legal_moves();
 
-private:
+//private:
     std::vector<Move> _history;
     std::vector<Square> _squares;
 
