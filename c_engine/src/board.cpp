@@ -6,21 +6,44 @@
 PieceIterator::PieceIterator(Board *board, Color color, bool end)
     : _board(board)
     , _color(color) {
-
-        if (!end) {
-            if (color == Color::WHITE) {
-                _ptr = _board->_whitePawns[0];
-            } else {
-                _ptr = _board->_blackPawns[0];
-            }
-        } else {
-            if (color == Color::WHITE) {
-                _ptr = _board->_whitePawns.back();
-            } else {
-                _ptr = _board->_blackPawns.back();
-            }
-        }
+        
+    if (color == Color::WHITE) {
+        _pieceLists = {
+            &_board->_whitePawns,
+            &_board->_whiteKnights,
+            &_board->_whiteBishops,
+            &_board->_whiteRooks,
+            &_board->_whiteQueens,
+            &_board->_whiteKings
+        };
+    } else {
+        _pieceLists = {
+            &_board->_blackPawns,
+            &_board->_blackKnights,
+            &_board->_blackBishops,
+            &_board->_blackRooks,
+            &_board->_blackQueens,
+            &_board->_blackKings
+        };
     }
+
+    if (!end) {
+        if (color == Color::WHITE) {
+            _ptr = _board->_whitePawns[0];
+        } else {
+            _ptr = _board->_blackPawns[0];
+        }
+        _currentPieceListIdx = 0;
+    }
+
+    verify_ptr_not_at_end();
+}
+
+void PieceIterator::verify_ptr_not_at_end() {
+    //if (_ptr == _pieceLists[_currentPieceListIdx]->end())
+}
+
+
 
 
 Piece &PieceIterator::operator*() const {

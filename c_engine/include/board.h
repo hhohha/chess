@@ -37,6 +37,8 @@ public:
     Piece *operator->();
 
     PieceIterator &operator++();
+
+
 /*
     
     PieceIterator operator++(int);
@@ -45,9 +47,13 @@ public:
     bool operator!=(const PieceIterator &other);
     */
 private:
+    void verify_ptr_not_at_end();
+
     Board *_board;
     Color _color;
     Piece *_ptr;
+    std::vector<std::vector<Piece *> *> _pieceLists;  // vectors which we want to iterate over
+    unsigned int _currentPieceListIdx;
 };
 
 class Board {
@@ -77,6 +83,7 @@ public:
     // unsigned int _analysisDepth = 0;
     // std::vector<std::vector<Piece *>> piecesRecalculated;
 
+/*
     std::vector<Pawn *> _whitePawns;
     std::vector<Pawn *> _blackPawns;
     std::vector<Knight *> _whiteKnights;
@@ -89,4 +96,18 @@ public:
     std::vector<Queen *> _blackQueens;
     std::vector<King *> _whiteKings;
     std::vector<King *> _blackKings;
+    */
+
+    std::vector<Piece *> _whitePawns;
+    std::vector<Piece *> _blackPawns;
+    std::vector<Piece *> _whiteKnights;
+    std::vector<Piece *> _blackKnights;
+    std::vector<Piece *> _whiteBishops;
+    std::vector<Piece *> _blackBishops;
+    std::vector<Piece *> _whiteRooks;
+    std::vector<Piece *> _blackRooks;
+    std::vector<Piece *> _whiteQueens;
+    std::vector<Piece *> _blackQueens;
+    std::vector<Piece *> _whiteKings;
+    std::vector<Piece *> _blackKings;
 };
