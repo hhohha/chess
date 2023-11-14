@@ -4,7 +4,7 @@
 
 class Square;
 
-class Pawn : Piece {
+class Pawn : public Piece {
 public:
     Pawn(PieceType kind, Color color, Square *square);
 

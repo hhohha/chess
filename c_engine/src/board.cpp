@@ -3,7 +3,6 @@
 #include "move.h"
 #include "utils.h"
 
-// PieceIterator(Board *board, Color color, Piece *ptr = nullptr);
 PieceIterator::PieceIterator(Board *board, Color color, bool end)
     : _board(board)
     , _color(color) {
@@ -14,13 +13,35 @@ PieceIterator::PieceIterator(Board *board, Color color, bool end)
             } else {
                 _ptr = _board->_blackPawns[0];
             }
+        } else {
+            if (color == Color::WHITE) {
+                _ptr = _board->_whitePawns.back();
+            } else {
+                _ptr = _board->_blackPawns.back();
+            }
         }
-
     }
 
 
-// Piece *operator*() const;
-// Piece *operator->();
+Piece &PieceIterator::operator*() const {
+    return *_ptr;
+}
+
+Piece *PieceIterator::operator->() {
+    return _ptr;
+}
+
+PieceIterator &PieceIterator::operator++() {
+    if (_color == Color::WHITE) {
+                
+    } else {
+
+    }
+    return *this;
+}
+
+
+
 
 // PieceIterator &operator++();
 // PieceIterator operator++(int);
@@ -49,25 +70,24 @@ void Board::clear() {
     _blackRooks.clear();
     _whiteQueens.clear();
     _blackQueens.clear();
-    _whiteKing = std::nullopt;
-    _blackKing = std::nullopt;
-
+    _whiteKings.clear();
+    _blackKings.clear();
 }
 
 Square *Board::get_square(Coordinate c) {
-    if (0 <= c.col < 8 && 0 <= c.row < 8)
+    if (0 <= c.col && c.col < 8 && 0 <= c.row && c.row < 8)
         return &_squares[c.col*8 + c.row];
     return nullptr;
 }
 
 Square *Board::get_square(unsigned int col, unsigned int row) {
-    if (0 <= col < 8 && 0 <= row < 8)
+    if (0 <= col && col < 8 && 0 <= row && row < 8)
         return &_squares[col*8 + row];
     return nullptr;
 }
 
 Square *Board::get_square(unsigned int idx) {
-    if (0 <= idx < 64)
+    if (0 <= idx && idx < 64)
         return &_squares[idx];
     return nullptr;
 }

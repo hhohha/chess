@@ -5,6 +5,10 @@
 #include <vector>
 
 #include "piece.h"
+#include "pawn.h"   // to delete
+#include "knight.h"   // to delete
+
+
 #include "constants.h"
 
 class Coordinate;
@@ -28,17 +32,19 @@ class PieceIterator {
 
 public:
     PieceIterator(Board *board, Color color, bool end = false);
-/*
-    Piece *operator*() const;
+
+    Piece &operator*() const;
     Piece *operator->();
 
     PieceIterator &operator++();
+/*
+    
     PieceIterator operator++(int);
 
     bool operator==(const PieceIterator &other);
     bool operator!=(const PieceIterator &other);
     */
-private: 
+private:
     Board *_board;
     Color _color;
     Piece *_ptr;
@@ -81,6 +87,6 @@ public:
     std::vector<Rook *> _blackRooks;
     std::vector<Queen *> _whiteQueens;
     std::vector<Queen *> _blackQueens;
-    std::optional<King *> _whiteKing;
-    std::optional<King *> _blackKing;
+    std::vector<King *> _whiteKings;
+    std::vector<King *> _blackKings;
 };

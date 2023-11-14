@@ -2,64 +2,94 @@
 #include <iterator>
 #include <iostream>
 
-class MatrixIterator;
+class PieceIterator;
 class Matrix;
 
-struct BaseCls {
-    BaseCls(int v) : _value(v) {}
+///////////////////   pieces definitions ///////////////////////
+
+struct Piece {
+    Piece(int v) : _value(v) {}     // constructor
+    virtual std::string which_piece() = 0;    // identifier
+    
     int _value;
 };
 
-struct DerivedCls1 : public BaseCls {
-    DerivedCls1(int v): BaseCls(v) {
-    }
+struct Pawn : public Piece {
+    Pawn(int v): Piece(v) {}
+    std::string which_piece() override { return "Pawn"; }
 };
 
-struct DerivedCls2 : public BaseCls {
-    DerivedCls2(int v): BaseCls(v) {
-    }
+struct Knight : public Piece {
+    Knight(int v): Piece(v) {}
+    std::string which_piece() override { return "Knight"; }
 };
 
+struct Bishop : public Piece {
+    Bishop(int v): Piece(v) {}
+    std::string which_piece() override { return "Bishop"; }
+};
 
-struct MatrixIterator {
+struct Rook : public Piece {
+    Rook(int v): Piece(v) {}
+    std::string which_piece() override { return "Rook"; }
+};
+
+struct Queen : public Piece {
+    Queen(int v): Piece(v) {}
+    std::string which_piece() override { return "Queen"; }
+};
+
+struct King : public Piece {
+    King(int v): Piece(v) {}
+    std::string which_piece() override { return "King"; }
+};
+
+/////////////// iterator header ///////////////////////
+
+struct PieceIterator {
     using iterator_category = std::input_iterator_tag;
     using difference_type   = std::ptrdiff_t;
-    using value_type        = BaseCls;
-    using pointer           = BaseCls*;
-    using reference         = BaseCls&;
+    using value_type        = Piece;
+    using pointer           = Piece*;
+    using reference         = Piece&;
 
-    MatrixIterator(Matrix *m, BaseCls *ptr = nullptr);
+    PieceIterator(Matrix *m, BaseCls *ptr = nullptr);
 
     reference operator*() const;
     pointer operator->();
 
-    MatrixIterator& operator++();
-    MatrixIterator operator++(int);
+    PieceIterator& operator++();
+    PieceIterator operator++(int);
 
-    bool operator== (const MatrixIterator &other);
-    bool operator!= (const MatrixIterator &other);
+    bool operator== (const PieceIterator &other);
+    bool operator!= (const PieceIterator &other);
 
     Matrix *_matrix;
     BaseCls *_ptr;
 };
 
-struct Matrix {
-    MatrixIterator begin();
-    MatrixIterator end();
+///////////////////// board header /////////////////////////
 
-    std::vector<DerivedCls1> v1 = {11, 12, 13, 14, 15};
-    std::vector<DerivedCls2> v2 = {21, 22, 23, 24, 25};
+struct Board {
+    PieceIterator begin();
+    PieceIterator end();
+
+    std::vector<Pawn> pawns = {11, 12, 13, 14, 15};
+    std::vector<Knight> knights = {21, 22};
+    std::vector<Bishop> bishops = {31, 32};
+    std::vector<Rook> rooks = {41, 42};
+    std::vector<Queen> queens = {51};
+    std::vector<King> kings = {61};
+
 };
 
+////////////////////// iterator functions ///////////////////////
 
-MatrixIterator Matrix::begin() { return MatrixIterator(this); }
-MatrixIterator Matrix::end()   { return MatrixIterator(this, &v2[5]); }
+PieceIterator::PieceIterator(Board *m, BaseCls *ptr) : _matrix(m), _ptr(ptr == nullptr ? &m->v1[0] : ptr) {}
+BaseCls &PieceIterator::operator*() const { return *_ptr; }
+BaseCls *PieceIterator::operator->() { return _ptr; }
 
-MatrixIterator::MatrixIterator(Matrix *m, BaseCls *ptr) : _matrix(m), _ptr(ptr == nullptr ? &m->v1[0] : ptr) {}
-BaseCls &MatrixIterator::operator*() const { return *_ptr; }
-BaseCls *MatrixIterator::operator->() { return _ptr; }
-
-MatrixIterator& MatrixIterator::operator++() {
+PieceIterator& PieceIterator::operator++() {
     if (_ptr == &_matrix->v1[4])
         _ptr = &_matrix->v2[0];
     else
@@ -68,11 +98,17 @@ MatrixIterator& MatrixIterator::operator++() {
     return *this;
 }
 
-MatrixIterator MatrixIterator::operator++(int) { MatrixIterator tmp = *this; ++(*this); return tmp; }
+PieceIterator PieceIterator::operator++(int) { PieceIterator tmp = *this; ++(*this); return tmp; }
 
-bool MatrixIterator::operator== (const MatrixIterator &other) { return this->_ptr == other._ptr; }
-bool MatrixIterator::operator!= (const MatrixIterator &other) { return this->_ptr != other._ptr; }
+bool PieceIterator::operator== (const PieceIterator &other) { return this->_ptr == other._ptr; }
+bool PieceIterator::operator!= (const PieceIterator &other) { return this->_ptr != other._ptr; }
 
+////////////////////// board functions ///////////////////////
+
+PieceIterator Board::begin() { return PieceIterator(this); }
+PieceIterator Board::end()   { return PieceIterator(this, &v2[5]); }
+
+////////////////////// main //////////////////////////////////
 
 std::vector<int> &change_and_return(std::vector<int> &v) {
     v[0] = 100;
@@ -86,10 +122,10 @@ std::string vector_to_string(std::vector<int> v) {
     return s;
 }
 
-int main() {
+int mainx() {
     Matrix m;
 
-    for (MatrixIterator it(&m); it != m.end(); ++it)
+    for (PieceIterator it(&m); it != m.end(); ++it)
         std::cout << it->_value << std::endl;
 
     // std::vector<int> v1 = {1, 2, 3, 4};
