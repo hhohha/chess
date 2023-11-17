@@ -11,6 +11,13 @@ void assertEqual(T expected, T actual) {
     }
 }
 
+template<>
+inline void assertEqual<const char*>(const char* expected, const char* actual) {
+    if (expected != actual) {
+        throw std::runtime_error("Expected \"" + std::string(expected) + "\" but got \"" + std::string(actual) + "\"");
+    }
+}
+
 class TestSuite {
 public:
     TestSuite() {
