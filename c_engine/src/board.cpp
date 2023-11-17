@@ -1,81 +1,17 @@
+#include <cassert>
+
 #include "board.h"
 #include "square.h"
 #include "move.h"
 #include "utils.h"
 
-PieceIterator::PieceIterator(Board *board, Color color, bool end)
-    : _board(board)
-    , _color(color) {
-        
-    if (color == Color::WHITE) {
-        _pieceLists = {
-            &_board->_whitePawns,
-            &_board->_whiteKnights,
-            &_board->_whiteBishops,
-            &_board->_whiteRooks,
-            &_board->_whiteQueens,
-            &_board->_whiteKings
-        };
-    } else {
-        _pieceLists = {
-            &_board->_blackPawns,
-            &_board->_blackKnights,
-            &_board->_blackBishops,
-            &_board->_blackRooks,
-            &_board->_blackQueens,
-            &_board->_blackKings
-        };
-    }
 
-    if (!end) {
-        if (color == Color::WHITE) {
-            _ptr = _board->_whitePawns[0];
-        } else {
-            _ptr = _board->_blackPawns[0];
-        }
-        _currentPieceListIdx = 0;
-    }
-
-    verify_ptr_not_at_end();
-}
-
-void PieceIterator::verify_ptr_not_at_end() {
-    //if (_ptr == _pieceLists[_currentPieceListIdx]->end())
-}
-
-
-
-
-Piece &PieceIterator::operator*() const {
-    return *_ptr;
-}
-
-Piece *PieceIterator::operator->() {
-    return _ptr;
-}
-
-PieceIterator &PieceIterator::operator++() {
-    if (_color == Color::WHITE) {
-                
-    } else {
-
-    }
-    return *this;
-}
-
-
-
-
-// PieceIterator &operator++();
-// PieceIterator operator++(int);
-
-// bool operator==(const PieceIterator &other);
-// bool operator!=(const PieceIterator &other);
 
 Board::Board() {
     for(unsigned i = 0; i < 64; ++i) {
         _squares.push_back(Square(i, this));
     }
+
 }
 
 void Board::clear() {
@@ -83,18 +19,7 @@ void Board::clear() {
         sqr._piece = nullptr;
     }
 
-    _whitePawns.clear();
-    _blackPawns.clear();
-    _whiteKnights.clear();
-    _blackKnights.clear();
-    _whiteBishops.clear();
-    _blackBishops.clear();
-    _whiteRooks.clear();
-    _blackRooks.clear();
-    _whiteQueens.clear();
-    _blackQueens.clear();
-    _whiteKings.clear();
-    _blackKings.clear();
+
 }
 
 Square *Board::get_square(Coordinate c) {

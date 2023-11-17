@@ -20,7 +20,7 @@ bool Move::is_promotion() {
 }
 
 bool Move::is_castling() {
-    return _piece->_kind == PieceType::KING && abs(_fromSqr->_colIdx - _toSqr->_colIdx) == 2;
+    return _piece->_kind == PieceType::KING && abs(_fromSqr->get_coordinate().col - _toSqr->get_coordinate().col) == 2;
 }
 
 std::string Move::str() {

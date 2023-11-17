@@ -18,6 +18,7 @@ public:
     bool is_castling();
     std::string str();
 
+private:
     Piece *_piece;
     Square *_fromSqr;
     Square *_toSqr;

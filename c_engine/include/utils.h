@@ -7,8 +7,12 @@
 class Square;
 
 struct Coordinate {
-    unsigned int col;
-    unsigned int row;
+    int col;
+    int row;
+
+    bool operator!=(Coordinate &other) {
+        return col != other.col || row != other.row;
+    }
 };
 
 std::string piece_type_to_letter(PieceType type, bool printPawn=false);

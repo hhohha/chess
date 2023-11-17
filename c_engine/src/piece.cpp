@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <cassert>
+
 #include "piece.h"
 #include "board.h"
 #include "utils.h"
@@ -14,7 +17,7 @@ Square *Piece::get_square() {
 }
 
 std::string Piece::str() {
-    return _name;
+    return _name + _square->str();
 }
 
 SlidingPiece::SlidingPiece(PieceType kind, Color color, Square *square)
@@ -24,10 +27,10 @@ SlidingPiece::SlidingPiece(PieceType kind, Color color, Square *square)
 }
 
 void SlidingPiece::recalculate() {
-    for (auto sqr : _attackedSquares) {
-        auto vec = &sqr->get_attacked_by(_color);
-        vec->erase(std::remove(vec->begin(), vec->end(), this), vec->end());
-    }
+    //for (auto sqr : _attackedSquares) {
+        //auto vec = &sqr->get_attacked_by(_color);
+        //vec->erase(std::remove(vec->begin(), vec->end(), this), vec->end());
+    //}
 
     _attackedSquares.clear();
     _potentialMoves.clear();
@@ -37,7 +40,7 @@ void SlidingPiece::recalculate() {
         
         while (true) {
             move_in_direction(c, direction);
-            auto sqr = _square->_board->get_square(c);
+            auto sqr = _square->get_board()->get_square(c);
 
             if (sqr == nullptr) {
                 break; //reached the edge of the board
@@ -46,7 +49,7 @@ void SlidingPiece::recalculate() {
             if (sqr->is_free()) {
                 _attackedSquares.push_back(sqr);
                 _potentialMoves.push_back(new Move(this, sqr));
-            } else if (sqr->_piece->_color != _color) {
+            } else if (sqr->get_piece()->_color != _color) {
                 _attackedSquares.push_back(sqr);
                 _potentialMoves.push_back(new Move(this, sqr));
                 break;
@@ -62,5 +65,51 @@ void SlidingPiece::recalculate() {
 
 }
 
+/*
+ * what are potential moves if the piece is pinned in the given direction?
+ */
+std::vector<Move *> SlidingPiece::calc_potential_moves_pinned(Direction directionFromKingToPinner) {
+
+    if (std::find(get_sliding_directions().begin(), get_sliding_directions().end(), directionFromKingToPinner) != get_sliding_directions().end())
+        return {};
+
+    std::vector<Move *> potentialMoves;
+    Coordinate coordinate(_square->get_coordinate());
+
+    while (true) {
+        // the piece can move towards the king but cannot capture
+        move_in_direction(coordinate, reverse_direction(directionFromKingToPinner));
+        Square *sqr = _square->get_board()->get_square(coordinate);
+        assert(sqr != nullptr);
+
+        if (sqr->get_piece() != nullptr) {
+            assert(sqr->get_piece()->_color == _color && sqr->get_piece()->_kind == PieceType::KING);
+            break;
+        }
+
+        
+        potentialMoves.push_back(new Move(this, sqr)); // TODO: use emplace_back
+    }
+
+    while (true) {
+        // the piece can move in the direction of the pinner including its capture
+        move_in_direction(coordinate, directionFromKingToPinner);
+        Square *sqr = _square->get_board()->get_square(coordinate);
+        assert(sqr != nullptr);
+
+        potentialMoves.push_back(new Move(this, sqr)); // TODO: use emplace_back
+        if (sqr->get_piece() != nullptr) {
+            assert(sqr->get_piece()->_color != _color && sqr->get_piece()->_isSliding);
+            break;
+        }
+    }
+
+    return potentialMoves;
+}
+
+
+std::vector<Move *> SlidingPiece::get_legal_moves() {
+
+}
 
 

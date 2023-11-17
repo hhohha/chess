@@ -1,30 +1,39 @@
-#pragma once
-
 #include <string>
 #include <vector>
 
 #include "constants.h"
+#include "utils.h"
 
 class Board;
 class Piece;
 
 class Square {
 public:
-    Square(unsigned int idx, Board *board);
+    Square(int idx, Board *board);
 
     bool operator!=(Square &other);
 
-    bool is_free();
-
+    bool is_free() {return _piece == nullptr;}
     bool is_attacked_by(Color color);
 
     std::vector<Piece *> &get_attacked_by(Color color);
+    Coordinate &get_coordinate() {return _coordinate;}
 
-    std::string str();
+    std::string str() {return _name;}
+    std::string get_name() {return _name;}
 
+    Board *get_board() {return _board;}
+    Piece *get_piece() {return _piece;}
+
+    int get_col() {return _coordinate.col;}
+    int get_row() {return _coordinate.row;}
+
+    friend class Piece;
+    friend class Board;
+
+private:
     int _idx;
-    int _colIdx;
-    int _rowIdx;
+    Coordinate _coordinate;
     Piece *_piece = nullptr;
     Board *_board;
     std::vector<Piece *> _attackedByWhites;

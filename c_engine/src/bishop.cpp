@@ -1,7 +1,7 @@
 #include "bishop.h"
 
-Bishop::Bishop(PieceType kind, Color color, Square *square)
-    : SlidingPiece(kind, color, square) {
+Bishop::Bishop(Color color, Square *square)
+    : SlidingPiece(PieceType::BISHOP, color, square) {
 
     _isLight = true;
     _name = "B";
