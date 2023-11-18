@@ -2,22 +2,43 @@
 #include "utest.h"
 #include "square.h"
 
-int main() {
-    TestSuite unitTests;
+TestSuite create_test_suite_squares() {
+    TestSuite testSuite("Squares");
 
-    unitTests.addTest("test1", []() {
-        Square s(4, nullptr);
-        assertEqual(3, s.get_col());
+    testSuite.addTest("Square construction", []() {
+        Square s(0, nullptr);
+
+        assertEqual(0, s.get_col());
+        assertEqual(0, s.get_row());
+        assertEqual("a1", s.get_name());
+        assertTrue(s.is_free());
+        assertTrue(!s.is_attacked_by(Color::WHITE));
+        assertTrue(!s.is_attacked_by(Color::BLACK));
+
+        s = Square(63, nullptr);
+        assertEqual(7, s.get_col());
+        assertEqual(7, s.get_row());
+        assertEqual("h8", s.get_name());
+
+        s = Square(56, nullptr);
+        assertEqual(0, s.get_col());
+        assertEqual(7, s.get_row());
+        assertEqual("a8", s.get_name());
+
+        s = Square(7, nullptr);
+        assertEqual(7, s.get_col());
+        assertEqual(0, s.get_row());
+        assertEqual("h1", s.get_name());
     });
 
-    unitTests.addTest("test2", []() {
-        assertEqual(1 == 1, 2 == 3);
+    testSuite.addTest("Square comparison", []() {
+        Square s1(0, nullptr);
+        Square s2(0, nullptr);
+        Square s3(1, nullptr);
+
+        assertTrue(s1 == s2);
+        assertTrue(s1 != s3);
     });
 
-    unitTests.addTest("test3", []() {
-        assertEqual("str1", "str2");
-    });
-
-    unitTests.run();
+    return testSuite;
 }
-

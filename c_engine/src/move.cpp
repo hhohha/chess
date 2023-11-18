@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "move.h"
 #include "piece.h"
 #include "square.h"
@@ -5,7 +7,9 @@
 
 Move::Move(Piece *piece, Square *toSqr)
 : _piece(piece),
-    _toSqr(toSqr) {
+  _toSqr(toSqr) {
+
+    assert(_fromSqr != nullptr);
 
     _fromSqr = piece->get_square();
 
