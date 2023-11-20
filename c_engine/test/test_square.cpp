@@ -12,8 +12,8 @@ TestSuite create_test_suite_squares() {
         assertEqual(0, s.get_row());
         assertEqual("a1", s.get_name());
         assertTrue(s.is_free());
-        assertTrue(!s.is_attacked_by(Color::WHITE));
-        assertTrue(!s.is_attacked_by(Color::BLACK));
+        assertFalse(s.is_attacked_by(Color::WHITE));
+        assertFalse(s.is_attacked_by(Color::BLACK));
 
         s = Square(63, nullptr);
         assertEqual(7, s.get_col());
@@ -37,7 +37,9 @@ TestSuite create_test_suite_squares() {
         Square s3(1, nullptr);
 
         assertTrue(s1 == s2);
+        assertFalse(s1 != s2);
         assertTrue(s1 != s3);
+        assertFalse(s1 == s3);
     });
 
     return testSuite;

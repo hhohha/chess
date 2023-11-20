@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "square.h"
 
 Square::Square(int idx, Board *board)
@@ -5,6 +7,7 @@ Square::Square(int idx, Board *board)
     _coordinate({idx % 8, idx / 8}),
     _board(board) {
 
+    assert(idx >= 0 && idx < 64);
     this->_name = {static_cast<char>('a' + _coordinate.col), static_cast<char>('1' + _coordinate.row)};
 }
 

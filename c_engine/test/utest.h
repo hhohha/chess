@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -7,14 +8,33 @@ using testFuncPtr = void (*)(void);
 template<typename T1, typename T2>
 inline void assertEqual(T1 expected, T2 actual) {
     if (expected != actual) {
-        throw std::runtime_error("Expected " + std::to_string(expected) + " but got " + std::to_string(actual));
+        std::stringstream ss;
+        ss << "Expected " << expected << " but got " << actual;
+        //throw std::runtime_error("Expected " + std::to_string(expected) + " but got " + std::to_string(actual));
+        throw std::runtime_error(ss.str());
     }
 }
 
+template<typename T1, typename T2>
+inline void assertEqual(T1 *expected, T2 *actual) {
+    if (expected != actual) {
+        std::stringstream ss;
+        ss << "Expected " << *expected << " but got " << *actual;
+        //throw std::runtime_error("Expected " + std::to_string(expected) + " but got " + std::to_string(actual));
+        throw std::runtime_error(ss.str());
+    }
+}
+/*
 template<>
 inline void assertEqual<const char*, std::string>(const char* expected, std::string actual) {
     if (expected != actual) {
         throw std::runtime_error("Expected \"" + std::string(expected) + "\" but got \"" + actual + "\"");
+    }
+}*/
+
+inline void assertIsNull(void *ptr) {
+    if (ptr != nullptr) {
+        throw std::runtime_error("Expected pointer to be null");
     }
 }
 
@@ -24,10 +44,15 @@ inline void assertTrue(bool expression) {
     }
 }
 
+inline void assertFalse(bool expression) {
+    if (expression) {
+        throw std::runtime_error("Expected expression to be false");
+    }
+}
+
 class TestSuite {
 public:
     TestSuite(std::string suiteName) : suiteName(suiteName) {}
-
     void addTest(std::string name, testFuncPtr func) {
         tests.emplace_back(name, func);
     }

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "constants.h"
+#include "square.h"
 
 class Square;
 class Move;
@@ -14,7 +15,7 @@ public:
 
     Square *get_square();
 
-    std::string str();
+    std::string str() const {return _name + _square->str();}
 
     virtual void recalculate() = 0;
     virtual std::vector<Move *> calc_potential_moves_pinned(Direction directionFromKingToPinner) = 0;
@@ -45,3 +46,5 @@ public:
     virtual std::vector<Move *> calc_potential_moves_pinned(Direction directionFromKingToPinner) override;
     virtual std::vector<Move *> get_legal_moves() override;
 };
+
+std::ostream& operator << (std::ostream &os, const Piece &piece);

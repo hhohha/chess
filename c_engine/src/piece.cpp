@@ -16,10 +16,6 @@ Square *Piece::get_square() {
     return _square;
 }
 
-std::string Piece::str() {
-    return _name + _square->str();
-}
-
 SlidingPiece::SlidingPiece(PieceType kind, Color color, Square *square)
     : Piece(kind, color, square) {
 
@@ -109,7 +105,10 @@ std::vector<Move *> SlidingPiece::calc_potential_moves_pinned(Direction directio
 
 
 std::vector<Move *> SlidingPiece::get_legal_moves() {
-
+    throw std::runtime_error("not implemented");
 }
 
-
+std::ostream& operator << (std::ostream &os, const Piece &piece) {
+    os << piece.str();
+    return os;
+}

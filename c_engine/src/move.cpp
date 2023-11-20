@@ -5,14 +5,19 @@
 #include "square.h"
 #include "utils.h"
 
-Move::Move(Piece *piece, Square *toSqr)
+Move::Move(Piece *piece, Square *toSqr, std::optional<PieceType> newPiece)
 : _piece(piece),
-  _toSqr(toSqr) {
+  _toSqr(toSqr),
+  _newPiece(newPiece) {
 
-    assert(_fromSqr != nullptr);
-
+    assert(piece->get_square() != nullptr);
     _fromSqr = piece->get_square();
+    
+    // if the piece is a pawn and it's being promoted, the newPiece must be specified
+    assert(newPiece.has_value() || (piece->_kind != PieceType::PAWN || toSqr->get_coordinate().row != (piece->_color == Color::WHITE ? 7 : 0)));
 
+
+    
 }
 
 bool Move::operator==(Move &other) {
@@ -28,5 +33,5 @@ bool Move::is_castling() {
 }
 
 std::string Move::str() {
-    return _piece->str() + _fromSqr->str() + "-" + _toSqr->str() + (is_promotion() ? piece_type_to_letter(_newPiece.value()) : "");
+    return _piece->str() + "-" + _toSqr->str() + (is_promotion() ? piece_type_to_letter(_newPiece.value()) : "");
 }
