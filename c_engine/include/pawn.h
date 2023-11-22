@@ -1,6 +1,7 @@
 #pragma once
 
-#include "constants.h"
+#include <stdexcept>
+
 #include "piece.h"
 
 
@@ -15,7 +16,9 @@ public:
     const unsigned int _promotionRow;
     const unsigned int _enPassantRow;
 
-    std::vector<Move *> calc_potential_moves();
-    std::vector<Move *> get_legal_moves() override;
-    void recalculate() override;
+    virtual void recalculate() override;
+
+    virtual std::vector<Move *> calc_potential_moves_pinned(Direction directionFromKingToPinner) override;
+
+    virtual std::vector<Move *> get_legal_moves() override;
 };

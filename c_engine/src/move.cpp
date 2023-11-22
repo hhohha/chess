@@ -15,23 +15,20 @@ Move::Move(Piece *piece, Square *toSqr, std::optional<PieceType> newPiece)
     
     // if the piece is a pawn and it's being promoted, the newPiece must be specified
     assert(newPiece.has_value() || (piece->_kind != PieceType::PAWN || toSqr->get_coordinate().row != (piece->_color == Color::WHITE ? 7 : 0)));
-
-
-    
 }
 
-bool Move::operator==(Move &other) {
+bool Move::operator==(Move &other) const {
     return _piece == other._piece && _fromSqr == other._fromSqr && _toSqr == other._toSqr && _newPiece == other._newPiece;
 }
 
-bool Move::is_promotion() {
+bool Move::is_promotion() const {
     return _newPiece.has_value();
 }
 
-bool Move::is_castling() {
+bool Move::is_castling() const {
     return _piece->_kind == PieceType::KING && abs(_fromSqr->get_coordinate().col - _toSqr->get_coordinate().col) == 2;
 }
 
-std::string Move::str() {
+std::string Move::str() const {
     return _piece->str() + "-" + _toSqr->str() + (is_promotion() ? piece_type_to_letter(_newPiece.value()) : "");
 }

@@ -5,14 +5,8 @@
 #include <vector>
 
 #include "piece.h"
-#include "pawn.h"   // to delete
-#include "knight.h"   // to delete
-
-
-#include "constants.h"
 
 class Coordinate;
-
 class Move;
 class Square;
 

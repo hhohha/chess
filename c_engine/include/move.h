@@ -12,18 +12,18 @@ class Move {
 public:
     Move(Piece *piece, Square *toSqr, std::optional<PieceType> newPiece = std::nullopt);
 
-    bool operator==(Move &other);
+    bool operator==(Move &other) const;
 
-    bool is_promotion();
-    bool is_castling();
-    bool is_en_passant() {return _isEnPassant;}
-    std::string str();
+    bool is_promotion() const;
+    bool is_castling() const;
+    bool is_en_passant() const {return _isEnPassant;}
+    std::string str() const;
 
-    Piece *get_piece() {return _piece;}
-    Square *get_from_sqr() {return _fromSqr;}
-    Square *get_to_sqr() {return _toSqr;}
-    Piece *get_piece_taken() {return _pieceTaken;}
-    std::optional<PieceType> get_new_piece() {return _newPiece;}
+    Piece *get_piece() const {return _piece;}
+    Square *get_from_sqr() const {return _fromSqr;}
+    Square *get_to_sqr() const {return _toSqr;}
+    Piece *get_piece_taken() const {return _pieceTaken;}
+    std::optional<PieceType> get_new_piece() const {return _newPiece;}
 
 private:
     Piece *_piece;

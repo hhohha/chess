@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <cassert>
+#include <stdexcept>
+
 
 #include "piece.h"
 #include "board.h"

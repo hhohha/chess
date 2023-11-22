@@ -7,6 +7,6 @@ Bishop::Bishop(Color color, Square *square)
     _name = "B";
 }
 
-std::vector<Direction> Bishop::get_sliding_directions() {
+std::vector<Direction> Bishop::get_sliding_directions() const {
     return _slidingDirections;
 }

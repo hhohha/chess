@@ -1,6 +1,5 @@
 #pragma once
 
-#include "constants.h"
 #include "piece.h"
 
 class King : Piece {

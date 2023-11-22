@@ -5,21 +5,16 @@
 #include "move.h"
 #include "utils.h"
 
-
-
 Board::Board() {
     for(unsigned i = 0; i < 64; ++i) {
         _squares.push_back(Square(i, this));
     }
-
 }
 
 void Board::clear() {
     for (auto &sqr : _squares) {
         sqr._piece = nullptr;
     }
-
-
 }
 
 Square *Board::get_square(Coordinate c) {

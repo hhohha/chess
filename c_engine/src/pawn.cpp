@@ -13,19 +13,14 @@
     _isLight = false;
 }
 
-    // virtual void recalculate() = 0;
-    // virtual std::vector<Move *> calc_potential_moves() = 0;
-    // virtual std::vector<Move *> get_legal_moves() = 0;
+void Pawn::recalculate() {
+    throw std::runtime_error("not implemented");
+}
 
-
-
-std::vector<Move *> Pawn::calc_potential_moves() {
-    return std::vector<Move *>();
+std::vector<Move *> Pawn::calc_potential_moves_pinned(Direction directionFromKingToPinner) {
+    throw std::runtime_error("not implemented");
 }
 
 std::vector<Move *> Pawn::get_legal_moves() {
-    return std::vector<Move *>();
+    throw std::runtime_error("not implemented");
 }
-
-
-void Pawn::recalculate() {}

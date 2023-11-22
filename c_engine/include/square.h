@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-#include "constants.h"
 #include "utils.h"
 
 class Board;

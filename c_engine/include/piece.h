@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-#include "constants.h"
 #include "square.h"
 
 class Square;
@@ -40,7 +39,7 @@ class SlidingPiece : public Piece {
 public:
     SlidingPiece(PieceType kind, Color color, Square *square);
 
-    virtual std::vector<Direction> get_sliding_directions() = 0;
+    virtual std::vector<Direction> get_sliding_directions() const = 0;
 
     virtual void recalculate() override;
     virtual std::vector<Move *> calc_potential_moves_pinned(Direction directionFromKingToPinner) override;
