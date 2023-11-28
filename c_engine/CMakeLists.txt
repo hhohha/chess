@@ -1,22 +1,19 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.27)
 
 project(chess_engine)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_FLAGS "-Wall -g")
-set(CMAKE_BINARY_DIR, "build/")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_CXX_FLAGS "-Wall")
 
-# Add all the source files to the project
 file(GLOB_RECURSE SOURCES src/*.cpp)
 file(GLOB_RECURSE TESTS test/*.cpp)
 
-# Add the executable target
-add_executable(engine ${SOURCES} main.cpp)
-add_executable(tests ${TESTS} ${SOURCES})
+add_library(board STATIC ${SOURCES})
+target_include_directories(board PUBLIC include)
 
-# Add include directories
-target_include_directories(engine PUBLIC include)
-target_include_directories(tests PUBLIC include)
+add_executable(engine main.cpp)
+add_executable(tests ${TESTS})
 
+target_link_libraries(engine PUBLIC board)
+target_link_libraries(tests PUBLIC board)
