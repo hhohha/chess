@@ -17,7 +17,7 @@ Move::Move(Piece *piece, Square *toSqr, std::optional<PieceType> newPiece)
     assert(newPiece.has_value() || (piece->_kind != PieceType::PAWN || toSqr->get_coordinate().row != (piece->_color == Color::WHITE ? 7 : 0)));
 }
 
-bool Move::operator==(Move &other) const {
+bool Move::operator==(const Move &other) const {
     return _piece == other._piece && _fromSqr == other._fromSqr && _toSqr == other._toSqr && _newPiece == other._newPiece;
 }
 
@@ -31,4 +31,8 @@ bool Move::is_castling() const {
 
 std::string Move::str() const {
     return _piece->str() + "-" + _toSqr->str() + (is_promotion() ? piece_type_to_letter(_newPiece.value()) : "");
+}
+
+std::ostream& operator << (std::ostream &os, const Move &move) {
+    return os << move.str();
 }

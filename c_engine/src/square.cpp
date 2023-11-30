@@ -19,6 +19,8 @@ std::vector<Piece *> &Square::get_attacked_by(Color color) {
     return color == Color::WHITE ? _attackedByWhites : _attackedByBlacks;
 }
 
+
+// printing of square via ostream
 std::ostream& operator << (std::ostream &os, const Square &square) {
     os << square.get_name();
     return os;

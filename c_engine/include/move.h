@@ -12,7 +12,7 @@ class Move {
 public:
     Move(Piece *piece, Square *toSqr, std::optional<PieceType> newPiece = std::nullopt);
 
-    bool operator==(Move &other) const;
+    bool operator==(const Move &other) const;
 
     bool is_promotion() const;
     bool is_castling() const;
@@ -33,3 +33,5 @@ private:
     std::optional<PieceType> _newPiece;
     bool _isEnPassant = false;
 };
+
+std::ostream& operator << (std::ostream &os, const Move &move);

@@ -4,5 +4,5 @@
 
 class Knight : Piece {
 public:
-    Knight(PieceType kind, Color color, Square *square);
+    Knight(Color color, Square *square);
 };

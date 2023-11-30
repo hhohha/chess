@@ -18,23 +18,24 @@ Square *Piece::get_square() {
     return _square;
 }
 
-SlidingPiece::SlidingPiece(PieceType kind, Color color, Square *square)
-    : Piece(kind, color, square) {
+SlidingPiece::SlidingPiece(PieceType kind, Color color, Square *square, const std::vector<Direction> slidingDirections) : 
+    Piece(kind, color, square),
+    _slidingDirections(slidingDirections) {
 
     _isSliding = true;
 }
 
 void SlidingPiece::recalculate() {
-    //for (auto sqr : _attackedSquares) {
-        //auto vec = &sqr->get_attacked_by(_color);
-        //vec->erase(std::remove(vec->begin(), vec->end(), this), vec->end());
-    //}
+    for (auto sqr : _attackedSquares) {
+        auto vec = &sqr->get_attacked_by(_color);
+        vec->erase(std::remove(vec->begin(), vec->end(), this), vec->end());
+    }
 
     _attackedSquares.clear();
     _potentialMoves.clear();
 
     for (auto direction : get_sliding_directions()) {
-        Coordinate c{0, 0};
+        Coordinate c(_square->get_coordinate());
         
         while (true) {
             move_in_direction(c, direction);
@@ -60,7 +61,6 @@ void SlidingPiece::recalculate() {
 
     for (auto sqr : _attackedSquares)
         sqr->get_attacked_by(_color).push_back(this);
-
 }
 
 /*

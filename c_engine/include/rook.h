@@ -4,9 +4,9 @@
 
 class Rook : public SlidingPiece {
 public:
-    Rook(PieceType kind, Color color, Square *square);
+    Rook(Color color, Square *square);
 
-    virtual std::vector<Direction> get_sliding_directions();
-
-    std::vector<Direction> _slidingDirections = {Direction::DOWN, Direction::UP, Direction::RIGHT, Direction::LEFT};
+    void recalculate() override;
+    std::vector<Move *> calc_potential_moves_pinned(Direction directionFromKingToPinner) override;
+    std::vector<Move *> get_legal_moves() override;
 };
