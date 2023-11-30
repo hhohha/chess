@@ -2,7 +2,10 @@
 
 #include "piece.h"
 
-class King : Piece {
+class King : public Piece {
 public:
-    King(PieceType kind, Color color, Square *square);
+    King(Color color, Square *square);
+    void recalculate() override;
+    std::vector<Move *> calc_potential_moves_pinned(Direction directionFromKingToPinner) override;
+    std::vector<Move *> get_legal_moves() override;
 };

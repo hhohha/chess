@@ -9,12 +9,15 @@ class Square;
 class Move;
 
 class Piece {
-public:
+protected:
     Piece(PieceType kind, Color color, Square *square);
 
+public:
     Square *get_square();
 
     std::string str() const {return _name + _square->str();}
+
+    std::vector<Move *> get_potential_moves() const {return _potentialMoves;}
 
     virtual void recalculate() = 0;
     virtual std::vector<Move *> calc_potential_moves_pinned(Direction directionFromKingToPinner) = 0;
@@ -36,14 +39,17 @@ public:
 };
 
 class SlidingPiece : public Piece {
-public:
-    SlidingPiece(PieceType kind, Color color, Square *square);
+protected:
+    SlidingPiece(PieceType kind, Color color, Square *square, const std::vector<Direction> slidingDirections);
 
-    virtual std::vector<Direction> get_sliding_directions() const = 0;
+public:
+    const std::vector<Direction> & get_sliding_directions() const {return _slidingDirections;}
 
     virtual void recalculate() override;
     virtual std::vector<Move *> calc_potential_moves_pinned(Direction directionFromKingToPinner) override;
     virtual std::vector<Move *> get_legal_moves() override;
+
+    const std::vector<Direction> _slidingDirections;
 };
 
 std::ostream& operator << (std::ostream &os, const Piece &piece);

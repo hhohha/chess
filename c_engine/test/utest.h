@@ -24,6 +24,16 @@ inline void assertEqual(T1 *expected, T2 *actual) {
         throw std::runtime_error(ss.str());
     }
 }
+
+template<typename T>
+inline void assertVectorContain(std::vector<T *> &vec, const char* s) {
+    for (auto m : vec) {
+        if (m->str() == s)
+            return;
+    }
+
+    throw std::runtime_error("Expected voctor to contain " + std::string(s));
+}
 /*
 template<>
 inline void assertEqual<const char*, std::string>(const char* expected, std::string actual) {

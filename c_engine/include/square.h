@@ -10,12 +10,15 @@ class Piece;
 
 class Square {
 public:
-    Square(int idx, Board *board);
+    Square();
+
+    void init(int idx, Board *board);
+    //Square(int idx, Board *board);
 
     bool operator!=(Square &other) {return _coordinate != other._coordinate;}
     bool operator==(Square &other) {return !(_coordinate != other._coordinate);}
 
-    bool is_free() {return _piece == nullptr;}
+    bool is_free() const {return _piece == nullptr;}
 
     bool is_attacked_by(Color color);
     std::vector<Piece *> &get_attacked_by(Color color);

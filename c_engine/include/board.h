@@ -6,7 +6,6 @@
 
 #include "piece.h"
 
-class Coordinate;
 class Move;
 class Square;
 
@@ -23,9 +22,10 @@ public:
 
     std::vector<Move *> *get_current_legal_moves();
 
+    Piece *place_piece(PieceType kind, Color color, std::string squareName);
+
 //private:
     std::vector<Move> _history;
-    std::vector<Square> _squares;
 
     Color _turn = Color::WHITE;
     Square *_enPassantSquare = nullptr;
@@ -40,6 +40,9 @@ public:
 
     std::vector<Piece *> _whitePieces;
     std::vector<Piece *> _blackPieces;
-    // TODO: std::vector<Piece *> _whiteSlidingPieces;
-    // TODO: std::vector<Piece *> _blackSlidingPieces;
+    std::vector<Piece *> _whiteSlidingPieces;
+    std::vector<Piece *> _blackSlidingPieces;
+
+private:
+    Square _squares[64];
 };
