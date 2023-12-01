@@ -59,6 +59,7 @@ TestSuite create_test_suite_moves() {
         Square *pieceSqr2 = b.get_square("b2");
         Pawn pawn1(Color::WHITE, pieceSqr1);
         Pawn pawn2(Color::WHITE, pieceSqr2);
+        
 
         Square *destSqr1 = b.get_square("a8");
         Square *destSqr2 = b.get_square("b1");
