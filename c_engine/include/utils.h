@@ -22,3 +22,5 @@ void move_in_direction(Coordinate &c, Direction d);
 bool is_same_col_or_row(Square &sqr1, Square &sqr2);
 bool is_same_diag(Square &sqr1, Square &sqr2);
 Direction get_direction(Square &sqr1, Square &sqr2);
+
+void ASSERT(bool condition, std::string message);

@@ -1,5 +1,3 @@
-#include <cassert>
-
 #include "square.h"
 
 Square::Square(){};
@@ -8,7 +6,7 @@ void Square::init(int idx, Board *board) {
     _idx = idx;
     _coordinate = {idx % 8, idx / 8};
     _board = board;
-    assert(idx >= 0 && idx < 64);
+    ASSERT(idx >= 0 && idx < 64, "invalid square index");
     this->_name = {static_cast<char>('a' + _coordinate.col), static_cast<char>('1' + _coordinate.row)};
 }
 

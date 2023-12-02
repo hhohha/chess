@@ -26,21 +26,27 @@ inline void assertEqual(T1 *expected, T2 *actual) {
 }
 
 template<typename T>
-inline void assertVectorContain(std::vector<T *> &vec, const char* s) {
-    for (auto m : vec) {
-        if (m->str() == s)
+inline void assertVectorContain(std::vector<T *> &vector, const char* itemStr) {
+    for (auto m : vector) {
+        if (m->str() == itemStr)
             return;
     }
 
-    throw std::runtime_error("Expected voctor to contain " + std::string(s));
+    throw std::runtime_error("Expected vector to contain " + std::string(itemStr));
 }
-/*
-template<>
-inline void assertEqual<const char*, std::string>(const char* expected, std::string actual) {
-    if (expected != actual) {
-        throw std::runtime_error("Expected \"" + std::string(expected) + "\" but got \"" + actual + "\"");
+
+template<typename T>
+inline void assertVectorContain(const std::vector<T> &vector, T item) {
+    for (auto item2 : vector) {
+        if (item == item2)
+            return;
     }
-}*/
+
+    std::stringstream ss;
+    ss << "Expected vector to contain " << item;
+
+    throw std::runtime_error(ss.str());
+}
 
 inline void assertIsNull(void *ptr) {
     if (ptr != nullptr) {
@@ -82,7 +88,7 @@ public:
             } catch (std::runtime_error &e) {
                 std::cout << "Test " << test.name << ": \033[91m FAILED \x1b[0m  " << e.what() << std::endl;
                 ++failed;
-            }
+            } 
 
         std::cout << std::endl;
         std::cout << "Passed tests: " << passed << std::endl;

@@ -1,5 +1,3 @@
-#include <cassert>
-
 #include "move.h"
 #include "piece.h"
 #include "square.h"
@@ -10,11 +8,12 @@ Move::Move(Piece *piece, Square *toSqr, std::optional<PieceType> newPiece)
   _toSqr(toSqr),
   _newPiece(newPiece) {
 
-    assert(piece->get_square() != nullptr);
+    ASSERT(piece->get_square() != nullptr, "piece has no square");
     _fromSqr = piece->get_square();
     
     // if the piece is a pawn and it's being promoted, the newPiece must be specified
-    assert(newPiece.has_value() || (piece->_kind != PieceType::PAWN || toSqr->get_coordinate().row != (piece->_color == Color::WHITE ? 7 : 0)));
+    ASSERT(newPiece.has_value() || (piece->_kind != PieceType::PAWN || toSqr->get_coordinate().row != (piece->_color == Color::WHITE ? 7 : 0)),
+        "a move must specify the new piece iff it's a promotion");
 }
 
 bool Move::operator==(const Move &other) const {

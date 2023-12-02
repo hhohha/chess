@@ -1,5 +1,3 @@
-#include <cassert>
-
 #include "bishop.h"
 #include "board.h"
 #include "constants.h"
@@ -28,7 +26,7 @@ void Board::clear() {
 
 Square *Board::get_square(Coordinate c) {
     if (0 <= c.col && c.col < 8 && 0 <= c.row && c.row < 8)
-        return &_squares[c.col*8 + c.row];
+        return &_squares[c.col + c.row*8];
     return nullptr;
 }
 
@@ -52,8 +50,8 @@ Square *Board::get_square(std::string name) {
 
 Piece *Board::place_piece(PieceType kind, Color color, std::string squareName) {
     auto sqr = get_square(squareName);
-    assert(sqr != nullptr);
-    assert(sqr->is_free());
+    ASSERT(sqr != nullptr, "invalid square name");
+    ASSERT(sqr->is_free(), "square is not free");
 
     Piece *piece;
     switch (kind) {
@@ -72,11 +70,9 @@ Piece *Board::place_piece(PieceType kind, Color color, std::string squareName) {
         case PieceType::QUEEN:
             piece = new Queen(color, sqr);
             break;
-        case PieceType::KING:
+        default:  // KING
             piece = new King(color, sqr);
             break;
-        default:
-            assert(false);
     }
 
     piece->_square = sqr;

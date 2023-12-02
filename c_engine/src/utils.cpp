@@ -1,7 +1,14 @@
-#include <cassert>
-
 #include "utils.h"
 #include "square.h"
+
+#ifdef DEBUG
+void ASSERT(bool condition, std::string message) {
+    if (!condition)
+        throw std::runtime_error("Assertion failed: " + message);
+}
+#else
+void ASSERT(bool condition, std::string message) {}
+#endif
 
 std::string piece_type_to_letter(PieceType type, bool printPawn) {
     if (type == PieceType::PAWN) return printPawn ? "p" : "";
@@ -9,8 +16,7 @@ std::string piece_type_to_letter(PieceType type, bool printPawn) {
     else if (type == PieceType::BISHOP) return "B";
     else if (type == PieceType::ROOK) return "R";
     else if (type == PieceType::QUEEN) return "Q";
-    else if (type == PieceType::KING) return "K";
-    else assert(false);
+    else return "K"; // KING
 }
 
 int square_name_to_idx(std::string name) {
@@ -29,8 +35,7 @@ Direction reverse_direction(Direction d) {
     else if (d == Direction::UP_LEFT) return Direction::DOWN_RIGHT;
     else if (d == Direction::UP_RIGHT) return Direction::DOWN_LEFT;
     else if (d == Direction::DOWN_LEFT) return Direction::UP_RIGHT;
-    else if (d == Direction::DOWN_RIGHT) return Direction::UP_LEFT;
-    else assert(false);
+    else return Direction::UP_LEFT; // DOWN_RIGHT
 }
 
 void move_in_direction(Coordinate &c, Direction d) {
@@ -41,8 +46,7 @@ void move_in_direction(Coordinate &c, Direction d) {
     else if (d == Direction::DOWN_RIGHT) {c.row -= 1; c.col += 1;}
     else if (d == Direction::DOWN_LEFT) {c.row -= 1; c.col -= 1;}
     else if (d == Direction::UP_RIGHT) {c.row += 1; c.col += 1;}
-    else if (d == Direction::UP_LEFT) {c.row += 1; c.col -= 1;}
-    else assert(false);
+    else {c.row += 1; c.col -= 1;} // UP_LEFT
 }
 
 bool is_same_col_or_row(Square &sqr1, Square &sqr2) {
@@ -54,7 +58,7 @@ bool is_same_diag(Square &sqr1, Square &sqr2) {
 }
 
 Direction get_direction(Square &sqr1, Square &sqr2) {
-    assert(sqr1 != sqr2);
+    ASSERT(sqr1 != sqr2, "same squares given to get_direction");
     if (sqr1.get_col() == sqr2.get_col())
         return sqr1.get_row() < sqr2.get_row() ? Direction::UP : Direction::DOWN;
     if (sqr1.get_row() == sqr2.get_row())
@@ -63,5 +67,5 @@ Direction get_direction(Square &sqr1, Square &sqr2) {
         return sqr1.get_col() > sqr2.get_col() ? Direction::DOWN_LEFT : Direction::UP_RIGHT;
     if (sqr1.get_col() - sqr2.get_col() == sqr2.get_row() - sqr1.get_row())
         return sqr1.get_col() > sqr2.get_col() ? Direction::UP_LEFT : Direction::DOWN_RIGHT;
-    assert(false);
+    throw std::runtime_error("No direction found between squares");
 }
