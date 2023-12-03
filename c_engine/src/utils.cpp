@@ -10,6 +10,17 @@ void ASSERT(bool condition, std::string message) {
 void ASSERT(bool condition, std::string message) {}
 #endif
 
+bool operator!=(Coordinate &c1, Coordinate &c2) {
+    return c1.col != c2.col || c1.row != c2.row;
+}
+
+Coordinate operator+(const Coordinate& c1, const Coordinate& c2) {
+    Coordinate result;
+    result.col = c1.col + c2.col;
+    result.row = c1.row + c2.row;
+    return result;
+}
+
 std::string piece_type_to_letter(PieceType type, bool printPawn) {
     if (type == PieceType::PAWN) return printPawn ? "p" : "";
     else if (type == PieceType::PAWN) return "N";

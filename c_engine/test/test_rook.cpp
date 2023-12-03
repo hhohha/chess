@@ -60,10 +60,8 @@ TestSuite create_test_suite_rook() {
         auto moves = rook->calc_potential_moves_pinned(Direction::RIGHT);
 
         assertEqual(4U, moves.size());
-        assertVectorContain(moves, "Rd1-c1");
-        assertVectorContain(moves, "Rd1-e1");
-        assertVectorContain(moves, "Rd1-f1");
-        assertVectorContain(moves, "Rd1-g1");
+        for (auto move : {"Rd1-c1", "Rd1-e1", "Rd1-f1", "Rd1-g1"})
+            assertVectorContain(moves, move);
     });
 
     return testSuite;

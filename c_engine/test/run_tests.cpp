@@ -7,6 +7,8 @@ TestSuite create_test_suite_squares();
 TestSuite create_test_suite_moves();
 TestSuite create_test_suite_bishop();
 TestSuite create_test_suite_rook();
+TestSuite create_test_suite_queen();
+TestSuite create_test_suite_knight();
 
 
 int main() {
@@ -16,6 +18,8 @@ int main() {
     testSuites.emplace_back(create_test_suite_moves());
     testSuites.emplace_back(create_test_suite_bishop());
     testSuites.emplace_back(create_test_suite_rook());
+    testSuites.emplace_back(create_test_suite_queen());
+    testSuites.emplace_back(create_test_suite_knight());
 
     for (auto &testSuite: testSuites)
         testSuite.run();

@@ -10,10 +10,11 @@ struct Coordinate {
     int col;
     int row;
 
-    bool operator!=(Coordinate &other) {
-        return col != other.col || row != other.row;
-    }
+
 };
+
+bool operator!=(Coordinate &c1, Coordinate &c2);
+Coordinate operator+(const Coordinate& c1, const Coordinate& c2);
 
 std::string piece_type_to_letter(PieceType type, bool printPawn=false);
 int square_name_to_idx(std::string name);
