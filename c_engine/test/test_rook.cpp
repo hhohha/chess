@@ -62,6 +62,9 @@ TestSuite create_test_suite_rook() {
         assertEqual(4U, moves.size());
         for (auto move : {"Rd1-c1", "Rd1-e1", "Rd1-f1", "Rd1-g1"})
             assertVectorContain(moves, move);
+
+        for (auto move : moves)
+            delete move;
     });
 
     return testSuite;

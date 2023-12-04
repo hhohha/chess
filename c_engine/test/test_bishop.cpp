@@ -78,6 +78,9 @@ TestSuite create_test_suite_bishop() {
         assertEqual(6U, moves.size());
         for (auto move : {"Bc3-b2", "Bc3-d4", "Bc3-e5", "Bc3-f6", "Bc3-g7", "Bc3-h8"})
             assertVectorContain(moves, move);
+
+        for (auto move : moves)
+            delete move;
     });
 
     return testSuite;

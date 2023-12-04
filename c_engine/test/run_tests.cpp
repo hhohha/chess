@@ -9,6 +9,7 @@ TestSuite create_test_suite_bishop();
 TestSuite create_test_suite_rook();
 TestSuite create_test_suite_queen();
 TestSuite create_test_suite_knight();
+TestSuite create_test_suite_king();
 
 
 int main() {
@@ -20,6 +21,7 @@ int main() {
     testSuites.emplace_back(create_test_suite_rook());
     testSuites.emplace_back(create_test_suite_queen());
     testSuites.emplace_back(create_test_suite_knight());
+    testSuites.emplace_back(create_test_suite_king());
 
     for (auto &testSuite: testSuites)
         testSuite.run();

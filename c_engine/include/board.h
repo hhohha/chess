@@ -12,6 +12,7 @@ class Square;
 class Board {
 public:
     Board();
+    ~Board();
 
     void clear();
 

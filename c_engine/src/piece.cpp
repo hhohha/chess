@@ -13,6 +13,11 @@ Piece::Piece(PieceType kind, Color color, Square *square)
       _color(color),
       _square(square) {}
 
+Piece::~Piece() {
+    for (auto move : _potentialMoves)
+        delete move;
+}
+
 Square *Piece::get_square() {
     return _square;
 }
@@ -31,6 +36,8 @@ void SlidingPiece::recalculate() {
     }
 
     _attackedSquares.clear();
+    for (auto move : _potentialMoves)
+        delete move;
     _potentialMoves.clear();
 
     for (auto direction : get_sliding_directions()) {

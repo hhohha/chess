@@ -16,6 +16,13 @@ Board::Board() {
     }
 }
 
+Board::~Board() {
+    for (auto piece : _whitePieces)
+        delete piece;
+    for (auto piece : _blackPieces)
+        delete piece;
+}
+
 void Board::clear() {
     for (auto &sqr : _squares) {
         sqr._piece = nullptr;
@@ -52,7 +59,7 @@ Piece *Board::place_piece(PieceType kind, Color color, std::string squareName) {
     auto sqr = get_square(squareName);
     ASSERT(sqr != nullptr, "invalid square name");
     ASSERT(sqr->is_free(), "square is not free");
-
+    
     Piece *piece;
     switch (kind) {
         case PieceType::PAWN:

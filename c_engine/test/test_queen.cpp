@@ -65,6 +65,9 @@ TestSuite create_test_suite_queen() {
         assertEqual(2U, moves.size());
         assertVectorContain(moves, "Qc2-d3");
         assertVectorContain(moves, "Qc2-e4");
+
+        for (auto move : moves)
+            delete move;
     });
 
     return testSuite;

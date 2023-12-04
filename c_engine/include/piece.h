@@ -11,6 +11,7 @@ class Move;
 class Piece {
 protected:
     Piece(PieceType kind, Color color, Square *square);
+    virtual ~Piece();
 
 public:
     Square *get_square();

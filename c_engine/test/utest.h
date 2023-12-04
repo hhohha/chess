@@ -48,21 +48,21 @@ inline void assertVectorContain(const std::vector<T> &vector, T item) {
     throw std::runtime_error(ss.str());
 }
 
-inline void assertIsNull(void *ptr) {
+inline void assertIsNull(void *ptr, std::string msg = "") {
     if (ptr != nullptr) {
-        throw std::runtime_error("Expected pointer to be null");
+        throw std::runtime_error("Expected pointer to be null" + (msg.empty() ? "" : ": " + msg));
     }
 }
 
-inline void assertTrue(bool expression) {
+inline void assertTrue(bool expression, std::string msg = "") {
     if (!expression) {
-        throw std::runtime_error("Expected expression to be true");
+        throw std::runtime_error("Expected expression to be true" + (msg.empty() ? "" : ": " + msg));
     }
 }
 
-inline void assertFalse(bool expression) {
+inline void assertFalse(bool expression, std::string msg = "") {
     if (expression) {
-        throw std::runtime_error("Expected expression to be false");
+        throw std::runtime_error("Expected expression to be false" + (msg.empty() ? "" : ": " + msg));
     }
 }
 

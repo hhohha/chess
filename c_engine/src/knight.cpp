@@ -18,6 +18,8 @@ void Knight::recalculate() {
     }
 
     _attackedSquares.clear();
+    for (auto move : _potentialMoves)
+        delete move;
     _potentialMoves.clear();
 
     for (Coordinate c : {Coordinate{2, 1}, Coordinate{2, -1}, Coordinate{-2, 1}, Coordinate{-2, -1},
