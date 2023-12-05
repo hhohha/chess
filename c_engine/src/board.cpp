@@ -107,3 +107,18 @@ Piece *Board::place_piece(PieceType kind, Color color, std::string squareName) {
 
     return piece;
 }
+
+King *Board::get_king(Color color) {
+    // king is always the first piece in the list
+    if (Color::WHITE == color)
+        return dynamic_cast<King *>(_whitePieces[0]);
+    else
+        return dynamic_cast<King *>(_blackPieces[0]);
+}
+
+Square * Board::find_first_occupied_square_in_dir(Square *start, Direction dir) {
+    // Find the square with first piece in the given direction from the given square
+
+    // TODO
+    return nullptr;
+}

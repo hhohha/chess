@@ -25,6 +25,8 @@ public:
     Piece *get_piece_taken() const {return _pieceTaken;}
     std::optional<PieceType> get_new_piece() const {return _newPiece;}
 
+    void mark_as_en_passant() {_isEnPassant = true;}
+
 private:
     Piece *_piece;
     Square *_fromSqr;

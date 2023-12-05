@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "king.h"
 #include "piece.h"
 
 class Move;
@@ -24,6 +25,9 @@ public:
     std::vector<Move *> *get_current_legal_moves();
 
     Piece *place_piece(PieceType kind, Color color, std::string squareName);
+
+    King *get_king(Color color);
+    Square *find_first_occupied_square_in_dir(Square *start, Direction dir);
 
 //private:
     std::vector<Move> _history;
