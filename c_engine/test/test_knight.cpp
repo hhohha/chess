@@ -12,6 +12,10 @@ TestSuite create_test_suite_knight() {
         auto knight = dynamic_cast<Knight*>(b.place_piece(PieceType::KNIGHT, Color::WHITE, "a1"));
 
         assertEqual(PieceType::KNIGHT, knight->_kind);
+        assertEqual(Color::WHITE, knight->_color);
+        assertEqual("a1", knight->_square->get_name());
+        assertEqual("N", knight->_name);
+        assertTrue(knight->_isLight);
     });
     
     testSuite.addTest("Knight move generation 1", []() {

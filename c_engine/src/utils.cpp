@@ -23,7 +23,7 @@ Coordinate operator+(const Coordinate& c1, const Coordinate& c2) {
 
 std::string piece_type_to_letter(PieceType type, bool printPawn) {
     if (type == PieceType::PAWN) return printPawn ? "p" : "";
-    else if (type == PieceType::PAWN) return "N";
+    else if (type == PieceType::KNIGHT) return "N";
     else if (type == PieceType::BISHOP) return "B";
     else if (type == PieceType::ROOK) return "R";
     else if (type == PieceType::QUEEN) return "Q";

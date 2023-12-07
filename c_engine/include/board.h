@@ -29,11 +29,13 @@ public:
     King *get_king(Color color);
     Square *find_first_occupied_square_in_dir(Square *start, Direction dir);
 
+    void load_fen(std::string fen);
+
 //private:
     std::vector<Move> _history;
 
     Color _turn = Color::WHITE;
-    Square *_enPassantSquare = nullptr;
+    Square *_enPassantPawnSquare = nullptr;  //
     std::vector<unsigned int> _halfMoves = {0};
     unsigned int _fullMoves = 1;
     
@@ -42,11 +44,15 @@ public:
     // unsigned int _analysisDepth = 0;
     // std::vector<std::vector<Piece *>> piecesRecalculated;
 
+    std::vector<Move *> calc_all_legal_moves();
+
 
     std::vector<Piece *> _whitePieces;
     std::vector<Piece *> _blackPieces;
     std::vector<Piece *> _whiteSlidingPieces;
     std::vector<Piece *> _blackSlidingPieces;
+
+    std::vector<std::vector<Move *>> _legalMoves;
 
 private:
     Square _squares[64];

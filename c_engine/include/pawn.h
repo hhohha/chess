@@ -4,7 +4,6 @@
 
 #include "piece.h"
 
-
 class Square;
 
 class Pawn : public Piece {
@@ -17,13 +16,14 @@ public:
 
     virtual std::vector<Move *> get_legal_moves() override;
 
+    std::vector<Move *> get_potential_moves();
+
 private:
     std::vector<Move *> get_forward_moves();
     std::vector<Move *> get_capture_moves(int colOffset);
     Move * get_en_passant_move();
     std::vector<Move *> generate_pawn_moves(Square *targetSqr);
     bool is_en_passant_pin();
-
 
     const int _moveOffset;
     const int _baseRow;

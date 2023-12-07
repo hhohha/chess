@@ -15,10 +15,29 @@
     _isLight = false;
 }
 
+std::vector<Move *> Pawn::get_potential_moves() {
+    std::vector<Move *> moves;
+
+    for (auto move : get_forward_moves()) // move forward
+        moves.push_back(move);
+
+    for (auto move : get_capture_moves(-1)) // capture to the left
+        moves.push_back(move);
+
+    for (auto move : get_capture_moves(1)) // capture to the right
+        moves.push_back(move);
+
+    auto enPassantMove = get_en_passant_move(); // en passant
+    if (enPassantMove != nullptr)
+        moves.push_back(enPassantMove);
+
+    return moves;
+}
+
 Move * Pawn::get_en_passant_move() {
     // check the possibility that the pawn can take en passant
     // if en passant is possible, the enPassantSqr is the square behind the pawn
-    auto enPassantSqr = _square->get_board()->_enPassantSquare;
+    auto enPassantSqr = _square->get_board()->_enPassantPawnSquare;
     if (enPassantSqr == nullptr)
         return nullptr;
 
@@ -33,7 +52,9 @@ Move * Pawn::get_en_passant_move() {
     if (is_en_passant_pin())
         return nullptr;
 
-    auto move = new Move(this, enPassantSqr);
+    auto destSquare = _square->get_board()->get_square(enPassantSqr->get_col(), _square->get_row() + _moveOffset);
+
+    auto move = new Move(this, destSquare);
     move->mark_as_en_passant();
     return move;
 }
@@ -43,7 +64,7 @@ bool Pawn::is_en_passant_pin() {
     // still expose the king
     // e.g. white:  pe5, Kg5, black: Rb5, pd7 and black moves pd7-d5 - then "exd6 e.p."" is not possible 
 
-    auto enPassantSqr = _square->get_board()->_enPassantSquare;
+    auto enPassantSqr = _square->get_board()->_enPassantPawnSquare;
     ASSERT(enPassantSqr != nullptr, "en passant square is null");
     ASSERT(enPassantSqr->get_piece() != nullptr, "en passant square is free");
     ASSERT(enPassantSqr->get_piece()->_kind == PieceType::PAWN, "en passant square is not occupied by a pawn");
@@ -144,7 +165,7 @@ std::vector<Move *> Pawn::generate_pawn_moves(Square *targetSqr) {
 
 
 void Pawn::recalculate() {
-    throw std::runtime_error("not implemented");
+    //throw std::runtime_error("not implemented");
 }
 
 std::vector<Move *> Pawn::calc_potential_moves_pinned(Direction directionFromKingToPinner) {
