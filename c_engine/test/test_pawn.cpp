@@ -27,6 +27,9 @@ TestSuite create_test_suite_pawn() {
         assertEqual(2U, moves.size());
         assertVectorContain(moves, "pa2-a3");
         assertVectorContain(moves, "pa2-a4");
+
+        for (auto move : moves)
+            delete move;
     });
 
     testSuite.addTest("Pawn move generation 2", []() {
@@ -37,6 +40,9 @@ TestSuite create_test_suite_pawn() {
 
         assertEqual(1U, moves.size());
         assertVectorContain(moves, "pd4-d5");
+
+        for (auto move : moves)
+            delete move;
     });
 
     testSuite.addTest("Pawn move generation 3", []() {
@@ -48,6 +54,9 @@ TestSuite create_test_suite_pawn() {
         assertEqual(4U, moves.size());
         for (auto move : {"ph7-h8Q", "ph7-h8R", "ph7-h8B", "ph7-h8N"})
             assertVectorContain(moves, move);
+
+        for (auto move : moves)
+            delete move;
     });
 
     testSuite.addTest("Pawn move generation 4", []() {
@@ -62,6 +71,9 @@ TestSuite create_test_suite_pawn() {
         for (auto move : {"pc7-c8Q", "pc7-c8R", "pc7-c8B", "pc7-c8N", "pc7-b8Q", "pc7-b8R", "pc7-b8B", "pc7-b8N",
             "pc7-d8Q", "pc7-d8R", "pc7-d8B", "pc7-d8N"})
             assertVectorContain(moves, move);
+        
+        for (auto move : moves)
+            delete move;
     });
 
     testSuite.addTest("Pawn move generation 5", []() {
@@ -76,6 +88,9 @@ TestSuite create_test_suite_pawn() {
         assertEqual(2U, moves.size());
         for (auto move : {"pe2-e3", "pe2-d3"})
             assertVectorContain(moves, move);
+
+        for (auto move : moves)
+            delete move;
     });
 
     testSuite.addTest("Test en passant 1", []() {
@@ -89,6 +104,9 @@ TestSuite create_test_suite_pawn() {
         assertEqual(2U, moves.size());
         for (auto move : {"pe5-e6", "pe5-d6"})
             assertVectorContain(moves, move);
+    
+        for (auto move : moves)
+            delete move;
     });
 
     testSuite.addTest("Test en passant pin", []() {
@@ -105,6 +123,9 @@ TestSuite create_test_suite_pawn() {
         assertEqual(2U, moves.size());
         for (auto move : {"pe5-e6", "pe5-f6"})
             assertVectorContain(moves, move);
+    
+        for (auto move : moves)
+            delete move;
 
         b.place_piece(PieceType::PAWN, Color::BLACK, "c5");
         
@@ -113,6 +134,9 @@ TestSuite create_test_suite_pawn() {
         assertEqual(3U, moves.size());
         for (auto move : {"pe5-e6", "pe5-f6", "pe5-d6"})
             assertVectorContain(moves, move);
+
+        for (auto move : moves)
+            delete move;
 
     });
             

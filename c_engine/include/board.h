@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <optional>
 #include <string>
 #include <vector>
@@ -26,8 +27,16 @@ public:
 
     Piece *place_piece(PieceType kind, Color color, std::string squareName);
 
+    // void remove_piece(Piece *piece);
+
+    std::vector<Move *> calc_all_legal_moves();
+    bool is_in_check(Color color);
+
     King *get_king(Color color);
     Square *find_first_occupied_square_in_dir(Square *start, Direction dir);
+
+    std::vector<Piece *> & get_pieces(Color color);
+    std::vector<Piece *> & get_sliding_pieces(Color color);
 
     void load_fen(std::string fen);
 
@@ -44,9 +53,6 @@ public:
     // unsigned int _analysisDepth = 0;
     // std::vector<std::vector<Piece *>> piecesRecalculated;
 
-    std::vector<Move *> calc_all_legal_moves();
-
-
     std::vector<Piece *> _whitePieces;
     std::vector<Piece *> _blackPieces;
     std::vector<Piece *> _whiteSlidingPieces;
@@ -55,5 +61,9 @@ public:
     std::vector<std::vector<Move *>> _legalMoves;
 
 private:
+    std::vector<Move *> calc_all_legal_moves_check();
+    std::vector<Move *> calc_all_legal_moves_no_check();
+    std::map<Piece *, Direction> calc_pinned_pieces(Color color);
+
     Square _squares[64];
 };

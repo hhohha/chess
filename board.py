@@ -497,11 +497,9 @@ class Board:
             direction = get_direction(kingSqr, piece.square)
             firstSquare = self.find_first_occupied_square_in_dir(kingSqr, direction)
 
-            if firstSquare is None:
-                assert False, "the potential pinner is not on the board"
-                #continue
-
+            assert firstSquare is not None, "the potential pinner is not on the board"
             assert firstSquare.piece is not None
+
             if firstSquare.piece.color != color:
                 continue
 

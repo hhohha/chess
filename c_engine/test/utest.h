@@ -5,6 +5,18 @@
 
 using testFuncPtr = void (*)(void);
 
+inline bool str_equal_ignore_case(std::string str1, std::string str2) {
+    if (str1.size() != str2.size())
+        return false;
+
+    for (unsigned int i = 0; i < str1.size(); ++i) {
+        if (tolower(str1[i]) != tolower(str2[i]))
+            return false;
+    }
+
+    return true;
+}
+
 template<typename T1, typename T2>
 inline void assertEqual(T1 expected, T2 actual) {
     if (expected != actual) {
@@ -73,7 +85,7 @@ public:
         tests.emplace_back(name, func);
     }
 
-    void run() {
+    void run(std::string testName) {
         std::cout << std::endl;
         std::cout << "==========================================" << std::endl;
         std::cout << "Running test suite " << suiteName << std::endl;
@@ -81,14 +93,16 @@ public:
         std::cout << std::endl;
 
         for (auto test: tests)
-            try {
-                test.func();
-                std::cout << "Test " << test.name << ": \033[92m PASSED \x1b[0m  " << std::endl;
-                ++passed;
-            } catch (std::runtime_error &e) {
-                std::cout << "Test " << test.name << ": \033[91m FAILED \x1b[0m  " << e.what() << std::endl;
-                ++failed;
-            } 
+            if (testName.empty() || str_equal_ignore_case(test.name, testName)) {
+                try {
+                    test.func();
+                    std::cout << "Test " << test.name << ": \033[92m PASSED \x1b[0m  " << std::endl;
+                    ++passed;
+                } catch (std::runtime_error &e) {
+                    std::cout << "Test " << test.name << ": \033[91m FAILED \x1b[0m  " << e.what() << std::endl;
+                    ++failed;
+                } 
+            }
 
         std::cout << std::endl;
         std::cout << "Passed tests: " << passed << std::endl;

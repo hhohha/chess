@@ -60,23 +60,27 @@ void move_in_direction(Coordinate &c, Direction d) {
     else {c.row += 1; c.col -= 1;} // UP_LEFT
 }
 
-bool is_same_col_or_row(Square &sqr1, Square &sqr2) {
-    return sqr1.get_col() == sqr2.get_col() || sqr1.get_row() == sqr2.get_row();
+bool is_same_col_or_row(Square * sqr1, Square * sqr2) {
+    return sqr1->get_col() == sqr2->get_col() || sqr1->get_row() == sqr2->get_row();
 }
 
-bool is_same_diag(Square &sqr1, Square &sqr2) {
-    return abs(sqr1.get_col() - sqr2.get_col()) == abs(sqr1.get_row() - sqr2.get_row());
+bool is_same_diag(Square * sqr1, Square * sqr2) {
+    return abs(sqr1->get_col() - sqr2->get_col()) == abs(sqr1->get_row() - sqr2->get_row());
 }
 
-Direction get_direction(Square &sqr1, Square &sqr2) {
+Direction get_direction(Square * sqr1, Square * sqr2) {
     ASSERT(sqr1 != sqr2, "same squares given to get_direction");
-    if (sqr1.get_col() == sqr2.get_col())
-        return sqr1.get_row() < sqr2.get_row() ? Direction::UP : Direction::DOWN;
-    if (sqr1.get_row() == sqr2.get_row())
-        return sqr1.get_col() < sqr2.get_col() ? Direction::RIGHT : Direction::LEFT;
-    if (sqr1.get_col() - sqr2.get_col() == sqr1.get_row() - sqr2.get_row())
-        return sqr1.get_col() > sqr2.get_col() ? Direction::DOWN_LEFT : Direction::UP_RIGHT;
-    if (sqr1.get_col() - sqr2.get_col() == sqr2.get_row() - sqr1.get_row())
-        return sqr1.get_col() > sqr2.get_col() ? Direction::UP_LEFT : Direction::DOWN_RIGHT;
+    if (sqr1->get_col() == sqr2->get_col())
+        return sqr1->get_row() < sqr2->get_row() ? Direction::UP : Direction::DOWN;
+    if (sqr1->get_row() == sqr2->get_row())
+        return sqr1->get_col() < sqr2->get_col() ? Direction::RIGHT : Direction::LEFT;
+    if (sqr1->get_col() - sqr2->get_col() == sqr1->get_row() - sqr2->get_row())
+        return sqr1->get_col() > sqr2->get_col() ? Direction::DOWN_LEFT : Direction::UP_RIGHT;
+    if (sqr1->get_col() - sqr2->get_col() == sqr2->get_row() - sqr1->get_row())
+        return sqr1->get_col() > sqr2->get_col() ? Direction::UP_LEFT : Direction::DOWN_RIGHT;
     throw std::runtime_error("No direction found between squares");
+}
+
+Color invert_color(Color color) {
+    return color == Color::WHITE ? Color::BLACK : Color::WHITE;
 }

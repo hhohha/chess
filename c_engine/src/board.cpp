@@ -110,6 +110,32 @@ Piece *Board::place_piece(PieceType kind, Color color, std::string squareName) {
     return piece;
 }
 
+
+// void Board::remove_piece(Piece *piece) {
+//     ASSERT(piece != nullptr, "piece is null");
+//     ASSERT(piece->_square != nullptr, "piece is not on the board");
+//     ASSERT(!piece->_square->is_free(), "piece is not on the board");
+
+//     for (auto sqr : piece->_attackedSquares) {
+//         if (piece->_color == Color::WHITE) {
+//             sqr->_attackedByWhites.erase(std::remove(sqr->_attackedByWhites.begin(), sqr->_attackedByWhites.end(), piece), sqr->_attackedByWhites.end());
+//             _whitePieces.erase(std::remove(_whitePieces.begin(), _whitePieces.end(), piece), _whitePieces.end());
+//             if (piece->_isSliding)
+//                 _whiteSlidingPieces.erase(std::remove(_whiteSlidingPieces.begin(), _whiteSlidingPieces.end(), piece), _whiteSlidingPieces.end());
+//         }
+//         else {
+//             sqr->_attackedByBlacks.erase(std::remove(sqr->_attackedByBlacks.begin(), sqr->_attackedByBlacks.end(), piece), sqr->_attackedByBlacks.end());
+//             _blackPieces.erase(std::remove(_blackPieces.begin(), _blackPieces.end(), piece), _blackPieces.end());
+//             if (piece->_isSliding)
+//                 _blackSlidingPieces.erase(std::remove(_blackSlidingPieces.begin(), _blackSlidingPieces.end(), piece), _blackSlidingPieces.end());
+//         }
+//     }
+
+//     piece->_attackedSquares.clear();
+//     piece->_isActive = false;
+// }
+
+
 King *Board::get_king(Color color) {
     // king is always the first piece in the list
     if (Color::WHITE == color)
@@ -227,6 +253,79 @@ void Board::load_fen(std::string fen) {
     _legalMoves.push_back(calc_all_legal_moves());
 }
 
+bool Board::is_in_check(Color color) {
+    auto king = get_king(color);
+    return king != nullptr && king->_square->is_attacked_by(invert_color(color));
+}
+
+std::vector<Move *> Board::calc_all_legal_moves_no_check(){
+    std::vector<Move *> legalMoves;
+    auto pinnedPieces = calc_pinned_pieces(_turn);
+
+    for (auto piece : get_pieces(_turn)) {
+
+    }
+
+}
+
+std::vector<Move *> Board::calc_all_legal_moves_check(){
+
+}
+
+std::map<Piece *, Direction> Board::calc_pinned_pieces(Color color){
+    // get all pinned pieces of the given color, a pinned piece is the only piece that is between the own king
+    // and a sliding piece that would otherwise attack the king
+    // the direction is the direction from the king towards the pinner!!!
+
+    auto king = get_king(color);
+    if (king == nullptr)
+        return {};
+
+    auto pinnedPieces = std::map<Piece *, Direction>();
+
+    // look at all opponent's sliding pieces (rooks, bishops, queens)
+    for (auto piece : get_sliding_pieces(invert_color(color))) {
+        // if the piece is not on the same row, column (rook, queen) or diagonal (bishop, queen) as the king, it cannot pin
+        if (piece->_kind == PieceType::ROOK && !is_same_col_or_row(piece->_square, king->_square))
+            continue;
+        if (piece->_kind == PieceType::BISHOP && !is_same_diag(piece->_square, king->_square))
+            continue;
+        if (!is_same_col_or_row(piece->_square, king->_square) && !is_same_diag(piece->_square, king->_square)) // _kind == queen
+            continue;
+
+        // go from own king towards the potential pinner: the first piece must be a piece of the same color, otherwise not a pin
+        auto direction = get_direction(king->_square, piece->_square);
+        auto firstSquare = find_first_occupied_square_in_dir(king->_square, direction);
+
+        ASSERT(firstSquare != nullptr, "the potentially pinned piece not found");
+        ASSERT(firstSquare->get_piece() != nullptr, "the potentially pinned piece not found");
+
+        if (firstSquare->get_piece()->_color != color)
+            continue;
+
+        // the second piece must be the potential pinner - then all conditions are met, the first piece is pinned
+        auto secondSquare = find_first_occupied_square_in_dir(firstSquare, direction);
+
+        ASSERT(secondSquare != nullptr && secondSquare->get_piece(), "the potential pinner not found"); 
+
+        if (secondSquare->get_piece() == piece)
+            pinnedPieces[piece] = direction;
+    }
+
+    return pinnedPieces;
+}
+
 std::vector<Move *> Board::calc_all_legal_moves() {
-    return std::vector<Move *>();
+    if (is_in_check(_turn)) 
+        return calc_all_legal_moves_check();
+    else
+        return calc_all_legal_moves_no_check();
+}
+
+std::vector<Piece *> & Board::get_pieces(Color color) {
+    return color == Color::WHITE ? _whitePieces : _blackPieces;
+}
+
+std::vector<Piece *> & Board::get_sliding_pieces(Color color) {
+    return color == Color::WHITE ? _whiteSlidingPieces : _blackSlidingPieces;
 }

@@ -14,7 +14,17 @@ TestSuite create_test_suite_pawn();
 TestSuite create_test_suite_board();
 
 
-int main() {
+int main(int argc, char **argv) {
+    std::string suiteName;
+    std::string testName;
+
+    if (argc >  1)
+        suiteName = argv[1];
+
+    if (argc > 2)
+        testName = argv[2];
+
+
     std::vector<TestSuite> testSuites;
 
     testSuites.emplace_back(create_test_suite_squares());
@@ -28,7 +38,8 @@ int main() {
     testSuites.emplace_back(create_test_suite_board());
 
     for (auto &testSuite: testSuites)
-        testSuite.run();
+        if (suiteName.empty() || str_equal_ignore_case(testSuite.suiteName, suiteName))
+            testSuite.run(testName);
 
     unsigned int passed = 0;
     unsigned int failed = 0;
