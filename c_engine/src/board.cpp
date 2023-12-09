@@ -58,6 +58,7 @@ Square *Board::get_square(std::string name) {
 }
 
 Piece *Board::place_piece(PieceType kind, Color color, std::string squareName) {
+
     auto sqr = get_square(squareName);
     ASSERT(sqr != nullptr, "invalid square name");
     ASSERT(sqr->is_free(), squareName + " square is not free");
@@ -249,8 +250,8 @@ void Board::load_fen(std::string fen) {
     for (auto piece : _blackPieces)
         piece->recalculate();
 
-    _legalMoves.clear();
-    _legalMoves.push_back(calc_all_legal_moves());
+    // _legalMoves.clear();
+    // _legalMoves.push_back(calc_all_legal_moves());
 }
 
 bool Board::is_in_check(Color color) {
@@ -309,7 +310,7 @@ std::map<Piece *, Direction> Board::calc_pinned_pieces(Color color){
         ASSERT(secondSquare != nullptr && secondSquare->get_piece(), "the potential pinner not found"); 
 
         if (secondSquare->get_piece() == piece)
-            pinnedPieces[piece] = direction;
+            pinnedPieces[firstSquare->get_piece()] = direction;
     }
 
     return pinnedPieces;

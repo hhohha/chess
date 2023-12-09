@@ -165,7 +165,25 @@ std::vector<Move *> Pawn::generate_pawn_moves(Square *targetSqr) {
 
 
 void Pawn::recalculate() {
-    //throw std::runtime_error("not implemented");
+    // pawn doesn't store potential moves, only attacked squares (possible todo)
+
+    for (auto sqr : _attackedSquares) {
+        auto vec = &sqr->get_attacked_by(_color);
+        vec->erase(std::remove(vec->begin(), vec->end(), this), vec->end());
+    }
+    _attackedSquares.clear();
+
+    if (_square->get_col() == 0)
+        _attackedSquares.push_back(_square->get_board()->get_square(1, _square->get_row() + _moveOffset));
+    else if (_square->get_col() == 7)
+        _attackedSquares.push_back(_square->get_board()->get_square(6, _square->get_row() + _moveOffset));
+    else {
+        _attackedSquares.push_back(_square->get_board()->get_square(_square->get_col() - 1, _square->get_row() + _moveOffset));
+        _attackedSquares.push_back(_square->get_board()->get_square(_square->get_col() + 1, _square->get_row() + _moveOffset));
+    }
+
+    for (auto sqr : _attackedSquares)
+        sqr->get_attacked_by(_color).push_back(this);
 }
 
 std::vector<Move *> Pawn::calc_potential_moves_pinned(Direction directionFromKingToPinner) {
