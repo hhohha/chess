@@ -264,12 +264,65 @@ std::vector<Move *> Board::calc_all_legal_moves_no_check(){
     auto pinnedPieces = calc_pinned_pieces(_turn);
 
     for (auto piece : get_pieces(_turn)) {
-
+        if (pinnedPieces.find(piece) != pinnedPieces.end()) {
+            auto moves = piece->calc_potential_moves_pinned(pinnedPieces[piece]);
+            legalMoves.insert(legalMoves.end(), moves.begin(), moves.end());
+        } else if (piece->_kind == PieceType::KING) {
+            auto moves = dynamic_cast<King *>(piece)->calc_moves_avoiding_check();
+            legalMoves.insert(legalMoves.end(), moves.begin(), moves.end());
+        } else {
+            auto moves = piece->get_potential_moves();
+            legalMoves.insert(legalMoves.end(), moves.begin(), moves.end());
+        }
     }
+
+    return legalMoves;
+}
+
+std::vector<Move *> Board::get_legal_moves_check_move_king(){
+
+    King *king = get_king(_turn);
+    auto attackers = king->_square->get_attacked_by(invert_color(_turn));
+
+    std::vector<Square *> inaccessableSquares;
+    for (auto piece : attackers) {
+        if (piece->_isSliding) {
+            auto direction = get_direction(piece->_square, king->_square);
+            Coordinate c(king->_square->get_coordinate());
+            move_in_direction(c, direction);
+            auto sqr = get_square(c);
+            if (sqr != nullptr)
+                inaccessableSquares.push_back(sqr);
+        }
+    }
+    return king->calc_moves_avoiding_check(&inaccessableSquares);
+}
+
+std::vector<Move *> Board::get_legal_moves_check_captures(){
 
 }
 
+std::vector<Move *> Board::get_legal_moves_check_blocks(){
+
+}
+
+
 std::vector<Move *> Board::calc_all_legal_moves_check(){
+
+    std::vector<Move *> legalMoves = get_legal_moves_check_move_king();
+    
+    King *king = get_king(_turn);
+    ASSERT(king != nullptr, "king is in check but no king found");
+
+    auto attackers = king->_square->get_attacked_by(invert_color(_turn));
+
+    if (attackers.size() == 1) {
+        auto pinnedPieces = calc_pinned_pieces(_turn);
+
+        auto attacker = attackers[0];
+
+        
+    }
 
 }
 

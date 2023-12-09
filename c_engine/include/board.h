@@ -65,5 +65,10 @@ private:
     std::vector<Move *> calc_all_legal_moves_no_check();
     std::map<Piece *, Direction> calc_pinned_pieces(Color color);
 
+    std::vector<Move *> get_legal_moves_check_move_king();
+    std::vector<Move *> get_legal_moves_check_captures();
+    std::vector<Move *> get_legal_moves_check_blocks();
+
+
     Square _squares[64];
 };

@@ -546,7 +546,6 @@ class Board:
         :return: list of legal moves
         """
         color = self.turn
-        pinnedPieces = self.calc_pinned_pieces(color)
         legalMoves = self._get_legal_moves_check_move_king()
 
         king = self.get_king(color)
@@ -555,6 +554,7 @@ class Board:
         attackers = king.square.get_attacked_by(color.invert())
 
         if len(attackers) == 1:
+            pinnedPieces = self.calc_pinned_pieces(color)
             # not double-check - can also capture the attacker or block it if it's a sliding piece
             attacker = attackers.pop()  # there is no convenient way of getting the only element from a set without removing it
             attackers.add(attacker)

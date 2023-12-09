@@ -3,6 +3,7 @@
 #include "move.h"
 #include "square.h"
 #include "board.h"
+#include "utils.h"
 
 King::King(Color color, Square *square)
     : Piece(PieceType::KING, color, square) {
@@ -10,6 +11,18 @@ King::King(Color color, Square *square)
     _isSliding = false;
     _isLight = false;
     _name = "K";
+}
+
+std::vector<Move *> King::calc_moves_avoiding_check(std::vector<Square *> *inaccessableSquares){
+    std::vector<Move *> moves;
+    for (auto move : _potentialMoves) {
+        if (move->get_to_sqr()->is_attacked_by(invert_color(_color)))
+            continue;
+        if (inaccessableSquares != nullptr && std::find(inaccessableSquares->begin(), inaccessableSquares->end(), move->get_to_sqr()) != inaccessableSquares->end())
+            continue;
+        moves.push_back(move);
+    }
+    return moves;
 }
 
 void King::recalculate() {
