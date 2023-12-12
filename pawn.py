@@ -115,7 +115,7 @@ class Pawn (Piece):
                 potentialMoves.append(Move(self, self.square.board.get_square_by_coords(enPassant.colIdx, enPassant.rowIdx + self.MOVE_OFFSET),
                                            isEnPassant=True))
 
-        else: # direction is LEFT_UP or RIGHT_DOWN
+        else: # direction is UP_LEFT or DOWN_RIGHT
             # capture in the other direction is analogous to the previous case
             potentialMoves += self.get_capture_moves(-self.MOVE_OFFSET)
             enPassant = self.square.board.enPassantPawnSquare[-1]

@@ -23,6 +23,9 @@ public:
     Square *get_from_sqr() const {return _fromSqr;}
     Square *get_to_sqr() const {return _toSqr;}
     Piece *get_piece_taken() const {return _pieceTaken;}
+
+    void set_piece_taken(Piece *pieceTaken) {_pieceTaken = pieceTaken;}
+
     std::optional<PieceType> get_new_piece() const {return _newPiece;}
 
     void mark_as_en_passant() {_isEnPassant = true;}

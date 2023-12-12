@@ -18,7 +18,7 @@ public:
 
     std::string str() const {return _name + _square->str();}
 
-    std::vector<Move *> get_potential_moves() const {return _potentialMoves;}
+    virtual std::vector<Move *> get_potential_moves() {return _potentialMoves;}
 
     virtual void recalculate() = 0;
     virtual std::vector<Move *> calc_potential_moves_pinned(Direction directionFromKingToPinner) = 0;

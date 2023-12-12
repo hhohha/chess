@@ -91,7 +91,77 @@ TestSuite create_test_suite_board() {
         assertTrue(pinnedWhites.find(b.get_square("e5")->get_piece()) != pinnedWhites.end(), "e5  pawn should be pinned");
     });
 
+    testSuite.addTest("Get legal moves 1", []() {
+        Board b;
+        b.load_fen(FEN_INIT);
+        auto moves = b.calc_all_legal_moves();
 
+        assertEqual(20U, moves.size());
+    });
+
+    testSuite.addTest("Get legal moves 2", []() {
+        Board b;
+        b.load_fen(FEN_TEST_A);
+        auto moves = b.calc_all_legal_moves();
+
+        assertEqual(3U, moves.size());
+    });
+
+    testSuite.addTest("Get legal moves 3", []() {
+        Board b;
+        b.load_fen(FEN_TEST_B);
+        auto moves = b.calc_all_legal_moves();
+
+        assertEqual(44U, moves.size());
+    });
+
+    testSuite.addTest("Get legal moves 4", []() {
+        Board b;
+        b.load_fen(FEN_TEST_C);
+        auto moves = b.calc_all_legal_moves();
+
+        assertEqual(14U, moves.size());
+    });
+
+    testSuite.addTest("Get legal moves 5", []() {
+        Board b;
+        b.load_fen(FEN_TEST_D);
+        auto moves = b.calc_all_legal_moves();
+
+        assertEqual(6U, moves.size());
+    });
+
+    testSuite.addTest("Get legal moves 6", []() {
+        Board b;
+        b.load_fen(FEN_TEST_D_INVERTED);
+        auto moves = b.calc_all_legal_moves();
+
+        assertEqual(6U, moves.size());
+    });
+
+    testSuite.addTest("Get legal moves 7", []() {
+        Board b;
+        b.load_fen(FEN_TEST_E);
+        auto moves = b.calc_all_legal_moves();
+
+        assertEqual(48U, moves.size());
+    });
+
+    testSuite.addTest("Get legal moves 8", []() {
+        Board b;
+        b.load_fen(FEN_TEST_E_NO_CASTLE);
+        auto moves = b.calc_all_legal_moves();
+
+        assertEqual(46U, moves.size());
+    });
+
+    testSuite.addTest("Get legal moves 9", []() {
+        Board b;
+        b.load_fen(FEN_TEST_F);
+        auto moves = b.calc_all_legal_moves();
+
+        assertEqual(46U, moves.size());
+    });
 
     return testSuite;
 }   

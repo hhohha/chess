@@ -187,7 +187,41 @@ void Pawn::recalculate() {
 }
 
 std::vector<Move *> Pawn::calc_potential_moves_pinned(Direction directionFromKingToPinner) {
-    throw std::runtime_error("not implemented");
+    // the piece is pinned in the given direction, it can potentially still move in the pin and the opposite direction
+
+    if (directionFromKingToPinner == Direction::RIGHT || directionFromKingToPinner == Direction::LEFT)
+        // a pawn pinned from side can never move
+        return {};
+
+    if (directionFromKingToPinner == Direction::UP || directionFromKingToPinner == Direction::DOWN)
+        // a pawn pinned from front or back can only move forward
+        return get_forward_moves();
+
+    auto enPassantSqr = _square->get_board()->_enPassantPawnSquare;
+    if (directionFromKingToPinner == Direction::UP_RIGHT || directionFromKingToPinner == Direction::DOWN_LEFT) {
+        // pawn pinned diagonally can possibly capture in the pin direction
+        std::vector<Move *> moves = get_capture_moves(_moveOffset);
+
+        // a diagonally pinned pawn can even capture en passant, en passant pin special pin is impossible in this case
+        // as the pawn is already pinned
+        if (enPassantSqr != nullptr && _square->get_row() == _enPassantRow && enPassantSqr->get_idx() - _square->get_idx() == _moveOffset) {
+            moves.push_back(new Move(this, _square->get_board()->get_square(enPassantSqr->get_col(), _square->get_row() + _moveOffset)));
+            moves.back()->mark_as_en_passant();
+        }
+
+        return moves;
+    }
+
+    // directionFromKingToPinner == Direction::UP_LEFT || directionFromKingToPinner == Direction::DOWN_RIGHT
+    // capture in the other direction is analogous to the previous case
+    std::vector<Move *> moves = get_capture_moves(-_moveOffset);
+
+    if (enPassantSqr != nullptr && _square->get_row() == _enPassantRow && _square->get_idx() - enPassantSqr->get_idx() == _moveOffset) {
+        moves.push_back(new Move(this, _square->get_board()->get_square(enPassantSqr->get_col(), _square->get_row() + _moveOffset)));
+        moves.back()->mark_as_en_passant();
+    }
+
+    return moves;
 }
 
 std::vector<Move *> Pawn::get_legal_moves() {

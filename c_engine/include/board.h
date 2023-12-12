@@ -40,6 +40,11 @@ public:
 
     void load_fen(std::string fen);
 
+    bool is_castle_possible(Color color, Direction dir);
+
+    void perform_move(Move *move);
+
+    void remove_captured_piece(Piece *piece);
 //private:
     std::vector<Move> _history;
 
@@ -62,6 +67,10 @@ public:
 
 private:
     std::vector<Square *> get_squares_in_dir(Square *sqr, Direction dir);
+    std::tuple<int, int> get_castle_rook_squares(Move *move);
+    void update_en_passant_history(Move *move);
+    void promote_pawn(Piece *pawn, PieceType kind);
+    void recalculation(Move *move);
 
     std::vector<Move *> calc_all_legal_moves_check();
     std::vector<Move *> calc_all_legal_moves_no_check();

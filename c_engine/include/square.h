@@ -34,6 +34,8 @@ public:
     int get_col() {return _coordinate.col;}
     int get_row() {return _coordinate.row;}
 
+    int get_idx() {return _idx;}
+
     friend class Piece;
     friend class Board;
 
