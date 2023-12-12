@@ -254,6 +254,21 @@ void Board::load_fen(std::string fen) {
     // _legalMoves.push_back(calc_all_legal_moves());
 }
 
+std::vector<Square *> Board::get_squares_in_dir(Square *sqr, Direction dir){
+    // Get all empty squares in the given direction from the given square
+
+    std::vector<Square *> squares;
+    Coordinate c(sqr->get_coordinate());
+
+    while (true) {
+        move_in_direction(c, dir);
+        auto sqr = get_square(c);
+        if (sqr == nullptr || !sqr->is_free())
+            return squares;
+        squares.push_back(sqr);
+    }    
+}
+
 bool Board::is_in_check(Color color) {
     auto king = get_king(color);
     return king != nullptr && king->_square->is_attacked_by(invert_color(color));
@@ -279,7 +294,7 @@ std::vector<Move *> Board::calc_all_legal_moves_no_check(){
     return legalMoves;
 }
 
-std::vector<Move *> Board::get_legal_moves_check_move_king(){
+std::vector<Move *> Board::calc_legal_moves_check_move_king(){
 
     King *king = get_king(_turn);
     auto attackers = king->_square->get_attacked_by(invert_color(_turn));
@@ -298,18 +313,88 @@ std::vector<Move *> Board::get_legal_moves_check_move_king(){
     return king->calc_moves_avoiding_check(&inaccessableSquares);
 }
 
-std::vector<Move *> Board::get_legal_moves_check_captures(){
+std::vector<Move *> Board::calc_legal_moves_check_captures(Piece *attacker, std::map<Piece *, Direction> &pinnedPieces){
+    // Get all legal capture moves of the current player provided that the king is in check (captures of the attacker)
 
+    std::vector<Move *> legalMoves;
+
+    for (auto piece : attacker->get_square()->get_attacked_by(_turn)) {
+        // a pinned piece cannot capture the attacker
+        if (pinnedPieces.find(piece) != pinnedPieces.end())
+            continue;
+
+        if (piece->_kind == PieceType::PAWN) {
+            auto moves = dynamic_cast<Pawn *>(piece)->generate_pawn_moves(attacker->_square);
+            legalMoves.insert(legalMoves.end(), moves.begin(), moves.end());
+        } else if (piece->_kind != PieceType::KING)
+            legalMoves.push_back(new Move(piece, attacker->_square));
+    }
+
+    // the attacker can also be captured en passant
+    if (_enPassantPawnSquare != nullptr && attacker->_square == _enPassantPawnSquare) {
+        ASSERT(attacker->_kind == PieceType::PAWN, "en passant capture by non-pawn");
+
+        for (int offset : {-1, 1}) {
+            auto potentialPawnSqr = get_square(_enPassantPawnSquare->get_col() + offset, _enPassantPawnSquare->get_row());
+            if (potentialPawnSqr != nullptr && potentialPawnSqr->get_piece() != nullptr &&
+                potentialPawnSqr->get_piece()->_kind == PieceType::PAWN && potentialPawnSqr->get_piece()->_color == _turn) {
+
+                legalMoves.push_back(new Move(potentialPawnSqr->get_piece(), get_square(attacker->_square->get_col(),
+                    attacker->_square->get_row() + (attacker->_color == Color::WHITE ? 1 : -1))));
+            }
+        }
+    }
+
+    return legalMoves;
 }
 
-std::vector<Move *> Board::get_legal_moves_check_blocks(){
+std::vector<Move *> Board::calc_legal_moves_check_blocks(Piece *attacker, std::map<Piece *, Direction> &pinnedPieces){
+    // Get all legal blocking moves of the current player provided that the king is in check
 
+    std::vector<Move *> legalMoves;
+
+    auto king = get_king(_turn);
+    ASSERT(king != nullptr, "king is in check but no king found");
+
+    auto direction = get_direction(king->_square, attacker->_square);
+
+    // look at all the squares between the king and the attacker - what pieces can access them?
+    for (auto blockingSquare : get_squares_in_dir(king->_square, direction)) {
+        for (auto piece : blockingSquare->get_attacked_by(_turn)) {
+            // a pinned piece cannot block the attacker, king cannot block, pawn cannot block to a place it is attacking (diagonally)
+            if (piece->_kind != PieceType::PAWN && piece->_kind != PieceType::KING && pinnedPieces.find(piece) != pinnedPieces.end())
+                continue;
+
+            // look one square in the direction of attackers pawns, if there is a defending pawn, it can block the attack
+            // consider potential promotion as well
+            auto potentialPawnSqr = get_square(blockingSquare->get_col(), blockingSquare->get_row() + (attacker->_color == Color::WHITE ? 1 : -1));
+            if(potentialPawnSqr != nullptr && potentialPawnSqr->get_piece() != nullptr && potentialPawnSqr->get_piece()->_kind == PieceType::PAWN &&
+                potentialPawnSqr->get_piece()->_color == _turn) {
+                // look for possible block by pawn stepping one squares forward
+
+                auto moves = dynamic_cast<Pawn *>(potentialPawnSqr->get_piece())->generate_pawn_moves(blockingSquare);
+                legalMoves.insert(legalMoves.end(), moves.begin(), moves.end());
+            } else if (blockingSquare->get_row() == (attacker->_color == Color::WHITE ? 4 : 3)) {
+                // look for possible block by pawn stepping two squares forward
+
+                potentialPawnSqr = get_square(blockingSquare->get_col(), blockingSquare->get_row() + (attacker->_color == Color::WHITE ? 2 : -2));
+                if (potentialPawnSqr->get_piece() != nullptr && potentialPawnSqr->get_piece()->_kind == PieceType::PAWN &&
+                    potentialPawnSqr->get_piece()->_color == _turn && get_square(blockingSquare->get_col(), blockingSquare->get_row() + (attacker->_color == Color::WHITE ? 1 : -1))->is_free()) {
+
+                    legalMoves.push_back(new Move(potentialPawnSqr->get_piece(), blockingSquare)); // cannot be promotion
+                }
+            }    
+            // NOTE: en passant capture can never block a check   
+        }
+    }
+
+    return legalMoves;
 }
 
 
 std::vector<Move *> Board::calc_all_legal_moves_check(){
 
-    std::vector<Move *> legalMoves = get_legal_moves_check_move_king();
+    std::vector<Move *> legalMoves = calc_legal_moves_check_move_king();
     
     King *king = get_king(_turn);
     ASSERT(king != nullptr, "king is in check but no king found");
@@ -320,10 +405,16 @@ std::vector<Move *> Board::calc_all_legal_moves_check(){
         auto pinnedPieces = calc_pinned_pieces(_turn);
 
         auto attacker = attackers[0];
+        auto moves = calc_legal_moves_check_captures(attacker, pinnedPieces);
+        legalMoves.insert(legalMoves.end(), moves.begin(), moves.end());
 
-        
+        if (attacker->_isSliding) {
+            auto moves = calc_legal_moves_check_blocks(attacker, pinnedPieces);
+            legalMoves.insert(legalMoves.end(), moves.begin(), moves.end());
+        }
     }
 
+    return legalMoves;
 }
 
 std::map<Piece *, Direction> Board::calc_pinned_pieces(Color color){

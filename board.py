@@ -589,10 +589,8 @@ class Board:
         return king.calc_moves_avoiding_check(inaccessibleSquares)
 
     def _get_legal_moves_check_captures(self, attacker: Piece, pinnedPieces: Dict[Piece, Direction]) -> List[Move]:
-        """
-        Get all legal capture moves of the current player provided that the king is in check (captures of the attacker)
-        :return: list of legal moves
-        """
+        """Get all legal capture moves of the current player provided that the king is in check (captures of the attacker)"""
+
         color = self.turn
         legalMoves: List[Move] = []
 
@@ -620,10 +618,8 @@ class Board:
         return legalMoves
 
     def _get_legal_moves_check_blocks(self, attacker: Piece, pinnedPieces: Dict[Piece, Direction]) -> List[Move]:
-        """
-        Get all legal blocking moves of the current player provided that the king is in check
-        :return: list of legal moves
-        """
+        """Get all legal blocking moves of the current player provided that the king is in check"""
+
         color = self.turn
         legalMoves: List[Move] = []
         king = self.get_king(color)
@@ -639,11 +635,12 @@ class Board:
 
             # look one square in the direction of attackers pawns, if there is a defending pawn, it can block the attack
             # consider potential promotion as well
-            potentialPawnSqr = self.get_square_by_coords_opt(blockingSquare.colIdx, blockingSquare.rowIdx + (-1 if color == Color.WHITE else 1))
+            potentialPawnSqr = self.get_square_by_coords_opt(blockingSquare.colIdx, blockingSquare.rowIdx + (1 if color == Color.WHITE else -1))
             if potentialPawnSqr is not None and isinstance(potentialPawnSqr.piece, Pawn) and potentialPawnSqr.piece.color == color:
                 legalMoves += potentialPawnSqr.piece.generate_pawn_move(blockingSquare)
 
             # on row 3 (4 for black) look two squares in the direction of attackers pawns, if there is a defending pawn, it can block the attack
+            # TODO - this logic is probably wrong
             if potentialPawnSqr is not None and potentialPawnSqr.piece is None and (blockingSquare.rowIdx == 3 and color == Color.WHITE) or (blockingSquare.rowIdx == 4 and color == Color.BLACK):
                 potentialPawnSqr = self.get_square_by_coords_opt(blockingSquare.colIdx, blockingSquare.rowIdx + (-2 if color == Color.WHITE else 2))
                 if potentialPawnSqr is not None and isinstance(potentialPawnSqr.piece, Pawn) and potentialPawnSqr.piece.color == color:
@@ -655,13 +652,13 @@ class Board:
     def get_squares_in_dir(self, square: Square, direction: Direction) -> List[Square]:
         """Get all empty squares in the given direction from the given square"""
         squares: List[Square] = []
-        colIdx, rowIdx = move_in_direction(square.colIdx, square.rowIdx, direction)
         while True:
+            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, direction)
             sqr = self.get_square_by_coords_opt(colIdx, rowIdx)
             if sqr is None or not sqr.is_free():
                 return squares
             squares.append(sqr)
-            colIdx, rowIdx = move_in_direction(colIdx, rowIdx, direction)
+
 
     def find_first_occupied_square_in_dir(self, square: Square, direction: Direction) -> Optional[Square]:
         """Find the square with first piece in the given direction from the given square"""

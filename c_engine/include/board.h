@@ -44,7 +44,7 @@ public:
     std::vector<Move> _history;
 
     Color _turn = Color::WHITE;
-    Square *_enPassantPawnSquare = nullptr;  //
+    Square *_enPassantPawnSquare = nullptr;  // this will need to be a vector to keep track of history
     std::vector<unsigned int> _halfMoves = {0};
     unsigned int _fullMoves = 1;
     
@@ -61,13 +61,15 @@ public:
     std::vector<std::vector<Move *>> _legalMoves;
 
 private:
+    std::vector<Square *> get_squares_in_dir(Square *sqr, Direction dir);
+
     std::vector<Move *> calc_all_legal_moves_check();
     std::vector<Move *> calc_all_legal_moves_no_check();
     std::map<Piece *, Direction> calc_pinned_pieces(Color color);
 
-    std::vector<Move *> get_legal_moves_check_move_king();
-    std::vector<Move *> get_legal_moves_check_captures();
-    std::vector<Move *> get_legal_moves_check_blocks();
+    std::vector<Move *> calc_legal_moves_check_move_king();
+    std::vector<Move *> calc_legal_moves_check_captures(Piece *attacker, std::map<Piece *, Direction> &pinnedPieces);
+    std::vector<Move *> calc_legal_moves_check_blocks(Piece *attacker, std::map<Piece *, Direction> &pinnedPieces);
 
 
     Square _squares[64];
