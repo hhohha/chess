@@ -1,5 +1,7 @@
 #include <optional>
 #include <regex>
+#include <set>
+
 
 #include "bishop.h"
 #include "board.h"
@@ -59,10 +61,16 @@ Square *Board::get_square(std::string name) {
 }
 
 Piece *Board::place_piece(PieceType kind, Color color, std::string squareName) {
+    return place_piece(kind, color, get_square(squareName));
+}
 
-    auto sqr = get_square(squareName);
+Piece *Board::place_piece(PieceType kind, Color color, int squareIdx) {
+    return place_piece(kind, color, get_square(squareIdx));
+}
+
+Piece *Board::place_piece(PieceType kind, Color color, Square *sqr) {
+    ASSERT(sqr->is_free(), sqr->_name + " square is not free");
     ASSERT(sqr != nullptr, "invalid square name");
-    ASSERT(sqr->is_free(), squareName + " square is not free");
     
     Piece *piece;
     switch (kind) {
@@ -112,6 +120,17 @@ Piece *Board::place_piece(PieceType kind, Color color, std::string squareName) {
     return piece;
 }
 
+Square * Board::get_en_passant_pawn_square(){
+    ASSERT(_enPassantPawnSquareHistory.size() > 0, "en passant pawn square history is empty");
+    return _enPassantPawnSquareHistory.back();
+}
+
+void Board::update_en_passant_pawn_square(Square *sqr){
+    ASSERT(_enPassantPawnSquareHistory.size() > 0, "en passant pawn square history is empty");
+    //_enPassantPawnSquareHistory.pop_back();
+    //_enPassantPawnSquareHistory.push_back(sqr);
+    _enPassantPawnSquareHistory.back() = sqr;
+}
 
 // void Board::remove_piece(Piece *piece) {
 //     ASSERT(piece != nullptr, "piece is null");
@@ -214,7 +233,7 @@ void Board::load_fen(std::string fen) {
         else if (c == 'q') kind = PieceType::QUEEN;
         else kind = PieceType::KING; // c == 'k'
 
-        place_piece(kind, color, get_square(coord)->get_name());
+        place_piece(kind, color, get_square(coord));
         coord.col++;
     }
 
@@ -239,7 +258,7 @@ void Board::load_fen(std::string fen) {
     if (enPassantSqr != "-") {
         // we need the square of the pawn, not the square behind it
         Coordinate coord(enPassantSqr[0] - 'a' + (_turn == Color::WHITE ? 1 : -1), enPassantSqr[1] - '1');
-        _enPassantPawnSquare = get_square(coord);
+        update_en_passant_pawn_square(get_square(coord));
     }
 
     _halfMoves.clear();
@@ -404,11 +423,12 @@ std::vector<Move *> Board::calc_legal_moves_check_captures(Piece *attacker, std:
     }
 
     // the attacker can also be captured en passant
-    if (_enPassantPawnSquare != nullptr && attacker->_square == _enPassantPawnSquare) {
+    auto enPassantPawnSquare = get_en_passant_pawn_square();
+    if (enPassantPawnSquare != nullptr && attacker->_square == enPassantPawnSquare) {
         ASSERT(attacker->_kind == PieceType::PAWN, "en passant capture by non-pawn");
 
         for (int offset : {-1, 1}) {
-            auto potentialPawnSqr = get_square(_enPassantPawnSquare->get_col() + offset, _enPassantPawnSquare->get_row());
+            auto potentialPawnSqr = get_square(enPassantPawnSquare->get_col() + offset, enPassantPawnSquare->get_row());
             if (potentialPawnSqr != nullptr && potentialPawnSqr->get_piece() != nullptr &&
                 potentialPawnSqr->get_piece()->_kind == PieceType::PAWN && potentialPawnSqr->get_piece()->_color == _turn) {
 
@@ -562,13 +582,14 @@ void Board::perform_move(Move *move) {
     // if capturing a piece, store the reference in the move and remove it ...
     if (toSqr->get_piece() != nullptr) {
         move->set_piece_taken(toSqr->get_piece());
-        remove_captured_piece(toSqr->get_piece());
+        remove_piece(toSqr->get_piece());
     }
 
     //... and the same for en passant capture
     if (move->is_en_passant()) {
-        move->set_piece_taken(_enPassantPawnSquare->get_piece());
-        remove_captured_piece(_enPassantPawnSquare->get_piece());
+        auto enPassantPawn = get_en_passant_pawn_square()->get_piece();
+        move->set_piece_taken(enPassantPawn);
+        remove_piece(enPassantPawn);
         move->get_piece_taken()->_square = nullptr;
     }
 
@@ -607,24 +628,108 @@ void Board::perform_move(Move *move) {
     _legalMoves.push_back(calc_all_legal_moves());
 }
 
+void Board::undo_move() {
+    ASSERT(_history.size() > 0, "no moves to undo");
+
+    auto move = _history.back();
+    _history.pop_back();
+
+    auto fromSqr = move.get_from_sqr();
+    auto toSqr = move.get_to_sqr();
+    auto movingPiece = move.get_piece();
+
+    if (move.get_piece_taken() != nullptr) {
+        if (move.is_en_passant())  {
+            // restore the piece taken en passant
+            // it's column is the same as the takers destination square, it's row as the taker's starting square
+        } else {
+
+        }
+    } else {
+
+    }
+
+
+
+}
+
 void Board::recalculation(Move *move) {
-    // TODO
+    // recalculates which squares are attacked by which pieces after a move
+    // not all pieces must be recalculated, only those that are affected by the move
+    //     1. the moving piece
+    //     2. the piece being taken
+    //     3. the pieces that were previously blocked by the moving piece
+    //     4. the pieces that are now blocked by the moving piece
+    //     5. if the move is castling, the rook and the pieces now blocked by the rook (before the rook couldn't block anyone, it was in the corner)
+    //     6. if the move is en passant, the pieces previously blocked by the captured pawn
+
+    auto piecesToRecalculate = std::set<Piece *>();
+
+    piecesToRecalculate.insert(move->get_piece());
+    for (auto piece : move->get_from_sqr()->get_attacked_by(Color::WHITE))
+        piecesToRecalculate.insert(piece);
+    for (auto piece : move->get_from_sqr()->get_attacked_by(Color::BLACK))
+        piecesToRecalculate.insert(piece);
+    for (auto piece : move->get_to_sqr()->get_attacked_by(Color::WHITE))
+        piecesToRecalculate.insert(piece);
+    for (auto piece : move->get_to_sqr()->get_attacked_by(Color::BLACK))
+        piecesToRecalculate.insert(piece);
+
+    if (move->get_piece_taken() != nullptr && move->get_piece_taken()->_isActive)
+        piecesToRecalculate.insert(move->get_piece_taken());
+
+    if (move->is_castling()){
+        auto rookTo = get<1>(get_castle_rook_squares(move));
+        auto rookToSqr = get_square(rookTo);
+        piecesToRecalculate.insert(rookToSqr->get_piece());
+        for (auto piece : rookToSqr->get_attacked_by(Color::WHITE))
+            piecesToRecalculate.insert(piece);
+        for (auto piece : rookToSqr->get_attacked_by(Color::BLACK))
+            piecesToRecalculate.insert(piece);
+    }
+
+    if (move->is_en_passant()) {
+        ASSERT(move->get_piece_taken() != nullptr, "en passant capture without piece taken");
+        for (auto piece : move->get_piece_taken()->_square->get_attacked_by(Color::WHITE))
+            piecesToRecalculate.insert(piece);
+        for (auto piece : move->get_piece_taken()->_square->get_attacked_by(Color::BLACK))
+            piecesToRecalculate.insert(piece);
+    }
+
+    for (auto piece : piecesToRecalculate)
+        piece->recalculate();
+
 }
 
-void Board::promote_pawn(Piece *pawn, PieceType neKind) {
-    // TODO
+void Board::promote_pawn(Piece *pawn, PieceType newKind) {
+    remove_piece(pawn);
+    place_piece(newKind, pawn->_color, pawn->_square);
 }
 
-void Board::remove_captured_piece(Piece *piece) {
-    // TODO
+
+void Board::remove_piece(Piece *piece) {
+    // used when piece is captured, also removes pawn that is being promoted
+    piece->_square->_piece = nullptr;
+    piece->_square = nullptr;
+    piece->_isActive = false;
+
+    if (piece->_color == Color::WHITE){
+        _whitePieces.erase(std::remove(_whitePieces.begin(), _whitePieces.end(), piece), _whitePieces.end());
+        if (piece->_isSliding)
+            _whiteSlidingPieces.erase(std::remove(_whiteSlidingPieces.begin(), _whiteSlidingPieces.end(), piece), _whiteSlidingPieces.end());
+    } else {
+        _blackPieces.erase(std::remove(_blackPieces.begin(), _blackPieces.end(), piece), _blackPieces.end());    
+        if (piece->_isSliding)
+            _blackSlidingPieces.erase(std::remove(_blackSlidingPieces.begin(), _blackSlidingPieces.end(), piece), _blackSlidingPieces.end());
+    }
 }
 
 void Board::update_en_passant_history(Move *move) {
     // if the current move is a 2 square pawn move, remember that it can be taken e.p.
     if (move->get_piece()->_kind == PieceType::PAWN && abs(move->get_from_sqr()->get_row() - move->get_to_sqr()->get_row()) == 2)
-        _enPassantPawnSquare = move->get_to_sqr();
+        _enPassantPawnSquareHistory.push_back(move->get_to_sqr());
     else
-        _enPassantPawnSquare = nullptr;
+        _enPassantPawnSquareHistory.push_back(nullptr);
 }
 
 std::tuple<int, int> Board::get_castle_rook_squares(Move *move) {

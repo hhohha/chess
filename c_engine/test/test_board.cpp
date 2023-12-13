@@ -163,5 +163,19 @@ TestSuite create_test_suite_board() {
         assertEqual(46U, moves.size());
     });
 
+    testSuite.addTest("Perform move", []() {
+        Board b;
+        b.load_fen(FEN_TEST_A);
+        
+        auto whiteKing = b.get_square("h1")->get_piece();
+        auto destSquare = b.get_square("h2");
+        auto move = new Move(whiteKing, destSquare);
+        b.perform_move(move);
+
+        assertEqual(destSquare, move->get_to_sqr());
+        assertEqual(whiteKing->_square, move->get_to_sqr());
+        assertEqual(move->get_from_sqr(), b.get_square("h1"));
+    });
+
     return testSuite;
 }   

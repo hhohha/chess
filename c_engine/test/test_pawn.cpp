@@ -97,7 +97,7 @@ TestSuite create_test_suite_pawn() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "e5"));
         b.place_piece(PieceType::PAWN, Color::BLACK, "d5");
-        b._enPassantPawnSquare = b.get_square("d5");
+        b.update_en_passant_pawn_square(b.get_square("d5"));
 
         auto moves = pawn->get_potential_moves();
 
@@ -113,7 +113,7 @@ TestSuite create_test_suite_pawn() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "e5"));
         b.place_piece(PieceType::PAWN, Color::BLACK, "d5");
-        b._enPassantPawnSquare = b.get_square("d5");
+        b.update_en_passant_pawn_square(b.get_square("d5"));
         b.place_piece(PieceType::ROOK, Color::BLACK, "b5");
         b.place_piece(PieceType::KING, Color::WHITE, "h5");
         b.place_piece(PieceType::PAWN, Color::BLACK, "f6");

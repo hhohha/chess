@@ -26,6 +26,8 @@ public:
     std::vector<Move *> *get_current_legal_moves();
 
     Piece *place_piece(PieceType kind, Color color, std::string squareName);
+    Piece *place_piece(PieceType kind, Color color, int squareIdx);
+    Piece *place_piece(PieceType kind, Color color, Square *sqr);
 
     // void remove_piece(Piece *piece);
 
@@ -43,13 +45,17 @@ public:
     bool is_castle_possible(Color color, Direction dir);
 
     void perform_move(Move *move);
+    void undo_move();
 
-    void remove_captured_piece(Piece *piece);
+    void remove_piece(Piece *piece);
 //private:
     std::vector<Move> _history;
 
+    Square * get_en_passant_pawn_square();
+    void update_en_passant_pawn_square(Square *sqr);
+
     Color _turn = Color::WHITE;
-    Square *_enPassantPawnSquare = nullptr;  // this will need to be a vector to keep track of history
+    std::vector<Square *>_enPassantPawnSquareHistory = {nullptr};  // this needs to be a vector to keep track of history
     std::vector<unsigned int> _halfMoves = {0};
     unsigned int _fullMoves = 1;
     

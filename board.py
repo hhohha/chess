@@ -355,8 +355,6 @@ class Board:
             4. the pieces that are now blocked by the moving piece
             5. if the move is castling, the rook and the pieces now blocked by the rook (before the rook couldn't block anyone, it was in the corner)
             6. if the move is en passant, the pieces previously blocked by the captured pawn
-        :param move: the move being made
-        :param analysis: is this an actual move or just a move for analysis?
         """
         piecesToRecalc = ({move.piece} | {piece for piece in move.fromSqr.get_attacked_by()} | {piece for piece in move.toSqr.get_attacked_by()})
 

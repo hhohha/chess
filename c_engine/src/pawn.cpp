@@ -37,7 +37,7 @@ std::vector<Move *> Pawn::get_potential_moves() {
 Move * Pawn::get_en_passant_move() {
     // check the possibility that the pawn can take en passant
     // if en passant is possible, the enPassantSqr is the square behind the pawn
-    auto enPassantSqr = _square->get_board()->_enPassantPawnSquare;
+    auto enPassantSqr = _square->get_board()->get_en_passant_pawn_square();
     if (enPassantSqr == nullptr)
         return nullptr;
 
@@ -64,7 +64,7 @@ bool Pawn::is_en_passant_pin() {
     // still expose the king
     // e.g. white:  pe5, Kg5, black: Rb5, pd7 and black moves pd7-d5 - then "exd6 e.p."" is not possible 
 
-    auto enPassantSqr = _square->get_board()->_enPassantPawnSquare;
+    auto enPassantSqr = _square->get_board()->get_en_passant_pawn_square();
     ASSERT(enPassantSqr != nullptr, "en passant square is null");
     ASSERT(enPassantSqr->get_piece() != nullptr, "en passant square is free");
     ASSERT(enPassantSqr->get_piece()->_kind == PieceType::PAWN, "en passant square is not occupied by a pawn");
@@ -197,7 +197,7 @@ std::vector<Move *> Pawn::calc_potential_moves_pinned(Direction directionFromKin
         // a pawn pinned from front or back can only move forward
         return get_forward_moves();
 
-    auto enPassantSqr = _square->get_board()->_enPassantPawnSquare;
+    auto enPassantSqr = _square->get_board()->get_en_passant_pawn_square();
     if (directionFromKingToPinner == Direction::UP_RIGHT || directionFromKingToPinner == Direction::DOWN_LEFT) {
         // pawn pinned diagonally can possibly capture in the pin direction
         std::vector<Move *> moves = get_capture_moves(_moveOffset);
