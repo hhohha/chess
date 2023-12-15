@@ -29,7 +29,7 @@ bool Move::is_castling() const {
 }
 
 std::string Move::str() const {
-    return _piece->str() + "-" + _toSqr->str() + (is_promotion() ? piece_type_to_letter(_newPiece.value()) : "");
+    return _piece->str().substr(0, 1) + _fromSqr->str() + "-" + _toSqr->str() + (is_promotion() ? piece_type_to_letter(_newPiece.value()) : "");
 }
 
 std::ostream& operator << (std::ostream &os, const Move &move) {

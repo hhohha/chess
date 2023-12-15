@@ -11,18 +11,17 @@ class Move;
 class Piece {
 protected:
     Piece(PieceType kind, Color color, Square *square);
-    virtual ~Piece();
+    virtual ~Piece() = default;
 
 public:
     Square *get_square();
 
     std::string str() const {return _name + _square->str();}
 
-    virtual std::vector<Move *> get_potential_moves() {return _potentialMoves;}
+    virtual std::vector<Square *> get_potential_squares() {return _potentialSquares;}
 
     virtual void recalculate() = 0;
-    virtual std::vector<Move *> calc_potential_moves_pinned(Direction directionFromKingToPinner) = 0;
-    virtual std::vector<Move *> get_legal_moves() = 0;
+    virtual std::vector<Square *> calc_potential_squares_pinned(Direction directionFromKingToPinner) = 0;
 
     PieceType _kind;
     Color _color;
@@ -33,7 +32,7 @@ public:
     unsigned _movesCnt = 0;
     std::string _name;
     std::vector<Square *> _attackedSquares;
-    std::vector<Move *> _potentialMoves;
+    std::vector<Square *> _potentialSquares;
 
     friend class Square;
     friend class Board;
@@ -47,8 +46,7 @@ public:
     const std::vector<Direction> & get_sliding_directions() const {return _slidingDirections;}
 
     virtual void recalculate() override;
-    virtual std::vector<Move *> calc_potential_moves_pinned(Direction directionFromKingToPinner) override;
-    virtual std::vector<Move *> get_legal_moves() override;
+    virtual std::vector<Square *> calc_potential_squares_pinned(Direction directionFromKingToPinner) override;
 
     const std::vector<Direction> _slidingDirections;
 };

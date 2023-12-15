@@ -163,7 +163,7 @@ TestSuite create_test_suite_board() {
         assertEqual(46U, moves.size());
     });
 
-    testSuite.addTest("Perform move", []() {
+    testSuite.addTest("Perform move 1", []() {
         Board b;
         b.load_fen(FEN_TEST_A);
         
@@ -175,6 +175,65 @@ TestSuite create_test_suite_board() {
         assertEqual(destSquare, move->get_to_sqr());
         assertEqual(whiteKing->_square, move->get_to_sqr());
         assertEqual(move->get_from_sqr(), b.get_square("h1"));
+    });
+
+
+    testSuite.addTest("Perform move 2", []() {
+        Board b;
+        b.load_fen("k7/8/8/8/8/3p4/4P3/7K w - - 98 0");
+        
+        auto whiteKing = b.get_square("h1")->get_piece();
+        auto whitePawn = b.get_square("e2")->get_piece();
+        auto destSquare = b.get_square("e3");
+        auto move = new Move(whitePawn, destSquare);
+
+        std::cout << "MOVES at start:" << std::endl;
+        for (auto move : b.calc_all_legal_moves())
+            std::cout << *move << std::endl;
+
+        b.perform_move(move);
+
+        // assertEqual(b.get_square("e3"), whitePawn->_square);
+        // assertEqual(b.get_square("e3")->get_piece(), whitePawn);
+        // assertIsNull(b.get_square("e2")->get_piece());
+
+        std::cout << "\nMOVES after e3" << std::endl;
+        for (auto move : b.calc_all_legal_moves())
+            std::cout << *move << std::endl;
+
+        b.undo_move();
+        // assertEqual(b.get_square("e2"), whitePawn->_square);
+        // assertEqual(b.get_square("e2")->get_piece(), whitePawn);
+        // assertIsNull(b.get_square("e3")->get_piece());
+
+        std::cout << "\nMOVES at start again" << std::endl;
+        for (auto move : b.calc_all_legal_moves())
+            std::cout << *move << std::endl;
+
+        move = new Move(whiteKing, b.get_square("h2"));
+        b.perform_move(move);
+
+        std::cout << "\nMOVES after Kh2" << std::endl;
+        for (auto move : b.calc_all_legal_moves())
+            std::cout << *move << std::endl;
+
+        b.undo_move();
+
+        std::cout << "\nMOVES at start again" << std::endl;
+        for (auto move : b.calc_all_legal_moves())
+            std::cout << *move << std::endl;
+
+
+    });
+
+    testSuite.addTest("Move generation 1", []() {
+        Board b;
+        // b.load_fen(FEN_INIT);
+        b.load_fen("k7/8/8/8/8/3p4/4P3/7K w - - 98 0");
+        
+        int result = b.generate_successors(2);
+
+        std::cout << "result: " << result << std::endl;
     });
 
     return testSuite;

@@ -15,26 +15,26 @@
     _isLight = false;
 }
 
-std::vector<Move *> Pawn::get_potential_moves() {
-    std::vector<Move *> moves;
+std::vector<Square *> Pawn::get_potential_squares() {
+    std::vector<Square *> squares;
 
-    for (auto move : get_forward_moves()) // move forward
-        moves.push_back(move);
+    for (auto square : get_forward_squares()) // move forward
+        squares.push_back(square);
 
-    for (auto move : get_capture_moves(-1)) // capture to the left
-        moves.push_back(move);
+    for (auto square : get_capture_squares(-1)) // capture to the left
+        squares.push_back(square);
 
-    for (auto move : get_capture_moves(1)) // capture to the right
-        moves.push_back(move);
+    for (auto square : get_capture_squares(1)) // capture to the right
+        squares.push_back(square);
 
-    auto enPassantMove = get_en_passant_move(); // en passant
-    if (enPassantMove != nullptr)
-        moves.push_back(enPassantMove);
+    auto enPassantSquare = get_en_passant_square(); // en passant
+    if (enPassantSquare != nullptr)
+        squares.push_back(enPassantSquare);
 
-    return moves;
+    return squares;
 }
 
-Move * Pawn::get_en_passant_move() {
+Square * Pawn::get_en_passant_square() {
     // check the possibility that the pawn can take en passant
     // if en passant is possible, the enPassantSqr is the square behind the pawn
     auto enPassantSqr = _square->get_board()->get_en_passant_pawn_square();
@@ -52,11 +52,7 @@ Move * Pawn::get_en_passant_move() {
     if (is_en_passant_pin())
         return nullptr;
 
-    auto destSquare = _square->get_board()->get_square(enPassantSqr->get_col(), _square->get_row() + _moveOffset);
-
-    auto move = new Move(this, destSquare);
-    move->mark_as_en_passant();
-    return move;
+    return _square->get_board()->get_square(enPassantSqr->get_col(), _square->get_row() + _moveOffset);
 }
 
 bool Pawn::is_en_passant_pin() {
@@ -115,53 +111,54 @@ bool Pawn::is_en_passant_pin() {
     return true;
 }
 
-std::vector<Move *> Pawn::get_capture_moves(int colOffset) {
-    std::vector<Move *> moves;
+std::vector<Square *> Pawn::get_capture_squares(int colOffset) {
+    std::vector<Square *> squares;
 
     auto sqr = _square->get_board()->get_square(_square->get_coordinate() + Coordinate{colOffset, _moveOffset});
     if (sqr != nullptr && !sqr->is_free() && sqr->get_piece()->_color != _color)
-        for (auto move : generate_pawn_moves(sqr))
-            moves.push_back(move);
+        squares.push_back(sqr);
+        //for (auto move : generate_pawn_moves(sqr))
+        //    moves.push_back(move);
 
-    return moves;
+    return squares;
 }
 
-std::vector<Move *> Pawn::get_forward_moves() {
-    std::vector<Move *> moves;
+std::vector<Square *> Pawn::get_forward_squares() {
+    std::vector<Square *> squares;
 
     // if the square in front if the pawn is free, it can move there
     auto sqr = _square->get_board()->get_square(_square->get_coordinate() + Coordinate{0, _moveOffset});
     ASSERT(sqr != nullptr, "square in front of pawn is not valid");
     if (sqr->is_free()) {
-        for (auto move : generate_pawn_moves(sqr))
-            moves.push_back(move);
+        //for (auto square : generate_pawn_moves(sqr))
+        squares.push_back(sqr);
 
         // if the pawn is on its base row, it can move two squares forward
         if (_square->get_coordinate().row == _baseRow) {
             sqr = _square->get_board()->get_square(_square->get_coordinate() + Coordinate{0, 2 * _moveOffset});
             ASSERT(sqr != nullptr, "square two squares in front of pawn is not valid");
             if (sqr->is_free())
-                for (auto move : generate_pawn_moves(sqr))
-                    moves.push_back(move);
+                //for (auto move : generate_pawn_moves(sqr))
+                    squares.push_back(sqr);
         }      
     }
 
-    return moves;
+    return squares;
 }
 
-std::vector<Move *> Pawn::generate_pawn_moves(Square *targetSqr) {
-    // if the pawn is about to promote, generate all possible promotions
-    if (targetSqr->get_row() == _promotionRow) {
-        return {
-            new Move(this, targetSqr, PieceType::QUEEN),
-            new Move(this, targetSqr, PieceType::ROOK),
-            new Move(this, targetSqr, PieceType::BISHOP),
-            new Move(this, targetSqr, PieceType::KNIGHT)
-        };
-    } else {
-        return {new Move(this, targetSqr)};
-    }
-}
+// std::vector<Move *> Pawn::generate_pawn_moves(Square *targetSqr) {
+//     // if the pawn is about to promote, generate all possible promotions
+//     if (targetSqr->get_row() == _promotionRow) {
+//         return {
+//             new Move(this, targetSqr, PieceType::QUEEN),
+//             new Move(this, targetSqr, PieceType::ROOK),
+//             new Move(this, targetSqr, PieceType::BISHOP),
+//             new Move(this, targetSqr, PieceType::KNIGHT)
+//         };
+//     } else {
+//         return {new Move(this, targetSqr)};
+//     }
+// }
 
 
 void Pawn::recalculate() {
@@ -186,7 +183,7 @@ void Pawn::recalculate() {
         sqr->get_attacked_by(_color).push_back(this);
 }
 
-std::vector<Move *> Pawn::calc_potential_moves_pinned(Direction directionFromKingToPinner) {
+std::vector<Square *> Pawn::calc_potential_squares_pinned(Direction directionFromKingToPinner) {
     // the piece is pinned in the given direction, it can potentially still move in the pin and the opposite direction
 
     if (directionFromKingToPinner == Direction::RIGHT || directionFromKingToPinner == Direction::LEFT)
@@ -195,35 +192,31 @@ std::vector<Move *> Pawn::calc_potential_moves_pinned(Direction directionFromKin
 
     if (directionFromKingToPinner == Direction::UP || directionFromKingToPinner == Direction::DOWN)
         // a pawn pinned from front or back can only move forward
-        return get_forward_moves();
+        return get_forward_squares();
 
     auto enPassantSqr = _square->get_board()->get_en_passant_pawn_square();
     if (directionFromKingToPinner == Direction::UP_RIGHT || directionFromKingToPinner == Direction::DOWN_LEFT) {
         // pawn pinned diagonally can possibly capture in the pin direction
-        std::vector<Move *> moves = get_capture_moves(_moveOffset);
+        std::vector<Square *> squares = get_capture_squares(_moveOffset);
 
         // a diagonally pinned pawn can even capture en passant, en passant pin special pin is impossible in this case
         // as the pawn is already pinned
         if (enPassantSqr != nullptr && _square->get_row() == _enPassantRow && enPassantSqr->get_idx() - _square->get_idx() == _moveOffset) {
-            moves.push_back(new Move(this, _square->get_board()->get_square(enPassantSqr->get_col(), _square->get_row() + _moveOffset)));
-            moves.back()->mark_as_en_passant();
+            squares.push_back(_square->get_board()->get_square(enPassantSqr->get_col(), _square->get_row() + _moveOffset));
+            //moves.back()->mark_as_en_passant();
         }
 
-        return moves;
+        return squares;
     }
 
     // directionFromKingToPinner == Direction::UP_LEFT || directionFromKingToPinner == Direction::DOWN_RIGHT
     // capture in the other direction is analogous to the previous case
-    std::vector<Move *> moves = get_capture_moves(-_moveOffset);
+    std::vector<Square *> squares = get_capture_squares(-_moveOffset);
 
     if (enPassantSqr != nullptr && _square->get_row() == _enPassantRow && _square->get_idx() - enPassantSqr->get_idx() == _moveOffset) {
-        moves.push_back(new Move(this, _square->get_board()->get_square(enPassantSqr->get_col(), _square->get_row() + _moveOffset)));
-        moves.back()->mark_as_en_passant();
+        squares.push_back(_square->get_board()->get_square(enPassantSqr->get_col(), _square->get_row() + _moveOffset));
+        //moves.back()->mark_as_en_passant();
     }
 
-    return moves;
-}
-
-std::vector<Move *> Pawn::get_legal_moves() {
-    throw std::runtime_error("not implemented");
+    return squares;
 }

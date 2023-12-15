@@ -1,8 +1,11 @@
 #include "utest.h"
-#include "board.h"
 #include "pawn.h"
 #include "move.h"
 #include "constants.h"
+
+#define private public
+
+#include "board.h"
 
 TestSuite create_test_suite_pawn() {
     TestSuite testSuite("Pawn");
@@ -22,7 +25,7 @@ TestSuite create_test_suite_pawn() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "a2"));
 
-        auto moves = pawn->get_potential_moves();
+        auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
         assertEqual(2U, moves.size());
         assertVectorContain(moves, "pa2-a3");
@@ -36,7 +39,7 @@ TestSuite create_test_suite_pawn() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "d4"));
 
-        auto moves = pawn->get_potential_moves();
+        auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
         assertEqual(1U, moves.size());
         assertVectorContain(moves, "pd4-d5");
@@ -49,7 +52,7 @@ TestSuite create_test_suite_pawn() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "h7"));
 
-        auto moves = pawn->get_potential_moves();
+        auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
         assertEqual(4U, moves.size());
         for (auto move : {"ph7-h8Q", "ph7-h8R", "ph7-h8B", "ph7-h8N"})
@@ -65,7 +68,7 @@ TestSuite create_test_suite_pawn() {
         b.place_piece(PieceType::ROOK, Color::BLACK, "b8");
         b.place_piece(PieceType::ROOK, Color::BLACK, "d8");
 
-        auto moves = pawn->get_potential_moves();
+        auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
         assertEqual(12U, moves.size());
         for (auto move : {"pc7-c8Q", "pc7-c8R", "pc7-c8B", "pc7-c8N", "pc7-b8Q", "pc7-b8R", "pc7-b8B", "pc7-b8N",
@@ -83,7 +86,7 @@ TestSuite create_test_suite_pawn() {
         b.place_piece(PieceType::ROOK, Color::BLACK, "e4");
         b.place_piece(PieceType::PAWN, Color::WHITE, "f3");
 
-        auto moves = pawn->get_potential_moves();
+        auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
         assertEqual(2U, moves.size());
         for (auto move : {"pe2-e3", "pe2-d3"})
@@ -99,7 +102,7 @@ TestSuite create_test_suite_pawn() {
         b.place_piece(PieceType::PAWN, Color::BLACK, "d5");
         b.update_en_passant_pawn_square(b.get_square("d5"));
 
-        auto moves = pawn->get_potential_moves();
+        auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
         assertEqual(2U, moves.size());
         for (auto move : {"pe5-e6", "pe5-d6"})
@@ -118,7 +121,7 @@ TestSuite create_test_suite_pawn() {
         b.place_piece(PieceType::KING, Color::WHITE, "h5");
         b.place_piece(PieceType::PAWN, Color::BLACK, "f6");
 
-        auto moves = pawn->get_potential_moves();
+        auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
         assertEqual(2U, moves.size());
         for (auto move : {"pe5-e6", "pe5-f6"})
@@ -129,7 +132,7 @@ TestSuite create_test_suite_pawn() {
 
         b.place_piece(PieceType::PAWN, Color::BLACK, "c5");
         
-        moves = pawn->get_potential_moves();
+        moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
         assertEqual(3U, moves.size());
         for (auto move : {"pe5-e6", "pe5-f6", "pe5-d6"})

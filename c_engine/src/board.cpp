@@ -270,8 +270,8 @@ void Board::load_fen(std::string fen) {
     for (auto piece : _blackPieces)
         piece->recalculate();
 
-    // _legalMoves.clear();
-    // _legalMoves.push_back(calc_all_legal_moves());
+    _legalMoves.clear();
+    //_legalMoves.push_back(calc_all_legal_moves());
 }
 
 std::vector<Square *> Board::get_squares_in_dir(Square *sqr, Direction dir){
@@ -357,21 +357,37 @@ bool Board::is_castle_possible(Color color, Direction side) {
     return true;
 }
 
+std::vector<Move *> Board::squares_to_moves(std::vector<Square *> squares, Piece *piece) {
+    std::vector<Move *> moves;
+    for (auto sqr : squares) {
+        if (piece->_kind == PieceType::PAWN && sqr->get_row() == (piece->_color == Color::WHITE ? 7 : 0)) {
+            for (auto newPiece : {PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN})
+                moves.push_back(new Move(piece, sqr, newPiece));
+        } else {
+            moves.push_back(new Move(piece, sqr));
+            if (piece->_kind == PieceType::PAWN && sqr->get_piece() == nullptr && sqr->get_col() != piece->_square->get_col())
+                moves.back()->mark_as_en_passant();
+        }
+    }
+    return moves;
+}
+
 std::vector<Move *> Board::calc_all_legal_moves_no_check(){
     std::vector<Move *> legalMoves;
     auto pinnedPieces = calc_pinned_pieces(_turn);
 
     for (auto piece : get_pieces(_turn)) {
-        if (pinnedPieces.find(piece) != pinnedPieces.end()) {
-            auto moves = piece->calc_potential_moves_pinned(pinnedPieces[piece]);
-            legalMoves.insert(legalMoves.end(), moves.begin(), moves.end());
-        } else if (piece->_kind == PieceType::KING) {
-            auto moves = dynamic_cast<King *>(piece)->calc_moves_avoiding_check();
-            legalMoves.insert(legalMoves.end(), moves.begin(), moves.end());
-        } else {
-            auto moves = piece->get_potential_moves();
-            legalMoves.insert(legalMoves.end(), moves.begin(), moves.end());
-        }
+        std::vector<Square *> squares;
+
+        if (pinnedPieces.find(piece) != pinnedPieces.end())
+            squares = piece->calc_potential_squares_pinned(pinnedPieces[piece]);
+        else if (piece->_kind == PieceType::KING)
+            squares = dynamic_cast<King *>(piece)->calc_squares_avoiding_check();
+        else 
+            squares = piece->get_potential_squares();
+            
+        for (auto move : squares_to_moves(squares, piece))
+                legalMoves.push_back(move);
     }
 
     // castling
@@ -402,7 +418,12 @@ std::vector<Move *> Board::calc_legal_moves_check_move_king(){
                 inaccessableSquares.push_back(sqr);
         }
     }
-    return king->calc_moves_avoiding_check(&inaccessableSquares);
+
+    std::vector<Move *> legalMoves;
+    for (auto sqr : king->calc_squares_avoiding_check(&inaccessableSquares)) 
+        legalMoves.push_back(new Move(king, sqr));
+
+    return legalMoves;
 }
 
 std::vector<Move *> Board::calc_legal_moves_check_captures(Piece *attacker, std::map<Piece *, Direction> &pinnedPieces){
@@ -416,8 +437,9 @@ std::vector<Move *> Board::calc_legal_moves_check_captures(Piece *attacker, std:
             continue;
 
         if (piece->_kind == PieceType::PAWN) {
-            auto moves = dynamic_cast<Pawn *>(piece)->generate_pawn_moves(attacker->_square);
-            legalMoves.insert(legalMoves.end(), moves.begin(), moves.end());
+            for (auto move : squares_to_moves({attacker->_square}, piece))
+                legalMoves.push_back(move);
+            
         } else if (piece->_kind != PieceType::KING)
             legalMoves.push_back(new Move(piece, attacker->_square));
     }
@@ -465,9 +487,8 @@ std::vector<Move *> Board::calc_legal_moves_check_blocks(Piece *attacker, std::m
         if(potentialPawnSqr != nullptr && potentialPawnSqr->get_piece() != nullptr && potentialPawnSqr->get_piece()->_kind == PieceType::PAWN &&
             potentialPawnSqr->get_piece()->_color == _turn) {
             // look for possible block by pawn stepping one squares forward
-
-            auto moves = dynamic_cast<Pawn *>(potentialPawnSqr->get_piece())->generate_pawn_moves(blockingSquare);
-            legalMoves.insert(legalMoves.end(), moves.begin(), moves.end());
+            for (auto move : squares_to_moves({blockingSquare}, potentialPawnSqr->get_piece()))
+                legalMoves.push_back(move);
         } else if (blockingSquare->get_row() == (attacker->_color == Color::WHITE ? 4 : 3)) {
             // look for possible block by pawn stepping two squares forward
 
@@ -569,7 +590,7 @@ std::vector<Piece *> & Board::get_sliding_pieces(Color color) {
 }
 
 void Board::perform_move(Move *move) {
-    _history.push_back(*move);
+    _history.push_back(move);
 
     auto fromSqr = move->get_from_sqr();
     auto toSqr = move->get_to_sqr();
@@ -618,14 +639,34 @@ void Board::perform_move(Move *move) {
 
     if(move->is_promotion()) {
         ASSERT(move->get_new_piece() != std::nullopt, "promotion piece not set");
-
         promote_pawn(movingPiece, move->get_new_piece().value());
     }
 
     _turn = invert_color(_turn);
 
-    recalculation(move);
-    _legalMoves.push_back(calc_all_legal_moves());
+    //recalculation(move);
+    //_legalMoves.push_back(calc_all_legal_moves());
+}
+
+void Board::store_piece_in_vectors(Piece *piece) {
+    if (piece->_color == Color::WHITE) {
+        if (piece->_kind == PieceType::KING)
+            _whitePieces.insert(_whitePieces.begin(), piece);
+        else
+            _whitePieces.push_back(piece);
+
+        if (piece->_isSliding)
+            _whiteSlidingPieces.push_back(piece);
+    } else {
+        if (piece->_kind == PieceType::KING)
+            _blackPieces.insert(_blackPieces.begin(), piece);
+        else
+            _blackPieces.push_back(piece);
+
+        if (piece->_isSliding)
+            _blackSlidingPieces.push_back(piece);
+    }
+
 }
 
 void Board::undo_move() {
@@ -634,23 +675,57 @@ void Board::undo_move() {
     auto move = _history.back();
     _history.pop_back();
 
-    auto fromSqr = move.get_from_sqr();
-    auto toSqr = move.get_to_sqr();
-    auto movingPiece = move.get_piece();
+    auto fromSqr = move->get_from_sqr();
+    auto toSqr = move->get_to_sqr();
+    auto movingPiece = move->get_piece();
 
-    if (move.get_piece_taken() != nullptr) {
-        if (move.is_en_passant())  {
-            // restore the piece taken en passant
-            // it's column is the same as the takers destination square, it's row as the taker's starting square
-        } else {
+    if (move->is_promotion()) {
+        ASSERT(move->get_piece()->_kind == PieceType::PAWN, "promotion piece is not a pawn");
+        ASSERT(move->get_to_sqr()->get_row() == (move->get_piece()->_color == Color::WHITE ? 7 : 0), "promotion piece is not on the last rank");
+        ASSERT(move->get_to_sqr()->get_piece() != nullptr, "promotion piece is not on the board");
+        ASSERT(move->get_to_sqr()->get_piece()->_kind != PieceType::PAWN && move->get_to_sqr()->get_piece()->_kind != PieceType::KING,
+            "promotion piece is invalid");
 
-        }
-    } else {
-
+        delete move->get_to_sqr()->get_piece();
+        move->get_piece()->_isActive = true;
     }
 
+    if (move->get_piece_taken() != nullptr) {
+        if (move->is_en_passant())  {
+            // restore the piece taken en passant
+            // it's column is the same as the takers destination square, it's row as the taker's starting square
+            get_square(toSqr->get_col(), fromSqr->get_row())->_piece  = move->get_piece_taken();
+            toSqr->_piece = nullptr;
+            movingPiece->_square = fromSqr;
+            fromSqr->_piece = movingPiece;
+        } else
+            toSqr->_piece = move->get_piece_taken();
+        
+        move->get_piece_taken()->_isActive = true;
+        store_piece_in_vectors(move->get_piece_taken());
+    } else
+        toSqr->_piece = nullptr;
 
+    fromSqr->_piece = movingPiece;
+    movingPiece->_square = fromSqr;
+    --movingPiece->_movesCnt;
 
+    if (move->is_castling()) {
+        auto [rookFrom, rookTo] = get_castle_rook_squares(move);
+        get_square(rookFrom)->_piece = get_square(rookTo)->_piece;
+        get_square(rookTo)->_piece = nullptr;
+        get_square(rookFrom)->_piece->_square = get_square(rookFrom);
+    }
+
+    if (movingPiece->_color == Color::BLACK)
+        _fullMoves--;
+
+    _halfMoves.pop_back();
+    _enPassantPawnSquareHistory.pop_back();
+
+    //recalculation(&move);
+    _turn = invert_color(_turn);
+    //_legalMoves.pop_back();
 }
 
 void Board::recalculation(Move *move) {
@@ -745,4 +820,26 @@ std::tuple<int, int> Board::get_castle_rook_squares(Move *move) {
         return {63, 61};
     else
         return {56, 59};
+}
+
+int Board::generate_successors(int depth) {
+    int total = 0;
+    _legalMoves.push_back(calc_all_legal_moves());
+    for (auto move : _legalMoves.back()) {
+        perform_move(move);
+
+        std::cout << std::string(5-depth*2, ' ') << *move << std::endl;
+
+        if (depth > 1)
+            total += generate_successors(depth - 1);
+        else
+            total++;
+        undo_move();
+    }
+
+    for (auto move : _legalMoves.back())
+        delete move;
+    _legalMoves.pop_back();
+
+    return total;
 }

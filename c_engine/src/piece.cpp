@@ -13,11 +13,6 @@ Piece::Piece(PieceType kind, Color color, Square *square)
       _color(color),
       _square(square) {}
 
-Piece::~Piece() {
-    for (auto move : _potentialMoves)
-        delete move;
-}
-
 Square *Piece::get_square() {
     return _square;
 }
@@ -36,9 +31,7 @@ void SlidingPiece::recalculate() {
     }
 
     _attackedSquares.clear();
-    for (auto move : _potentialMoves)
-        delete move;
-    _potentialMoves.clear();
+    _potentialSquares.clear();
 
     for (auto direction : get_sliding_directions()) {
         Coordinate c(_square->get_coordinate());
@@ -53,10 +46,10 @@ void SlidingPiece::recalculate() {
 
             if (sqr->is_free()) {
                 _attackedSquares.push_back(sqr);
-                _potentialMoves.push_back(new Move(this, sqr));   // this needs to be deleted
+                _potentialSquares.push_back(sqr);
             } else if (sqr->get_piece()->_color != _color) {
                 _attackedSquares.push_back(sqr);
-                _potentialMoves.push_back(new Move(this, sqr));  // this needs to be deleted
+                _potentialSquares.push_back(sqr);
                 break;
             } else {
                 _attackedSquares.push_back(sqr);
@@ -72,12 +65,12 @@ void SlidingPiece::recalculate() {
 /*
  * what are potential moves if the piece is pinned in the given direction?
  */
-std::vector<Move *> SlidingPiece::calc_potential_moves_pinned(Direction directionFromKingToPinner) {
+std::vector<Square *> SlidingPiece::calc_potential_squares_pinned(Direction directionFromKingToPinner) {
 
     if (std::find(get_sliding_directions().begin(), get_sliding_directions().end(), directionFromKingToPinner) == get_sliding_directions().end())
         return {};
 
-    std::vector<Move *> potentialMoves;
+    std::vector<Square *> potentialSquares;
     Coordinate coordinate(_square->get_coordinate());
 
     while (true) {
@@ -91,9 +84,8 @@ std::vector<Move *> SlidingPiece::calc_potential_moves_pinned(Direction directio
                 "moving towards own king but reached a different piece");
             break;
         }
-
         
-        potentialMoves.push_back(new Move(this, sqr));
+        potentialSquares.push_back(sqr);
     }
 
     coordinate = _square->get_coordinate();
@@ -104,7 +96,7 @@ std::vector<Move *> SlidingPiece::calc_potential_moves_pinned(Direction directio
         Square *sqr = _square->get_board()->get_square(coordinate);
         ASSERT(sqr != nullptr, "moving towards the pinner but reached the edge of the board");
 
-        potentialMoves.push_back(new Move(this, sqr));
+        potentialSquares.push_back(sqr);
         if (sqr->get_piece() != nullptr) {
             ASSERT(sqr->get_piece()->_color != _color && sqr->get_piece()->_isSliding,
                 "moving towards the pinner but reached a different piece");
@@ -112,13 +104,9 @@ std::vector<Move *> SlidingPiece::calc_potential_moves_pinned(Direction directio
         }
     }
 
-    return potentialMoves;
+    return potentialSquares;
 }
 
-
-std::vector<Move *> SlidingPiece::get_legal_moves() {
-    throw std::runtime_error("not implemented");
-}
 
 std::ostream& operator << (std::ostream &os, const Piece &piece) {
     os << piece.str();

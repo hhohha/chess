@@ -13,16 +13,16 @@ King::King(Color color, Square *square)
     _name = "K";
 }
 
-std::vector<Move *> King::calc_moves_avoiding_check(std::vector<Square *> *inaccessableSquares){
-    std::vector<Move *> moves;
-    for (auto move : _potentialMoves) {
-        if (move->get_to_sqr()->is_attacked_by(invert_color(_color)))
+std::vector<Square *> King::calc_squares_avoiding_check(std::vector<Square *> *inaccessableSquares){
+    std::vector<Square *> squares;
+    for (auto square : _potentialSquares) {
+        if (square->is_attacked_by(invert_color(_color)))
             continue;
-        if (inaccessableSquares != nullptr && std::find(inaccessableSquares->begin(), inaccessableSquares->end(), move->get_to_sqr()) != inaccessableSquares->end())
+        if (inaccessableSquares != nullptr && std::find(inaccessableSquares->begin(), inaccessableSquares->end(), square) != inaccessableSquares->end())
             continue;
-        moves.push_back(move);
+        squares.push_back(square);
     }
-    return moves;
+    return squares;
 }
 
 void King::recalculate() {
@@ -32,9 +32,7 @@ void King::recalculate() {
     }
 
     _attackedSquares.clear();
-    for (auto move : _potentialMoves)
-        delete move; 
-    _potentialMoves.clear();
+    _potentialSquares.clear();
 
     for (Coordinate c : {Coordinate{1, 1}, Coordinate{1, 0}, Coordinate{1, -1}, Coordinate{0, 1},
         Coordinate{0, -1}, Coordinate{-1, 1}, Coordinate{-1, 0}, Coordinate{-1, -1}}) {
@@ -45,7 +43,7 @@ void King::recalculate() {
         if (sqr != nullptr) {
             _attackedSquares.push_back(sqr);
             if (sqr->is_free() || sqr->get_piece()->_color != _color)
-                _potentialMoves.push_back(new Move(this, sqr));
+                _potentialSquares.push_back(sqr);
         }
     }
 
@@ -53,10 +51,6 @@ void King::recalculate() {
         sqr->get_attacked_by(_color).push_back(this);
 }
 
-std::vector<Move *> King::calc_potential_moves_pinned(Direction directionFromKingToPinner) {
-    throw std::runtime_error("King::calc_potential_moves_pinned() not implemented");
-}
-
-std::vector<Move *> King::get_legal_moves() {
-    throw std::runtime_error("King::get_legal_moves() not implemented");
+std::vector<Square *> King::calc_potential_squares_pinned(Direction directionFromKingToPinner) {
+    throw std::runtime_error("King cannot be pinned");
 }

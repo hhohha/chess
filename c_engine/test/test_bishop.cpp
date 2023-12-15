@@ -2,9 +2,12 @@
 #include "king.h"
 #include "rook.h"
 #include "utest.h"
-#include "board.h"
 #include "bishop.h"
 #include "move.h"
+
+#define private public
+
+#include "board.h"
 
 TestSuite create_test_suite_bishop() {
     TestSuite testSuite("Bishop");
@@ -26,12 +29,12 @@ TestSuite create_test_suite_bishop() {
         assertVectorContain(bishop->_slidingDirections, Direction::UP_LEFT);
     });
 
-    testSuite.addTest("Bishop move generation 1", []() {
+    testSuite.addTest("Move generation 1", []() {
         Board b;
         auto bishop = dynamic_cast<Bishop*>(b.place_piece(PieceType::BISHOP, Color::WHITE, "a1"));
         bishop->recalculate();
 
-        auto moves = bishop->get_potential_moves();
+        auto moves = b.squares_to_moves(bishop->get_potential_squares(), bishop);
 
         assertEqual(7U, moves.size());
         for (auto move : {"Ba1-b2", "Ba1-c3", "Ba1-d4", "Ba1-e5", "Ba1-f6", "Ba1-g7", "Ba1-h8"})
@@ -44,7 +47,7 @@ TestSuite create_test_suite_bishop() {
         auto bishop = dynamic_cast<Bishop*>(b.place_piece(PieceType::BISHOP, Color::WHITE, "d4"));
         bishop->recalculate();
 
-        auto moves = bishop->get_potential_moves();
+        auto moves = b.squares_to_moves(bishop->get_potential_squares(), bishop);
 
         assertEqual(13U, moves.size());
         for (auto move : {"Bd4-a1", "Bd4-b2", "Bd4-c3", "Bd4-e5", "Bd4-f6", "Bd4-g7", "Bd4-h8", "Bd4-c5", "Bd4-b6",
@@ -60,7 +63,7 @@ TestSuite create_test_suite_bishop() {
 
         bishop->recalculate();
 
-        auto moves = bishop->calc_potential_moves_pinned(Direction::RIGHT);
+        auto moves = b.squares_to_moves(bishop->calc_potential_squares_pinned(Direction::RIGHT), bishop);
 
         assertEqual(0U, moves.size());
     });
@@ -73,7 +76,7 @@ TestSuite create_test_suite_bishop() {
 
         bishop->recalculate();
 
-        auto moves = bishop->calc_potential_moves_pinned(Direction::UP_RIGHT);
+        auto moves = b.squares_to_moves(bishop->calc_potential_squares_pinned(Direction::UP_RIGHT), bishop);
 
         assertEqual(6U, moves.size());
         for (auto move : {"Bc3-b2", "Bc3-d4", "Bc3-e5", "Bc3-f6", "Bc3-g7", "Bc3-h8"})

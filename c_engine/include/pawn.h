@@ -12,17 +12,15 @@ public:
 
     virtual void recalculate() override;
 
-    virtual std::vector<Move *> calc_potential_moves_pinned(Direction directionFromKingToPinner) override;
+    virtual std::vector<Square *> calc_potential_squares_pinned(Direction directionFromKingToPinner) override;
 
-    virtual std::vector<Move *> get_legal_moves() override;
+    std::vector<Square *> get_potential_squares() override;
 
-    std::vector<Move *> get_potential_moves();
-
-    std::vector<Move *> generate_pawn_moves(Square *targetSqr);
+    //std::vector<Move *> generate_pawn_moves(Square *targetSqr);
 private:
-    std::vector<Move *> get_forward_moves();
-    std::vector<Move *> get_capture_moves(int colOffset);
-    Move * get_en_passant_move();
+    std::vector<Square *> get_forward_squares();
+    std::vector<Square *> get_capture_squares(int colOffset);
+    Square * get_en_passant_square();
     bool is_en_passant_pin();
 
     const int _moveOffset;

@@ -379,17 +379,17 @@ class Board:
             if move.isEnPassant:
                 # restore the piece taken en passant
                 # it's column is the same as the takers destination square, it's row as the taker's starting square
-                self.enPassantPawnSquare[-1] = self.get_square_by_coords_opt(toSqr.colIdx, fromSqr.rowIdx)
-                self.enPassantPawnSquare[-1].piece = move.pieceTaken
+                #self.enPassantPawnSquare[-1] = self.get_square_by_coords_opt(toSqr.colIdx, fromSqr.rowIdx)
+                #self.enPassantPawnSquare[-1].piece = move.pieceTaken
 
-                # remove the piece from toSqr
+
+                self.get_square_by_coords_opt(toSqr.colIdx, fromSqr.rowIdx).piece = move.pieceTaken
+
                 toSqr.piece = None
 
-                # place piece to fromSqr
                 movingPiece.square = fromSqr
                 fromSqr.piece = movingPiece
             else:
-                # standard capture - just restore the taken piece to toSqr
                 toSqr.piece = move.pieceTaken
 
             move.pieceTaken.isActive = True

@@ -1,8 +1,11 @@
 #include "constants.h"
 #include "utest.h"
-#include "board.h"
 #include "queen.h"
 #include "move.h"
+
+#define private public
+
+#include "board.h"
 
 TestSuite create_test_suite_queen() {
     TestSuite testSuite("Queen");
@@ -29,7 +32,7 @@ TestSuite create_test_suite_queen() {
         auto queen = dynamic_cast<Queen*>(b.place_piece(PieceType::QUEEN, Color::WHITE, "a1"));
         queen->recalculate();
 
-        auto moves = queen->get_potential_moves();
+        auto moves = b.squares_to_moves(queen->get_potential_squares(), queen);
 
         assertEqual(21U, moves.size());
         for (auto move : {"Qa1-a2", "Qa1-a3", "Qa1-a4", "Qa1-a5", "Qa1-a6", "Qa1-a7", "Qa1-a8", "Qa1-b1", "Qa1-c1",
@@ -43,7 +46,7 @@ TestSuite create_test_suite_queen() {
         auto queen = dynamic_cast<Queen*>(b.place_piece(PieceType::QUEEN, Color::WHITE, "d4"));
         queen->recalculate();
 
-        auto moves = queen->get_potential_moves();
+        auto moves = b.squares_to_moves(queen->get_potential_squares(), queen);
 
         assertEqual(27U, moves.size());
         for (auto move : {"Qd4-a1", "Qd4-b2", "Qd4-c3", "Qd4-e5", "Qd4-f6", "Qd4-g7", "Qd4-h8", "Qd4-c5", "Qd4-b6",
@@ -60,7 +63,7 @@ TestSuite create_test_suite_queen() {
 
         queen->recalculate();
 
-        auto moves = queen->calc_potential_moves_pinned(Direction::UP_RIGHT);
+        auto moves = b.squares_to_moves(queen->calc_potential_squares_pinned(Direction::UP_RIGHT), queen);
 
         assertEqual(2U, moves.size());
         assertVectorContain(moves, "Qc2-d3");

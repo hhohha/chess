@@ -1,7 +1,10 @@
-#include "board.h"
 #include "rook.h"
 #include "move.h"
 #include "utest.h"
+
+#define private public
+
+#include "board.h"
 
 TestSuite create_test_suite_rook() {
     TestSuite testSuite("Rook");
@@ -28,7 +31,7 @@ TestSuite create_test_suite_rook() {
         auto rook = dynamic_cast<Rook*>(b.place_piece(PieceType::ROOK, Color::WHITE, "a1"));
         rook->recalculate();
 
-        auto moves = rook->get_potential_moves();
+        auto moves = b.squares_to_moves(rook->get_potential_squares(), rook);
 
         assertEqual(14U, moves.size());
         for (auto move : {"Ra1-a2", "Ra1-a3", "Ra1-a4", "Ra1-a5", "Ra1-a6", "Ra1-a7", "Ra1-a8", "Ra1-b1", "Ra1-c1",
@@ -44,7 +47,7 @@ TestSuite create_test_suite_rook() {
 
         rook->recalculate();
 
-        auto moves = rook->calc_potential_moves_pinned(Direction::UP_RIGHT);
+        auto moves = b.squares_to_moves(rook->calc_potential_squares_pinned(Direction::UP_RIGHT), rook);
 
         assertEqual(0U, moves.size());
     });
@@ -57,7 +60,7 @@ TestSuite create_test_suite_rook() {
 
         rook->recalculate();
 
-        auto moves = rook->calc_potential_moves_pinned(Direction::RIGHT);
+        auto moves = b.squares_to_moves(rook->calc_potential_squares_pinned(Direction::RIGHT), rook);
 
         assertEqual(4U, moves.size());
         for (auto move : {"Rd1-c1", "Rd1-e1", "Rd1-f1", "Rd1-g1"})

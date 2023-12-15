@@ -11,7 +11,3 @@ Rook::Rook(Color color, Square *square) :
     _isLight = false;
     _name = "R";
 }
-
-std::vector<Move *> Rook::get_legal_moves() {
-    throw std::runtime_error("Rook::get_legal_moves() not implemented");
-}

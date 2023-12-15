@@ -18,9 +18,7 @@ void Knight::recalculate() {
     }
 
     _attackedSquares.clear();
-    for (auto move : _potentialMoves)
-        delete move;
-    _potentialMoves.clear();
+    _potentialSquares.clear();
 
     for (Coordinate c : {Coordinate{2, 1}, Coordinate{2, -1}, Coordinate{-2, 1}, Coordinate{-2, -1},
         Coordinate{1, 2}, Coordinate{1, -2}, Coordinate{-1, 2}, Coordinate{-1, -2}}) {
@@ -31,7 +29,7 @@ void Knight::recalculate() {
         if (sqr != nullptr) {
             _attackedSquares.push_back(sqr);
             if (sqr->is_free() || sqr->get_piece()->_color != _color)
-                _potentialMoves.push_back(new Move(this, sqr));
+                _potentialSquares.push_back(sqr);
         }
     }
 
@@ -39,10 +37,6 @@ void Knight::recalculate() {
         sqr->get_attacked_by(_color).push_back(this);
 }
 
-std::vector<Move *> Knight::calc_potential_moves_pinned(Direction directionFromKingToPinner) {
+std::vector<Square *> Knight::calc_potential_squares_pinned(Direction directionFromKingToPinner) {
     return {};
-}
-
-std::vector<Move *> Knight::get_legal_moves() {
-    throw std::runtime_error("Knight::get_legal_moves() not implemented");
 }

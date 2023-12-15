@@ -48,8 +48,10 @@ public:
     void undo_move();
 
     void remove_piece(Piece *piece);
+
+    int generate_successors(int depth);
 //private:
-    std::vector<Move> _history;
+    std::vector<Move *> _history;
 
     Square * get_en_passant_pawn_square();
     void update_en_passant_pawn_square(Square *sqr);
@@ -72,6 +74,9 @@ public:
     std::vector<std::vector<Move *>> _legalMoves;
 
 private:
+    std::vector<Move *> squares_to_moves(std::vector<Square *> squares, Piece *piece);
+    void store_piece_in_vectors(Piece *piece);
+
     std::vector<Square *> get_squares_in_dir(Square *sqr, Direction dir);
     std::tuple<int, int> get_castle_rook_squares(Move *move);
     void update_en_passant_history(Move *move);
