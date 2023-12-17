@@ -9,7 +9,7 @@
 TestSuite create_test_suite_moves() {
     TestSuite testSuite("Moves");
 
-    testSuite.addTest("Move construction", []() {
+    testSuite.add_test("Move construction", []() {
         Board b;
         Square *pieceSqr = b.get_square("a1");
         Bishop bishop(Color::WHITE, pieceSqr);
@@ -18,21 +18,21 @@ TestSuite create_test_suite_moves() {
 
         Move move(&bishop, destSqr);
 
-        assertEqual(&bishop, move.get_piece());
-        assertEqual(destSqr, move.get_to_sqr());
-        assertFalse(move.is_promotion());
-        assertFalse(move.is_castling());
+        assert_equal(&bishop, move.get_piece());
+        assert_equal(destSqr, move.get_to_sqr());
+        assert_false(move.is_promotion());
+        assert_false(move.is_castling());
 
-        assertEqual("Ba1-h8", move.str());
-        assertEqual(pieceSqr, move.get_from_sqr());
-        assertEqual(destSqr, move.get_to_sqr());
-        assertIsNull(move.get_piece_taken());
-        assertFalse(move.get_new_piece().has_value());
-        assertFalse(move.is_en_passant());
+        assert_equal("Ba1-h8", move.str());
+        assert_equal(pieceSqr, move.get_from_sqr());
+        assert_equal(destSqr, move.get_to_sqr());
+        assert_is_null(move.get_piece_taken());
+        assert_false(move.get_new_piece().has_value());
+        assert_false(move.is_en_passant());
     });
 
     
-    testSuite.addTest("Move comparison", []() {
+    testSuite.add_test("Move comparison", []() {
         Board b;
         Square *pieceSqr1 = b.get_square("a1");
         Square *pieceSqr2 = b.get_square("b2");
@@ -47,13 +47,13 @@ TestSuite create_test_suite_moves() {
         Move move3(&bishop1, destSqr2);
         Move move4(&bishop2, destSqr1);
 
-        assertTrue(move1 == move2); // Same piece, same destination square
-        assertFalse(move1 == move3); // Same piece, different destination square
-        assertFalse(move1 == move4); // Different piece, same destination square
+        assert_true(move1 == move2); // Same piece, same destination square
+        assert_false(move1 == move3); // Same piece, different destination square
+        assert_false(move1 == move4); // Different piece, same destination square
     });
 
     
-    testSuite.addTest("Pawn promotion move comparison", []() {
+    testSuite.add_test("Pawn promotion move comparison", []() {
         Board b;
         Square *pieceSqr1 = b.get_square("a7");
         Square *pieceSqr2 = b.get_square("b2");
@@ -69,9 +69,9 @@ TestSuite create_test_suite_moves() {
         Move move3(&pawn1, destSqr1, PieceType::ROOK);
         Move move4(&pawn2, destSqr2, PieceType::KNIGHT);
 
-        assertTrue(move1 == move2); // Same piece, same destination square, same promotion piece
-        assertFalse(move1 == move3); // Same piece, same destination square, different promotion piece
-        assertFalse(move1 == move4); // Different piece, different destination square, different promotion piece
+        assert_true(move1 == move2); // Same piece, same destination square, same promotion piece
+        assert_false(move1 == move3); // Same piece, same destination square, different promotion piece
+        assert_false(move1 == move4); // Different piece, different destination square, different promotion piece
     });
 
     return testSuite;

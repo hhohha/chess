@@ -5,45 +5,45 @@
 TestSuite create_test_suite_squares() {
     TestSuite testSuite("Squares");
 
-    testSuite.addTest("Square construction", []() {
+    testSuite.add_test("Square construction", []() {
         {
             Square s;
             s.init(0, nullptr);
 
-            assertEqual(0, s.get_col());
-            assertEqual(0, s.get_row());
-            assertEqual("a1", s.get_name());
-            assertTrue(s.is_free());
-            assertFalse(s.is_attacked_by(Color::WHITE));
-            assertFalse(s.is_attacked_by(Color::BLACK));
+            assert_equal(0, s.get_col());
+            assert_equal(0, s.get_row());
+            assert_equal("a1", s.get_name());
+            assert_true(s.is_free());
+            assert_false(s.is_attacked_by(Color::WHITE));
+            assert_false(s.is_attacked_by(Color::BLACK));
         }
         {
             Square s;
             s.init(63, nullptr);
 
-            assertEqual(7, s.get_col());
-            assertEqual(7, s.get_row());
-            assertEqual("h8", s.get_name());
+            assert_equal(7, s.get_col());
+            assert_equal(7, s.get_row());
+            assert_equal("h8", s.get_name());
         }
         {
             Square s;
             s.init(56, nullptr);
 
-            assertEqual(0, s.get_col());
-            assertEqual(7, s.get_row());
-            assertEqual("a8", s.get_name());
+            assert_equal(0, s.get_col());
+            assert_equal(7, s.get_row());
+            assert_equal("a8", s.get_name());
         }
         {
             Square s;
             s.init(7, nullptr);
 
-            assertEqual(7, s.get_col());
-            assertEqual(0, s.get_row());
-            assertEqual("h1", s.get_name());
+            assert_equal(7, s.get_col());
+            assert_equal(0, s.get_row());
+            assert_equal("h1", s.get_name());
         }
     });
 
-    testSuite.addTest("Square comparison", []() {
+    testSuite.add_test("Square comparison", []() {
         Square s1;
         s1.init(0, nullptr);
         Square s2;
@@ -51,10 +51,10 @@ TestSuite create_test_suite_squares() {
         Square s3;
         s3.init(1, nullptr);
 
-        assertTrue(s1 == s2);
-        assertFalse(s1 != s2);
-        assertTrue(s1 != s3);
-        assertFalse(s1 == s3);
+        assert_true(s1 == s2);
+        assert_false(s1 != s2);
+        assert_true(s1 != s3);
+        assert_false(s1 == s3);
     });
 
     return testSuite;

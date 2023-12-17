@@ -44,8 +44,8 @@ public:
 
     bool is_castle_possible(Color color, Direction dir);
 
-    void perform_move(Move *move);
-    void undo_move();
+    void perform_move(Move *move, bool treeSearch = false);
+    void undo_move(bool treeSearch = false);
 
     void remove_piece(Piece *piece);
 
@@ -81,7 +81,8 @@ private:
     std::tuple<int, int> get_castle_rook_squares(Move *move);
     void update_en_passant_history(Move *move);
     void promote_pawn(Piece *pawn, PieceType kind);
-    void recalculation(Move *move);
+    void recalculation(Move *move, bool undo = false);
+    void recalculation();
 
     std::vector<Move *> calc_all_legal_moves_check();
     std::vector<Move *> calc_all_legal_moves_no_check();

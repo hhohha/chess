@@ -9,161 +9,170 @@
 TestSuite create_test_suite_board() {
     TestSuite testSuite("Board");
 
-    testSuite.addTest("Board construction", []() {
+    testSuite.add_test("Board construction", []() {
         Board b;
 
-        assertEqual(0U, b._whitePieces.size());
-        assertEqual(0U, b._blackPieces.size());
-        assertEqual(0U, b._whiteSlidingPieces.size());
-        assertEqual(0U, b._blackSlidingPieces.size());
+        assert_equal(0U, b._whitePieces.size());
+        assert_equal(0U, b._blackPieces.size());
+        assert_equal(0U, b._whiteSlidingPieces.size());
+        assert_equal(0U, b._blackSlidingPieces.size());
     });
 
-    testSuite.addTest("Load fen", []() {
+    testSuite.add_test("Load fen", []() {
         Board b;
         b.load_fen(FEN_INIT);
 
-        assertEqual(16U, b._whitePieces.size());
-        assertEqual(16U, b._blackPieces.size());
-        assertEqual(5U, b._whiteSlidingPieces.size());
-        assertEqual(5U, b._blackSlidingPieces.size());
-        assertEqual(PieceType::KING, b._whitePieces[0]->_kind);
-        assertEqual(Color::WHITE, b._whitePieces[0]->_color);
-        assertEqual(PieceType::KING, b._blackPieces[0]->_kind);
-        assertEqual(Color::BLACK, b._blackPieces[0]->_color);
+        assert_equal(16U, b._whitePieces.size());
+        assert_equal(16U, b._blackPieces.size());
+        assert_equal(5U, b._whiteSlidingPieces.size());
+        assert_equal(5U, b._blackSlidingPieces.size());
+        assert_equal(PieceType::KING, b._whitePieces[0]->_kind);
+        assert_equal(Color::WHITE, b._whitePieces[0]->_color);
+        assert_equal(PieceType::KING, b._blackPieces[0]->_kind);
+        assert_equal(Color::BLACK, b._blackPieces[0]->_color);
 
-        assertEqual(PieceType::ROOK, b.get_square("a1")->get_piece()->_kind);
-        assertEqual(Color::WHITE, b.get_square("a1")->get_piece()->_color);
-        assertEqual(PieceType::BISHOP, b.get_square("c8")->get_piece()->_kind);
-        assertEqual(Color::BLACK, b.get_square("c8")->get_piece()->_color);
+        assert_equal(PieceType::ROOK, b.get_square("a1")->get_piece()->_kind);
+        assert_equal(Color::WHITE, b.get_square("a1")->get_piece()->_color);
+        assert_equal(PieceType::BISHOP, b.get_square("c8")->get_piece()->_kind);
+        assert_equal(Color::BLACK, b.get_square("c8")->get_piece()->_color);
 
-        assertEqual(Color::WHITE, b._turn);
+        assert_equal(Color::WHITE, b._turn);
     });
 
-    testSuite.addTest("Pin calculation 1", []() {
+    testSuite.add_test("Pin calculation 1", []() {
         Board b;
         b.load_fen(FEN_INIT);
 
         auto pinnedWhites = b.calc_pinned_pieces(Color::WHITE);
-        assertEqual(0U, pinnedWhites.size());
+        assert_equal(0U, pinnedWhites.size());
 
         auto pinnedBlacks = b.calc_pinned_pieces(Color::BLACK);
-        assertEqual(0U, pinnedBlacks.size());
+        assert_equal(0U, pinnedBlacks.size());
 
     });
 
-    testSuite.addTest("Pin calculation 2", []() {
+    testSuite.add_test("Pin calculation 2", []() {
         Board b;
         b.load_fen(FEN_TEST_C);
 
         auto pinnedWhites = b.calc_pinned_pieces(Color::WHITE);
-        assertEqual(1U, pinnedWhites.size());
-        assertTrue(b.get_square("b5")->get_piece() == pinnedWhites.begin()->first, "Pinned piece should be on b5");
-        assertTrue(Direction::RIGHT == pinnedWhites.begin()->second, "Direction should be RIGHT");
+        assert_equal(1U, pinnedWhites.size());
+        assert_true(b.get_square("b5")->get_piece() == pinnedWhites.begin()->first, "Pinned piece should be on b5");
+        assert_true(Direction::RIGHT == pinnedWhites.begin()->second, "Direction should be RIGHT");
         
         auto pinnedBlacks = b.calc_pinned_pieces(Color::BLACK);
-        assertEqual(1U, pinnedBlacks.size());
-        assertTrue(b.get_square("f4")->get_piece() == pinnedBlacks.begin()->first, "Pinned piece should be on f4");
-        assertTrue(Direction::LEFT == pinnedBlacks.begin()->second, "Direction should be LEFT");
+        assert_equal(1U, pinnedBlacks.size());
+        assert_true(b.get_square("f4")->get_piece() == pinnedBlacks.begin()->first, "Pinned piece should be on f4");
+        assert_true(Direction::LEFT == pinnedBlacks.begin()->second, "Direction should be LEFT");
     });
 
-    testSuite.addTest("Pin calculation 3", []() {
+    testSuite.add_test("Pin calculation 3", []() {
         Board b;
         // king surrounded by own pawns, all pinned by queens
         b.load_fen("k7/8/2q1q1q1/3PPP2/2qPKPq1/3PPP2/2q1q1q1/8 w - - 0 0");
 
         auto pinnedWhites = b.calc_pinned_pieces(Color::WHITE);
-        assertEqual(8U, pinnedWhites.size());
+        assert_equal(8U, pinnedWhites.size());
         for (auto piece : b._whitePieces)
             if (piece->_kind != PieceType::KING)
-                assertTrue(pinnedWhites.find(piece) != pinnedWhites.end(), "All white pawns should be pinned");
+                assert_true(pinnedWhites.find(piece) != pinnedWhites.end(), "All white pawns should be pinned");
     });
 
-    testSuite.addTest("Pin calculation 4", []() {
+    testSuite.add_test("Pin calculation 4", []() {
         Board b;
         // previous position, but rooks instead of queens, only 4 pawns are pinned
         b.load_fen("k7/8/2r1r1r1/3PPP2/2rPKPr1/3PPP2/2r1r1r1/8 w - - 0 0");
 
         auto pinnedWhites = b.calc_pinned_pieces(Color::WHITE);
-        assertEqual(4U, pinnedWhites.size());
-        assertTrue(pinnedWhites.find(b.get_square("d4")->get_piece()) != pinnedWhites.end(), "d4  pawn should be pinned");
-        assertTrue(pinnedWhites.find(b.get_square("f4")->get_piece()) != pinnedWhites.end(), "f4  pawn should be pinned");
-        assertTrue(pinnedWhites.find(b.get_square("e3")->get_piece()) != pinnedWhites.end(), "e3  pawn should be pinned");
-        assertTrue(pinnedWhites.find(b.get_square("e5")->get_piece()) != pinnedWhites.end(), "e5  pawn should be pinned");
+        assert_equal(4U, pinnedWhites.size());
+        assert_true(pinnedWhites.find(b.get_square("d4")->get_piece()) != pinnedWhites.end(), "d4  pawn should be pinned");
+        assert_true(pinnedWhites.find(b.get_square("f4")->get_piece()) != pinnedWhites.end(), "f4  pawn should be pinned");
+        assert_true(pinnedWhites.find(b.get_square("e3")->get_piece()) != pinnedWhites.end(), "e3  pawn should be pinned");
+        assert_true(pinnedWhites.find(b.get_square("e5")->get_piece()) != pinnedWhites.end(), "e5  pawn should be pinned");
     });
 
-    testSuite.addTest("Get legal moves 1", []() {
+    testSuite.add_test("Get legal moves 1", []() {
         Board b;
         b.load_fen(FEN_INIT);
         auto moves = b.calc_all_legal_moves();
 
-        assertEqual(20U, moves.size());
+        assert_equal(20U, moves.size());
+        delete_vector(moves);
     });
 
-    testSuite.addTest("Get legal moves 2", []() {
+    testSuite.add_test("Get legal moves 2", []() {
         Board b;
         b.load_fen(FEN_TEST_A);
         auto moves = b.calc_all_legal_moves();
 
-        assertEqual(3U, moves.size());
+        assert_equal(3U, moves.size());
+        delete_vector(moves);
     });
 
-    testSuite.addTest("Get legal moves 3", []() {
+    testSuite.add_test("Get legal moves 3", []() {
         Board b;
         b.load_fen(FEN_TEST_B);
         auto moves = b.calc_all_legal_moves();
 
-        assertEqual(44U, moves.size());
+        assert_equal(44U, moves.size());
+        delete_vector(moves);
     });
 
-    testSuite.addTest("Get legal moves 4", []() {
+    testSuite.add_test("Get legal moves 4", []() {
         Board b;
         b.load_fen(FEN_TEST_C);
         auto moves = b.calc_all_legal_moves();
 
-        assertEqual(14U, moves.size());
+        assert_equal(14U, moves.size());
+        delete_vector(moves);
     });
 
-    testSuite.addTest("Get legal moves 5", []() {
+    testSuite.add_test("Get legal moves 5", []() {
         Board b;
         b.load_fen(FEN_TEST_D);
         auto moves = b.calc_all_legal_moves();
 
-        assertEqual(6U, moves.size());
+        assert_equal(6U, moves.size());
+        delete_vector(moves);
     });
 
-    testSuite.addTest("Get legal moves 6", []() {
+    testSuite.add_test("Get legal moves 6", []() {
         Board b;
         b.load_fen(FEN_TEST_D_INVERTED);
         auto moves = b.calc_all_legal_moves();
 
-        assertEqual(6U, moves.size());
+        assert_equal(6U, moves.size());
+        delete_vector(moves);
     });
 
-    testSuite.addTest("Get legal moves 7", []() {
+    testSuite.add_test("Get legal moves 7", []() {
         Board b;
         b.load_fen(FEN_TEST_E);
         auto moves = b.calc_all_legal_moves();
 
-        assertEqual(48U, moves.size());
+        assert_equal(48U, moves.size());
+        delete_vector(moves);
     });
 
-    testSuite.addTest("Get legal moves 8", []() {
+    testSuite.add_test("Get legal moves 8", []() {
         Board b;
         b.load_fen(FEN_TEST_E_NO_CASTLE);
         auto moves = b.calc_all_legal_moves();
 
-        assertEqual(46U, moves.size());
+        assert_equal(46U, moves.size());
+        delete_vector(moves);
     });
 
-    testSuite.addTest("Get legal moves 9", []() {
+    testSuite.add_test("Get legal moves 9", []() {
         Board b;
         b.load_fen(FEN_TEST_F);
         auto moves = b.calc_all_legal_moves();
 
-        assertEqual(46U, moves.size());
+        assert_equal(46U, moves.size());
+        delete_vector(moves);
     });
 
-    testSuite.addTest("Perform move 1", []() {
+    testSuite.add_test("Perform move 1", []() {
         Board b;
         b.load_fen(FEN_TEST_A);
         
@@ -172,69 +181,113 @@ TestSuite create_test_suite_board() {
         auto move = new Move(whiteKing, destSquare);
         b.perform_move(move);
 
-        assertEqual(destSquare, move->get_to_sqr());
-        assertEqual(whiteKing->_square, move->get_to_sqr());
-        assertEqual(move->get_from_sqr(), b.get_square("h1"));
+        assert_equal(destSquare, move->get_to_sqr());
+        assert_equal(whiteKing->_square, move->get_to_sqr());
+        assert_equal(move->get_from_sqr(), b.get_square("h1"));
+
+        delete move;
     });
 
 
-    testSuite.addTest("Perform move 2", []() {
+    testSuite.add_test("Perform move 2", []() {
         Board b;
         b.load_fen("k7/8/8/8/8/3p4/4P3/7K w - - 98 0");
-        
         auto whiteKing = b.get_square("h1")->get_piece();
         auto whitePawn = b.get_square("e2")->get_piece();
+        
+        // step 1. initial position: white Kh1, pe2; black Ka8, pd3
+        auto moves = b.calc_all_legal_moves();
+        assert_equal(6U, moves.size());
+        for (auto move : {"Kh1-h2", "Kh1-g2", "Kh1-g1", "pe2-e3", "pe2-e4", "pe2-d3"})
+            assert_vector_contains(moves, move);
+
+        for (auto move : moves)
+            delete move;
+
+        // step 2. white pawn to e3
         auto destSquare = b.get_square("e3");
         auto move = new Move(whitePawn, destSquare);
-
-        std::cout << "MOVES at start:" << std::endl;
-        for (auto move : b.calc_all_legal_moves())
-            std::cout << *move << std::endl;
-
         b.perform_move(move);
 
-        // assertEqual(b.get_square("e3"), whitePawn->_square);
-        // assertEqual(b.get_square("e3")->get_piece(), whitePawn);
-        // assertIsNull(b.get_square("e2")->get_piece());
+        assert_equal(b.get_square("e3"), whitePawn->_square);
+        assert_equal(b.get_square("e3")->get_piece(), whitePawn);
+        assert_is_null(b.get_square("e2")->get_piece());
 
-        std::cout << "\nMOVES after e3" << std::endl;
-        for (auto move : b.calc_all_legal_moves())
-            std::cout << *move << std::endl;
+        moves = b.calc_all_legal_moves();
 
+        assert_equal(4U, moves.size());
+        for (auto move : {"Ka8-b8", "Ka8-a7", "Ka8-b7", "pd3-d2"})
+            assert_vector_contains(moves, move);
+
+        for (auto move : moves)
+            delete move;
+
+        // step 3. back to initial position
         b.undo_move();
-        // assertEqual(b.get_square("e2"), whitePawn->_square);
-        // assertEqual(b.get_square("e2")->get_piece(), whitePawn);
-        // assertIsNull(b.get_square("e3")->get_piece());
+        assert_equal(b.get_square("e2"), whitePawn->_square);
+        assert_equal(b.get_square("e2")->get_piece(), whitePawn);
+        assert_is_null(b.get_square("e3")->get_piece());
 
-        std::cout << "\nMOVES at start again" << std::endl;
-        for (auto move : b.calc_all_legal_moves())
-            std::cout << *move << std::endl;
+        moves = b.calc_all_legal_moves();
+        assert_equal(6U, moves.size());
+        for (auto move : {"Kh1-h2", "Kh1-g2", "Kh1-g1", "pe2-e3", "pe2-e4", "pe2-d3"})
+            assert_vector_contains(moves, move);
 
+        for (auto move : moves)
+            delete move;
+
+        // step 4. Kh1-h2
         move = new Move(whiteKing, b.get_square("h2"));
         b.perform_move(move);
 
-        std::cout << "\nMOVES after Kh2" << std::endl;
-        for (auto move : b.calc_all_legal_moves())
-            std::cout << *move << std::endl;
+        moves = b.calc_all_legal_moves();
+        assert_equal(5U, moves.size());
+        for (auto move : {"Ka8-b8", "Ka8-a7", "Ka8-b7", "pd3-d2", "pd3-e2"})
+            assert_vector_contains(moves, move);
 
+        for (auto move : moves)
+            delete move;
+
+        // step 5. - back to initial position
         b.undo_move();
+        assert_equal(b.get_square("e2"), whitePawn->_square);
+        assert_equal(b.get_square("e2")->get_piece(), whitePawn);
+        assert_is_null(b.get_square("e3")->get_piece());
 
-        std::cout << "\nMOVES at start again" << std::endl;
-        for (auto move : b.calc_all_legal_moves())
+        moves = b.calc_all_legal_moves();
+        assert_equal(6U, moves.size());
+        for (auto move : {"Kh1-h2", "Kh1-g2", "Kh1-g1", "pe2-e3", "pe2-e4", "pe2-d3"})
+            assert_vector_contains(moves, move);
+
+        for (auto move : moves)
+            delete move;
+    });
+
+    testSuite.add_test("Perform move 3", []() {
+        Board b;
+        b.load_fen(FEN_TEST_C);
+        
+        b.perform_move(new Move(b.get_square("a5")->_piece, b.get_square("a6")), false);
+        b.perform_move(new Move(b.get_square("c7")->_piece, b.get_square("c5")), false);
+
+        auto moves = b.calc_all_legal_moves();
+
+        for (auto move : moves)
             std::cout << *move << std::endl;
 
-
     });
 
-    testSuite.addTest("Move generation 1", []() {
+    testSuite.add_test("Perform move 4", []() {
         Board b;
-        // b.load_fen(FEN_INIT);
-        b.load_fen("k7/8/8/8/8/3p4/4P3/7K w - - 98 0");
-        
-        int result = b.generate_successors(2);
+        b.load_fen(FEN_TEST_B);
 
-        std::cout << "result: " << result << std::endl;
+
+        auto move = new Move(b.get_square("a2")->get_piece(), b.get_square("a3"));
+        b.perform_move(move);
+
+        b.generate_successors(2);
     });
+
 
     return testSuite;
 }   

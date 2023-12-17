@@ -12,6 +12,7 @@ TestSuite create_test_suite_knight();
 TestSuite create_test_suite_king();
 TestSuite create_test_suite_pawn();
 TestSuite create_test_suite_board();
+TestSuite create_test_suite_tree_search();
 
 
 int main(int argc, char **argv) {
@@ -36,6 +37,7 @@ int main(int argc, char **argv) {
     testSuites.emplace_back(create_test_suite_king());
     testSuites.emplace_back(create_test_suite_pawn());
     testSuites.emplace_back(create_test_suite_board());
+    testSuites.emplace_back(create_test_suite_tree_search());
 
     for (auto &testSuite: testSuites)
         if (suiteName.empty() || str_equal_ignore_case(testSuite.suiteName, suiteName))

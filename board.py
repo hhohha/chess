@@ -735,6 +735,7 @@ class Board:
             #if depth == 2:
             #    print(f'{">>>"*self.analysisDepth} MOVE: {move}    ', end='')
             self.perform_move(move)
+            
             n = self.generate_successors(depth - 1)
             total += n
             #if depth == 2:

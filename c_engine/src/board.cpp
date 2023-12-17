@@ -589,7 +589,7 @@ std::vector<Piece *> & Board::get_sliding_pieces(Color color) {
     return color == Color::WHITE ? _whiteSlidingPieces : _blackSlidingPieces;
 }
 
-void Board::perform_move(Move *move) {
+void Board::perform_move(Move *move, bool treeSearch) {
     _history.push_back(move);
 
     auto fromSqr = move->get_from_sqr();
@@ -611,7 +611,7 @@ void Board::perform_move(Move *move) {
         auto enPassantPawn = get_en_passant_pawn_square()->get_piece();
         move->set_piece_taken(enPassantPawn);
         remove_piece(enPassantPawn);
-        move->get_piece_taken()->_square = nullptr;
+        // move->get_piece_taken()->_square = nullptr;
     }
 
     if (move->get_piece_taken() != nullptr || movingPiece->_kind == PieceType::PAWN)
@@ -624,6 +624,7 @@ void Board::perform_move(Move *move) {
     toSqr->_piece = movingPiece;
     fromSqr->_piece = nullptr;
     movingPiece->_square = toSqr;
+    ++movingPiece->_movesCnt;
 
     if (move->is_castling()) {
         auto [rookFrom, rookTo] = get_castle_rook_squares(move);
@@ -644,7 +645,8 @@ void Board::perform_move(Move *move) {
 
     _turn = invert_color(_turn);
 
-    //recalculation(move);
+    if (!treeSearch)
+        recalculation(move);
     //_legalMoves.push_back(calc_all_legal_moves());
 }
 
@@ -669,7 +671,7 @@ void Board::store_piece_in_vectors(Piece *piece) {
 
 }
 
-void Board::undo_move() {
+void Board::undo_move(bool treeSearch) {
     ASSERT(_history.size() > 0, "no moves to undo");
 
     auto move = _history.back();
@@ -686,8 +688,12 @@ void Board::undo_move() {
         ASSERT(move->get_to_sqr()->get_piece()->_kind != PieceType::PAWN && move->get_to_sqr()->get_piece()->_kind != PieceType::KING,
             "promotion piece is invalid");
 
-        delete move->get_to_sqr()->get_piece();
+        auto newPiece = move->get_to_sqr()->get_piece();
+        remove_piece(newPiece);
+            
+        delete newPiece;
         move->get_piece()->_isActive = true;
+        store_piece_in_vectors(move->get_piece());
     }
 
     if (move->get_piece_taken() != nullptr) {
@@ -723,15 +729,24 @@ void Board::undo_move() {
     _halfMoves.pop_back();
     _enPassantPawnSquareHistory.pop_back();
 
-    //recalculation(&move);
+    if (!treeSearch)
+        recalculation(move, true);
     _turn = invert_color(_turn);
     //_legalMoves.pop_back();
+    delete move;
 }
 
-void Board::recalculation(Move *move) {
+void Board::recalculation() {
+    for (auto piece : _whitePieces)
+        piece->recalculate();
+    for (auto piece : _blackPieces)
+        piece->recalculate();
+}
+
+void Board::recalculation(Move *move, bool undo) {
     // recalculates which squares are attacked by which pieces after a move
     // not all pieces must be recalculated, only those that are affected by the move
-    //     1. the moving piece
+    //     1. the moving piece, in case of promotion the new piece
     //     2. the piece being taken
     //     3. the pieces that were previously blocked by the moving piece
     //     4. the pieces that are now blocked by the moving piece
@@ -740,7 +755,11 @@ void Board::recalculation(Move *move) {
 
     auto piecesToRecalculate = std::set<Piece *>();
 
-    piecesToRecalculate.insert(move->get_piece());
+    if (!move->is_promotion() || undo)
+        piecesToRecalculate.insert(move->get_piece());
+    else
+        piecesToRecalculate.insert(move->get_to_sqr()->get_piece());
+
     for (auto piece : move->get_from_sqr()->get_attacked_by(Color::WHITE))
         piecesToRecalculate.insert(piece);
     for (auto piece : move->get_from_sqr()->get_attacked_by(Color::BLACK))
@@ -754,9 +773,19 @@ void Board::recalculation(Move *move) {
         piecesToRecalculate.insert(move->get_piece_taken());
 
     if (move->is_castling()){
-        auto rookTo = get<1>(get_castle_rook_squares(move));
+        auto [rookFrom, rookTo] = get_castle_rook_squares(move);
+        auto rookFromSqr = get_square(rookFrom);
         auto rookToSqr = get_square(rookTo);
-        piecesToRecalculate.insert(rookToSqr->get_piece());
+
+        if (!undo)
+            piecesToRecalculate.insert(rookToSqr->get_piece());
+        else 
+            piecesToRecalculate.insert(rookFromSqr->get_piece());
+
+        for (auto piece : rookFromSqr->get_attacked_by(Color::WHITE))
+            piecesToRecalculate.insert(piece);
+        for (auto piece : rookFromSqr->get_attacked_by(Color::BLACK))
+            piecesToRecalculate.insert(piece);
         for (auto piece : rookToSqr->get_attacked_by(Color::WHITE))
             piecesToRecalculate.insert(piece);
         for (auto piece : rookToSqr->get_attacked_by(Color::BLACK))
@@ -783,9 +812,19 @@ void Board::promote_pawn(Piece *pawn, PieceType newKind) {
 
 
 void Board::remove_piece(Piece *piece) {
+
+    for (auto sqr : piece->_attackedSquares) {
+        if (piece->_color == Color::WHITE)
+            sqr->_attackedByWhites.erase(std::remove(sqr->_attackedByWhites.begin(), sqr->_attackedByWhites.end(), piece), sqr->_attackedByWhites.end());
+        else
+            sqr->_attackedByBlacks.erase(std::remove(sqr->_attackedByBlacks.begin(), sqr->_attackedByBlacks.end(), piece), sqr->_attackedByBlacks.end());
+    }
+
+    piece->_attackedSquares.clear();
+
     // used when piece is captured, also removes pawn that is being promoted
     piece->_square->_piece = nullptr;
-    piece->_square = nullptr;
+    //piece->_square = nullptr;
     piece->_isActive = false;
 
     if (piece->_color == Color::WHITE){
@@ -824,21 +863,35 @@ std::tuple<int, int> Board::get_castle_rook_squares(Move *move) {
 
 int Board::generate_successors(int depth) {
     int total = 0;
+
+    if (_history.size() > 0 && _history.back() != nullptr)
+        recalculation(_history.back());
+    else
+        recalculation();
+
     _legalMoves.push_back(calc_all_legal_moves());
     for (auto move : _legalMoves.back()) {
+        // if (depth == 2) 
+        //     std::cout << "move " << *move;
         perform_move(move);
 
-        std::cout << std::string(5-depth*2, ' ') << *move << std::endl;
+        // std::cout << std::string(10-depth*2, ' ') << *move << std::endl;
 
+        int n;
         if (depth > 1)
-            total += generate_successors(depth - 1);
+            n = generate_successors(depth - 1);
         else
-            total++;
+            n = 1;
+
+        total += n;
+
+        // if (depth == 2) 
+            // std::cout << ": " << n << std::endl;
         undo_move();
     }
 
-    for (auto move : _legalMoves.back())
-        delete move;
+    // for (auto move : _legalMoves.back())
+        // delete move;
     _legalMoves.pop_back();
 
     return total;

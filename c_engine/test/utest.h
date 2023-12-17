@@ -18,7 +18,7 @@ inline bool str_equal_ignore_case(std::string str1, std::string str2) {
 }
 
 template<typename T1, typename T2>
-inline void assertEqual(T1 expected, T2 actual) {
+inline void assert_equal(T1 expected, T2 actual) {
     if (expected != actual) {
         std::stringstream ss;
         ss << "Expected " << expected << " but got " << actual;
@@ -28,7 +28,7 @@ inline void assertEqual(T1 expected, T2 actual) {
 }
 
 template<typename T1, typename T2>
-inline void assertEqual(T1 *expected, T2 *actual) {
+inline void assert_equal(T1 *expected, T2 *actual) {
     if (expected != actual) {
         std::stringstream ss;
         ss << "Expected " << *expected << " but got " << *actual;
@@ -38,7 +38,7 @@ inline void assertEqual(T1 *expected, T2 *actual) {
 }
 
 template<typename T>
-inline void assertVectorContain(std::vector<T *> &vector, const char* itemStr) {
+inline void assert_vector_contains(std::vector<T *> &vector, const char* itemStr) {
     for (auto m : vector) {
         if (m->str() == itemStr)
             return;
@@ -48,7 +48,7 @@ inline void assertVectorContain(std::vector<T *> &vector, const char* itemStr) {
 }
 
 template<typename T>
-inline void assertVectorContain(const std::vector<T> &vector, T item) {
+inline void assert_vector_contains(const std::vector<T> &vector, T item) {
     for (auto item2 : vector) {
         if (item == item2)
             return;
@@ -60,28 +60,34 @@ inline void assertVectorContain(const std::vector<T> &vector, T item) {
     throw std::runtime_error(ss.str());
 }
 
-inline void assertIsNull(void *ptr, std::string msg = "") {
+inline void assert_is_null(void *ptr, std::string msg = "") {
     if (ptr != nullptr) {
         throw std::runtime_error("Expected pointer to be null" + (msg.empty() ? "" : ": " + msg));
     }
 }
 
-inline void assertTrue(bool expression, std::string msg = "") {
+inline void assert_true(bool expression, std::string msg = "") {
     if (!expression) {
         throw std::runtime_error("Expected expression to be true" + (msg.empty() ? "" : ": " + msg));
     }
 }
 
-inline void assertFalse(bool expression, std::string msg = "") {
+inline void assert_false(bool expression, std::string msg = "") {
     if (expression) {
         throw std::runtime_error("Expected expression to be false" + (msg.empty() ? "" : ": " + msg));
     }
 }
 
+template <typename T>
+inline void delete_vector(std::vector<T *> &vector) {
+    for (auto item : vector)
+        delete item;
+}
+
 class TestSuite {
 public:
     TestSuite(std::string suiteName) : suiteName(suiteName) {}
-    void addTest(std::string name, testFuncPtr func) {
+    void add_test(std::string name, testFuncPtr func) {
         tests.emplace_back(name, func);
     }
 

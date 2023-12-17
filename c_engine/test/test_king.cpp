@@ -9,40 +9,40 @@
 TestSuite create_test_suite_king() {
     TestSuite testSuite("King");
 
-    testSuite.addTest("King construction", []() {
+    testSuite.add_test("King construction", []() {
         Board b;
         auto king = dynamic_cast<King*>(b.place_piece(PieceType::KING, Color::WHITE, "a1"));
 
 
-        assertEqual(PieceType::KING, king->_kind);
-        assertEqual(Color::WHITE, king->_color);
-        assertEqual("a1", king->_square->get_name());
-        assertEqual("K", king->_name);
-        assertFalse(king->_isLight, "king is not a light piece");
+        assert_equal(PieceType::KING, king->_kind);
+        assert_equal(Color::WHITE, king->_color);
+        assert_equal("a1", king->_square->get_name());
+        assert_equal("K", king->_name);
+        assert_false(king->_isLight, "king is not a light piece");
     });
 
-    testSuite.addTest("King move generation 1", []() {
+    testSuite.add_test("King move generation 1", []() {
         Board b;
         auto king = dynamic_cast<King*>(b.place_piece(PieceType::KING, Color::WHITE, "a1"));
         king->recalculate();
 
         auto moves = b.squares_to_moves(king->get_potential_squares(), king);
 
-        assertEqual(3U, moves.size());
+        assert_equal(3U, moves.size());
         for (auto move : {"Ka1-a2", "Ka1-b1", "Ka1-b2"})
-            assertVectorContain(moves, move);
+            assert_vector_contains(moves, move);
     });
 
-    testSuite.addTest("King move generation 2", []() {
+    testSuite.add_test("King move generation 2", []() {
         Board b;
         auto king = dynamic_cast<King*>(b.place_piece(PieceType::KING, Color::WHITE, "d4"));
         king->recalculate();
 
         auto moves = b.squares_to_moves(king->get_potential_squares(), king);
 
-        assertEqual(8U, moves.size());
+        assert_equal(8U, moves.size());
         for (auto move : {"Kd4-c3", "Kd4-c4", "Kd4-c5", "Kd4-d3", "Kd4-d5", "Kd4-e3", "Kd4-e4", "Kd4-e5"})
-            assertVectorContain(moves, move);
+            assert_vector_contains(moves, move);
     });
 
     return testSuite;

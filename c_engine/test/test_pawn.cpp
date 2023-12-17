@@ -10,59 +10,59 @@
 TestSuite create_test_suite_pawn() {
     TestSuite testSuite("Pawn");
 
-    testSuite.addTest("Pawn construction", []() {
+    testSuite.add_test("Pawn construction", []() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "a2"));
 
-        assertEqual(PieceType::PAWN, pawn->_kind);
-        assertEqual(Color::WHITE, pawn->_color);
-        assertEqual("a2", pawn->_square->get_name());
-        assertEqual("p", pawn->_name);
-        assertFalse(pawn->_isLight);
+        assert_equal(PieceType::PAWN, pawn->_kind);
+        assert_equal(Color::WHITE, pawn->_color);
+        assert_equal("a2", pawn->_square->get_name());
+        assert_equal("p", pawn->_name);
+        assert_false(pawn->_isLight);
     });
 
-    testSuite.addTest("Pawn move generation 1", []() {
+    testSuite.add_test("Pawn move generation 1", []() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "a2"));
 
         auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
-        assertEqual(2U, moves.size());
-        assertVectorContain(moves, "pa2-a3");
-        assertVectorContain(moves, "pa2-a4");
+        assert_equal(2U, moves.size());
+        assert_vector_contains(moves, "pa2-a3");
+        assert_vector_contains(moves, "pa2-a4");
 
         for (auto move : moves)
             delete move;
     });
 
-    testSuite.addTest("Pawn move generation 2", []() {
+    testSuite.add_test("Pawn move generation 2", []() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "d4"));
 
         auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
-        assertEqual(1U, moves.size());
-        assertVectorContain(moves, "pd4-d5");
+        assert_equal(1U, moves.size());
+        assert_vector_contains(moves, "pd4-d5");
 
         for (auto move : moves)
             delete move;
     });
 
-    testSuite.addTest("Pawn move generation 3", []() {
+    testSuite.add_test("Pawn move generation 3", []() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "h7"));
 
         auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
-        assertEqual(4U, moves.size());
+        assert_equal(4U, moves.size());
         for (auto move : {"ph7-h8Q", "ph7-h8R", "ph7-h8B", "ph7-h8N"})
-            assertVectorContain(moves, move);
+            assert_vector_contains(moves, move);
 
         for (auto move : moves)
             delete move;
     });
 
-    testSuite.addTest("Pawn move generation 4", []() {
+    testSuite.add_test("Pawn move generation 4", []() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "c7"));
         b.place_piece(PieceType::ROOK, Color::BLACK, "b8");
@@ -70,16 +70,16 @@ TestSuite create_test_suite_pawn() {
 
         auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
-        assertEqual(12U, moves.size());
+        assert_equal(12U, moves.size());
         for (auto move : {"pc7-c8Q", "pc7-c8R", "pc7-c8B", "pc7-c8N", "pc7-b8Q", "pc7-b8R", "pc7-b8B", "pc7-b8N",
             "pc7-d8Q", "pc7-d8R", "pc7-d8B", "pc7-d8N"})
-            assertVectorContain(moves, move);
+            assert_vector_contains(moves, move);
         
         for (auto move : moves)
             delete move;
     });
 
-    testSuite.addTest("Pawn move generation 5", []() {
+    testSuite.add_test("Pawn move generation 5", []() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "e2"));
         b.place_piece(PieceType::ROOK, Color::BLACK, "d3");
@@ -88,15 +88,15 @@ TestSuite create_test_suite_pawn() {
 
         auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
-        assertEqual(2U, moves.size());
+        assert_equal(2U, moves.size());
         for (auto move : {"pe2-e3", "pe2-d3"})
-            assertVectorContain(moves, move);
+            assert_vector_contains(moves, move);
 
         for (auto move : moves)
             delete move;
     });
 
-    testSuite.addTest("Test en passant 1", []() {
+    testSuite.add_test("Test en passant 1", []() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "e5"));
         b.place_piece(PieceType::PAWN, Color::BLACK, "d5");
@@ -104,15 +104,15 @@ TestSuite create_test_suite_pawn() {
 
         auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
-        assertEqual(2U, moves.size());
+        assert_equal(2U, moves.size());
         for (auto move : {"pe5-e6", "pe5-d6"})
-            assertVectorContain(moves, move);
+            assert_vector_contains(moves, move);
     
         for (auto move : moves)
             delete move;
     });
 
-    testSuite.addTest("Test en passant pin", []() {
+    testSuite.add_test("Test en passant pin", []() {
         Board b;
         auto pawn = dynamic_cast<Pawn*>(b.place_piece(PieceType::PAWN, Color::WHITE, "e5"));
         b.place_piece(PieceType::PAWN, Color::BLACK, "d5");
@@ -123,9 +123,9 @@ TestSuite create_test_suite_pawn() {
 
         auto moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
-        assertEqual(2U, moves.size());
+        assert_equal(2U, moves.size());
         for (auto move : {"pe5-e6", "pe5-f6"})
-            assertVectorContain(moves, move);
+            assert_vector_contains(moves, move);
     
         for (auto move : moves)
             delete move;
@@ -134,9 +134,9 @@ TestSuite create_test_suite_pawn() {
         
         moves = b.squares_to_moves(pawn->get_potential_squares(), pawn);
 
-        assertEqual(3U, moves.size());
+        assert_equal(3U, moves.size());
         for (auto move : {"pe5-e6", "pe5-f6", "pe5-d6"})
-            assertVectorContain(moves, move);
+            assert_vector_contains(moves, move);
 
         for (auto move : moves)
             delete move;
