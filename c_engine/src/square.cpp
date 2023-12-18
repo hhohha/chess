@@ -8,6 +8,9 @@ void Square::init(int idx, Board *board) {
     _board = board;
     ASSERT(idx >= 0 && idx < 64, "invalid square index");
     this->_name = {static_cast<char>('a' + _coordinate.col), static_cast<char>('1' + _coordinate.row)};
+
+    _attackedByBlacks.reserve(16);
+    _attackedByWhites.reserve(16);
 }
 
 bool Square::is_attacked_by(Color color) {

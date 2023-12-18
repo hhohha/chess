@@ -11,7 +11,8 @@
 Piece::Piece(PieceType kind, Color color, Square *square)
     : _kind(kind),
       _color(color),
-      _square(square) {}
+      _square(square) {
+}
 
 Square *Piece::get_square() {
     return _square;
@@ -26,8 +27,13 @@ SlidingPiece::SlidingPiece(PieceType kind, Color color, Square *square, const st
 
 void SlidingPiece::recalculate() {
     for (auto sqr : _attackedSquares) {
-        auto vec = &sqr->get_attacked_by(_color);
-        vec->erase(std::remove(vec->begin(), vec->end(), this), vec->end());
+
+        // QQQ
+        //auto& attackedBy = sqr->get_attacked_by(_color);
+        //attackedBy.erase(std::find(attackedBy.begin(), attackedBy.end(), this));
+
+        auto attackedBy = &sqr->get_attacked_by(_color);
+        attackedBy->erase(std::find(attackedBy->begin(), attackedBy->end(), this));
     }
 
     _attackedSquares.clear();

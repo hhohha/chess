@@ -127,34 +127,8 @@ Square * Board::get_en_passant_pawn_square(){
 
 void Board::update_en_passant_pawn_square(Square *sqr){
     ASSERT(_enPassantPawnSquareHistory.size() > 0, "en passant pawn square history is empty");
-    //_enPassantPawnSquareHistory.pop_back();
-    //_enPassantPawnSquareHistory.push_back(sqr);
     _enPassantPawnSquareHistory.back() = sqr;
 }
-
-// void Board::remove_piece(Piece *piece) {
-//     ASSERT(piece != nullptr, "piece is null");
-//     ASSERT(piece->_square != nullptr, "piece is not on the board");
-//     ASSERT(!piece->_square->is_free(), "piece is not on the board");
-
-//     for (auto sqr : piece->_attackedSquares) {
-//         if (piece->_color == Color::WHITE) {
-//             sqr->_attackedByWhites.erase(std::remove(sqr->_attackedByWhites.begin(), sqr->_attackedByWhites.end(), piece), sqr->_attackedByWhites.end());
-//             _whitePieces.erase(std::remove(_whitePieces.begin(), _whitePieces.end(), piece), _whitePieces.end());
-//             if (piece->_isSliding)
-//                 _whiteSlidingPieces.erase(std::remove(_whiteSlidingPieces.begin(), _whiteSlidingPieces.end(), piece), _whiteSlidingPieces.end());
-//         }
-//         else {
-//             sqr->_attackedByBlacks.erase(std::remove(sqr->_attackedByBlacks.begin(), sqr->_attackedByBlacks.end(), piece), sqr->_attackedByBlacks.end());
-//             _blackPieces.erase(std::remove(_blackPieces.begin(), _blackPieces.end(), piece), _blackPieces.end());
-//             if (piece->_isSliding)
-//                 _blackSlidingPieces.erase(std::remove(_blackSlidingPieces.begin(), _blackSlidingPieces.end(), piece), _blackSlidingPieces.end());
-//         }
-//     }
-
-//     piece->_attackedSquares.clear();
-//     piece->_isActive = false;
-// }
 
 
 King *Board::get_king(Color color) {
@@ -812,14 +786,14 @@ void Board::promote_pawn(Piece *pawn, PieceType newKind) {
 
 
 void Board::remove_piece(Piece *piece) {
-
     for (auto sqr : piece->_attackedSquares) {
-        if (piece->_color == Color::WHITE)
-            sqr->_attackedByWhites.erase(std::remove(sqr->_attackedByWhites.begin(), sqr->_attackedByWhites.end(), piece), sqr->_attackedByWhites.end());
-        else
-            sqr->_attackedByBlacks.erase(std::remove(sqr->_attackedByBlacks.begin(), sqr->_attackedByBlacks.end(), piece), sqr->_attackedByBlacks.end());
-    }
+        // QQQ
+        // auto& attackedBy = sqr->get_attacked_by(piece->_color);
+        // attackedBy.erase(std::find(attackedBy.begin(), attackedBy.end(), piece));    
 
+        auto attackedBy = &sqr->get_attacked_by(piece->_color);
+        attackedBy->erase(std::find(attackedBy->begin(), attackedBy->end(), piece));    
+    }
     piece->_attackedSquares.clear();
 
     // used when piece is captured, also removes pawn that is being promoted
@@ -828,13 +802,13 @@ void Board::remove_piece(Piece *piece) {
     piece->_isActive = false;
 
     if (piece->_color == Color::WHITE){
-        _whitePieces.erase(std::remove(_whitePieces.begin(), _whitePieces.end(), piece), _whitePieces.end());
+        _whitePieces.erase(std::find(_whitePieces.begin(), _whitePieces.end(), piece));
         if (piece->_isSliding)
-            _whiteSlidingPieces.erase(std::remove(_whiteSlidingPieces.begin(), _whiteSlidingPieces.end(), piece), _whiteSlidingPieces.end());
+            _whiteSlidingPieces.erase(std::find(_whiteSlidingPieces.begin(), _whiteSlidingPieces.end(), piece));
     } else {
-        _blackPieces.erase(std::remove(_blackPieces.begin(), _blackPieces.end(), piece), _blackPieces.end());    
+        _blackPieces.erase(std::find(_blackPieces.begin(), _blackPieces.end(), piece));    
         if (piece->_isSliding)
-            _blackSlidingPieces.erase(std::remove(_blackSlidingPieces.begin(), _blackSlidingPieces.end(), piece), _blackSlidingPieces.end());
+            _blackSlidingPieces.erase(std::find(_blackSlidingPieces.begin(), _blackSlidingPieces.end(), piece));
     }
 }
 

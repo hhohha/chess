@@ -11,6 +11,8 @@ King::King(Color color, Square *square)
     _isSliding = false;
     _isLight = false;
     _name = "K";
+    _attackedSquares.reserve(8);
+    _potentialSquares.reserve(8);
 }
 
 std::vector<Square *> King::calc_squares_avoiding_check(std::vector<Square *> *inaccessableSquares){
@@ -27,8 +29,12 @@ std::vector<Square *> King::calc_squares_avoiding_check(std::vector<Square *> *i
 
 void King::recalculate() {
     for (auto sqr : _attackedSquares) {
-        auto vec = &sqr->get_attacked_by(_color);
-        vec->erase(std::remove(vec->begin(), vec->end(), this), vec->end());
+        // QQQ
+        // auto& attackedBy = sqr->get_attacked_by(_color);
+        // attackedBy.erase(std::find(attackedBy.begin(), attackedBy.end(), this));
+
+        auto attackedBy = &sqr->get_attacked_by(_color);
+        attackedBy->erase(std::find(attackedBy->begin(), attackedBy->end(), this));
     }
 
     _attackedSquares.clear();

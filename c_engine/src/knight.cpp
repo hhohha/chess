@@ -9,12 +9,18 @@ Knight::Knight(Color color, Square *square)
     _isSliding = false;
     _isLight = true;
     _name = "N";
+    _attackedSquares.reserve(8);
+    _potentialSquares.reserve(8);
 }
 
 void Knight::recalculate() {
     for (auto sqr : _attackedSquares) {
+        // QQQ
+        //auto& vec = sqr->get_attacked_by(_color);
+        //vec.erase(std::find(vec.begin(), vec.end(), this));
+
         auto vec = &sqr->get_attacked_by(_color);
-        vec->erase(std::remove(vec->begin(), vec->end(), this), vec->end());
+        vec->erase(std::find(vec->begin(), vec->end(), this));
     }
 
     _attackedSquares.clear();

@@ -13,6 +13,7 @@
     _name = "p";
     _isSliding = false;
     _isLight = false;
+    _attackedSquares.reserve(2);
 }
 
 std::vector<Square *> Pawn::get_potential_squares() {
@@ -146,27 +147,16 @@ std::vector<Square *> Pawn::get_forward_squares() {
     return squares;
 }
 
-// std::vector<Move *> Pawn::generate_pawn_moves(Square *targetSqr) {
-//     // if the pawn is about to promote, generate all possible promotions
-//     if (targetSqr->get_row() == _promotionRow) {
-//         return {
-//             new Move(this, targetSqr, PieceType::QUEEN),
-//             new Move(this, targetSqr, PieceType::ROOK),
-//             new Move(this, targetSqr, PieceType::BISHOP),
-//             new Move(this, targetSqr, PieceType::KNIGHT)
-//         };
-//     } else {
-//         return {new Move(this, targetSqr)};
-//     }
-// }
-
-
 void Pawn::recalculate() {
     // pawn doesn't store potential moves, only attacked squares (possible todo)
 
     for (auto sqr : _attackedSquares) {
-        auto vec = &sqr->get_attacked_by(_color);
-        vec->erase(std::remove(vec->begin(), vec->end(), this), vec->end());
+        // QQQ
+        // auto& attackedBy = sqr->get_attacked_by(_color);
+        // attackedBy.erase(std::find(attackedBy.begin(), attackedBy.end(), this));
+        auto attackedBy = &sqr->get_attacked_by(_color);
+        attackedBy->erase(std::find(attackedBy->begin(), attackedBy->end(), this));
+
     }
     _attackedSquares.clear();
 

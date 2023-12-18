@@ -78,7 +78,7 @@ Direction get_direction(Square * sqr1, Square * sqr2) {
         return sqr1->get_col() > sqr2->get_col() ? Direction::DOWN_LEFT : Direction::UP_RIGHT;
     if (sqr1->get_col() - sqr2->get_col() == sqr2->get_row() - sqr1->get_row())
         return sqr1->get_col() > sqr2->get_col() ? Direction::UP_LEFT : Direction::DOWN_RIGHT;
-    throw std::runtime_error("No direction found between squares");
+    throw std::runtime_error("No direction found between squares " + sqr1->get_name() + " and " + sqr2->get_name());
 }
 
 Color invert_color(Color color) {

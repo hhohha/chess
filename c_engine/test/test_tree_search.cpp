@@ -52,14 +52,18 @@ TestSuite create_test_suite_tree_search() {
         positions.push_back({8, "Position 8", FEN_TEST_E_NO_CASTLE, {1, 46, 1866, 86677,  3504849, 161724713, 6554868204}});
         positions.push_back({9, "Position 9", FEN_TEST_F,           {1, 46, 2079, 89890,  3894594, 164075551, 6923051137}});
 
-        for (auto &position: positions)
-            for (int depth = 5; depth <= 5; depth++) {
-                position.run_test(depth);
+        int repetitions = 1;
+
+        for (int i = 0; i < repetitions; i++) {
+            for (auto &position: positions)
+                for (int depth = 1; depth <= 4; depth++) {
+                    position.run_test(depth);
+            }
         }
 
-        std::cout << "Total time taken: " << (double)totalTime / 1000000 << " sec" << std::endl;
-        std::cout << "Total nodes generated: " << totalNodes << std::endl;
-        std::cout << "Nodes per second: " << (double)totalNodes / totalTime * 1000000 << std::endl;
+        std::cout << "Total time taken: " << (double)totalTime / 1000000 /repetitions << " sec" << std::endl;
+        std::cout << "Total nodes generated: " << totalNodes / repetitions << std::endl;
+        std::cout << "Nodes per second: " << (double)totalNodes / totalTime * 1000000 / repetitions << std::endl;
     });
 
     return testSuite;
