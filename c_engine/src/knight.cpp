@@ -15,12 +15,8 @@ Knight::Knight(Color color, Square *square)
 
 void Knight::recalculate() {
     for (auto sqr : _attackedSquares) {
-        // QQQ
-        //auto& vec = sqr->get_attacked_by(_color);
-        //vec.erase(std::find(vec.begin(), vec.end(), this));
-
-        auto vec = &sqr->get_attacked_by(_color);
-        vec->erase(std::find(vec->begin(), vec->end(), this));
+        auto& vec = sqr->get_attacked_by(_color);
+        vec.erase(std::find(vec.begin(), vec.end(), this));
     }
 
     _attackedSquares.clear();

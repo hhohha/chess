@@ -172,21 +172,114 @@ TestSuite create_test_suite_board() {
         delete_vector(moves);
     });
 
-    testSuite.add_test("Perform move 1", []() {
+    testSuite.add_test("Perform and undo a simple move", []() {
         Board b;
         b.load_fen(FEN_TEST_A);
         
         auto whiteKing = b.get_square("h1")->get_piece();
         auto destSquare = b.get_square("h2");
         auto move = new Move(whiteKing, destSquare);
-        b.perform_move(move);
+        b.perform_move(move, false);
 
+        // check details... history, move counts, en passant square, turn
+        assert_equal(1U, b._history.size());
+        assert_equal(move, b._history[0]);
+        assert_equal(0U, b._fullMoves);
+        assert_equal(2U, b._halfMoves.size());
+        assert_equal(99U, b._halfMoves.back());
+        assert_equal(1U, whiteKing->_movesCnt);
+        assert_is_null(b.get_en_passant_pawn_square(), "En passant pawn square should be null");
+        assert_equal(Color::BLACK, b._turn);
+        
+        // check the move object
         assert_equal(destSquare, move->get_to_sqr());
+        assert_is_null(move->get_piece_taken(), "Piece taken should be null");
         assert_equal(whiteKing->_square, move->get_to_sqr());
-        assert_equal(move->get_from_sqr(), b.get_square("h1"));
+        assert_equal(b.get_square("h1"), move->get_from_sqr());
+        assert_equal(b.get_square("h2"), move->get_to_sqr());
+        assert_equal(whiteKing, move->get_piece());
+        assert_false(move->is_castling(), "Move should not be castling");
+        assert_false(move->is_en_passant(), "Move should not be en passant");
+        assert_false(move->is_promotion(), "Move should not be promotion");
+        assert_false(move->is_capture(), "Move should not be a capture");
 
-        delete move;
+
+        // check the board
+        assert_equal(b.get_square("h2")->get_piece(), whiteKing);
+        assert_is_null(b.get_square("h1")->get_piece(), "h1 should be empty");
+
+        // check the piece
+        assert_equal(b.get_square("h2"), whiteKing->_square);
+        
+
+        b.undo_move(false);
+
+        // details...
+        assert_equal(0U, b._history.size());
+        assert_equal(0U, b._fullMoves);
+        assert_equal(98U, b._halfMoves.back());
+        assert_equal(0U, whiteKing->_movesCnt);
+        assert_is_null(b.get_en_passant_pawn_square(), "En passant pawn square should be null");
+        assert_equal(Color::WHITE, b._turn);
+
+        // board
+        assert_equal(b.get_square("h1")->get_piece(), whiteKing);
+        assert_is_null(b.get_square("h2")->get_piece(), "h2 should be empty");
+
+        // piece
+        assert_equal(b.get_square("h1"), whiteKing->_square);
     });
+
+    testSuite.add_test("Perform and undo a move move with capture", []() {
+        Board b;
+        b.load_fen("k7/8/8/8/8/8/7p/7K w - - 98 0");
+
+        auto whiteKing = b.get_square("h1")->get_piece();
+        auto pawnTaken = b.get_square("h2")->get_piece();
+        auto destSquare = b.get_square("h2");
+        auto move = new Move(whiteKing, destSquare);
+        b.perform_move(move, false);
+
+        // check the move object
+        assert_equal(destSquare, move->get_to_sqr());
+        assert_equal(pawnTaken, move->get_piece_taken());
+        assert_equal(b.get_square("h1"), move->get_from_sqr());
+        assert_equal(b.get_square("h2"), move->get_to_sqr());
+        assert_equal(whiteKing, move->get_piece());
+        assert_true(move->is_capture(), "Move should not be a capture");
+
+        // check the board
+        assert_equal(b.get_square("h2")->get_piece(), whiteKing);
+        assert_is_null(b.get_square("h1")->get_piece(), "h1 should be empty");
+
+        // check the moving piece
+        assert_equal(b.get_square("h2"), whiteKing->_square);
+
+        // check the captured piece
+        assert_false(pawnTaken->_isActive, "Pawn should be inactive");
+        assert_equal(b.get_square("h2"), pawnTaken->_square); // we preserve the last square of inactive pieces
+        assert_true(b._blackPieces.end() == std::find(b._blackPieces.begin(), b._blackPieces.end(), pawnTaken), "Pawn should not be in black pieces");
+
+        b.undo_move(false);
+
+        // board
+        assert_equal(b.get_square("h1")->get_piece(), whiteKing);
+        assert_equal(b.get_square("h2")->get_piece(), pawnTaken);
+
+        // moving piece
+        assert_equal(b.get_square("h1"), whiteKing->_square);
+
+        // captured piece
+        assert_true(pawnTaken->_isActive, "Pawn should be active");
+        assert_equal(b.get_square("h2"), pawnTaken->_square);
+        assert_false(b._blackPieces.end() == std::find(b._blackPieces.begin(), b._blackPieces.end(), pawnTaken), "Pawn should be in black pieces");
+    });
+
+    // perform and undo move - long castle
+    // perform and undo move - short castle
+    // perform and undo move - en passant
+    // perform and undo move - promotion
+    // test recalculations
 
 
     testSuite.add_test("Perform move 2", []() {
@@ -265,29 +358,15 @@ TestSuite create_test_suite_board() {
 
     testSuite.add_test("Perform move 3", []() {
         Board b;
-        b.load_fen(FEN_TEST_C);
+        b.load_fen(FEN_TEST_D);
         
-        b.perform_move(new Move(b.get_square("a5")->_piece, b.get_square("a6")), false);
-        b.perform_move(new Move(b.get_square("c7")->_piece, b.get_square("c5")), false);
-
+        b.perform_move(new Move(b.get_square("f1")->_piece, b.get_square("f2")), false);
         auto moves = b.calc_all_legal_moves();
 
         for (auto move : moves)
             std::cout << *move << std::endl;
 
     });
-
-    testSuite.add_test("Perform move 4", []() {
-        Board b;
-        b.load_fen(FEN_TEST_B);
-
-
-        auto move = new Move(b.get_square("a2")->get_piece(), b.get_square("a3"));
-        b.perform_move(move);
-
-        b.generate_successors(2);
-    });
-
 
     return testSuite;
 }   

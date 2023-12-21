@@ -29,12 +29,8 @@ std::vector<Square *> King::calc_squares_avoiding_check(std::vector<Square *> *i
 
 void King::recalculate() {
     for (auto sqr : _attackedSquares) {
-        // QQQ
-        // auto& attackedBy = sqr->get_attacked_by(_color);
-        // attackedBy.erase(std::find(attackedBy.begin(), attackedBy.end(), this));
-
-        auto attackedBy = &sqr->get_attacked_by(_color);
-        attackedBy->erase(std::find(attackedBy->begin(), attackedBy->end(), this));
+        auto& attackedBy = sqr->get_attacked_by(_color);
+        attackedBy.erase(std::find(attackedBy.begin(), attackedBy.end(), this));
     }
 
     _attackedSquares.clear();

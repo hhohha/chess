@@ -17,6 +17,7 @@ public:
     bool is_promotion() const;
     bool is_castling() const;
     bool is_en_passant() const {return _isEnPassant;}
+    bool is_capture() const {return _pieceTaken != nullptr;}
     std::string str() const;
 
     Piece *get_piece() const {return _piece;}

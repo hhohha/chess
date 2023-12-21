@@ -34,6 +34,8 @@ void Board::clear() {
     }
     _whitePieces.clear();
     _blackPieces.clear();
+    _whiteSlidingPieces.clear();
+    _blackSlidingPieces.clear();
 }
 
 Square *Board::get_square(Coordinate c) {
@@ -132,14 +134,11 @@ void Board::update_en_passant_pawn_square(Square *sqr){
 
 
 King *Board::get_king(Color color) {
-    // king is always the first piece in the list
-    if (Color::WHITE == color)
-        return dynamic_cast<King *>(_whitePieces[0]);
-    else
-        return dynamic_cast<King *>(_blackPieces[0]);
+    // king is always the first piece in the list, if king is not present, dynamic_cast returns nullptr
+    return dynamic_cast<King *>(get_pieces(color)[0]);
 }
 
-Square * Board::find_first_occupied_square_in_dir(Square *sqr, Direction dir) {
+Square *Board::find_first_occupied_square_in_dir(Square *sqr, Direction dir) {
     // Find the square with first piece in the given direction from the given square
 
     Coordinate c(sqr->get_coordinate());
@@ -238,11 +237,6 @@ void Board::load_fen(std::string fen) {
     _halfMoves.clear();
     _halfMoves.push_back(std::stoi(halves));
     _fullMoves = std::stoi(fulls);
-
-    for (auto piece : _whitePieces)
-        piece->recalculate();
-    for (auto piece : _blackPieces)
-        piece->recalculate();
 
     _legalMoves.clear();
     //_legalMoves.push_back(calc_all_legal_moves());
@@ -563,7 +557,7 @@ std::vector<Piece *> & Board::get_sliding_pieces(Color color) {
     return color == Color::WHITE ? _whiteSlidingPieces : _blackSlidingPieces;
 }
 
-void Board::perform_move(Move *move, bool treeSearch) {
+void Board::perform_move(Move *move, bool shouldRecalculate) {
     _history.push_back(move);
 
     auto fromSqr = move->get_from_sqr();
@@ -589,9 +583,9 @@ void Board::perform_move(Move *move, bool treeSearch) {
     }
 
     if (move->get_piece_taken() != nullptr || movingPiece->_kind == PieceType::PAWN)
-        _halfMoves.push_back(0);
+        _halfMoves.push_back(0U);
     else {
-        ASSERT(_halfMoves.size() > 0, "half moves history is empty");
+        ASSERT(_halfMoves.size() > 0U, "half moves history is empty");
         _halfMoves.push_back(_halfMoves.back() + 1);
     }
 
@@ -619,7 +613,7 @@ void Board::perform_move(Move *move, bool treeSearch) {
 
     _turn = invert_color(_turn);
 
-    if (!treeSearch)
+    if (shouldRecalculate)
         recalculation(move);
     //_legalMoves.push_back(calc_all_legal_moves());
 }
@@ -645,7 +639,7 @@ void Board::store_piece_in_vectors(Piece *piece) {
 
 }
 
-void Board::undo_move(bool treeSearch) {
+void Board::undo_move(bool shouldRecalculate) {
     ASSERT(_history.size() > 0, "no moves to undo");
 
     auto move = _history.back();
@@ -664,10 +658,9 @@ void Board::undo_move(bool treeSearch) {
 
         auto newPiece = move->get_to_sqr()->get_piece();
         remove_piece(newPiece);
-            
         delete newPiece;
-        move->get_piece()->_isActive = true;
-        store_piece_in_vectors(move->get_piece());
+        movingPiece->_isActive = true;
+        store_piece_in_vectors(movingPiece);
     }
 
     if (move->get_piece_taken() != nullptr) {
@@ -703,8 +696,23 @@ void Board::undo_move(bool treeSearch) {
     _halfMoves.pop_back();
     _enPassantPawnSquareHistory.pop_back();
 
-    if (!treeSearch)
-        recalculation(move, true);
+    if (shouldRecalculate) {
+        auto piecesToRecalculate = _piecesToRecalculate.back();
+        _piecesToRecalculate.pop_back();
+        for (auto piece : piecesToRecalculate) {
+            if (piece == nullptr)
+                std::cout << "piece is null" << std::endl;
+            ASSERT(piece != nullptr, "piece to recalculate is null");
+            piece->recalculate();
+        }
+    }
+
+    if (move->is_promotion())
+        movingPiece->recalculate();
+    if (move->is_capture())
+        move->get_piece_taken()->recalculate();
+        
+    //recalculation(move, true);
     _turn = invert_color(_turn);
     //_legalMoves.pop_back();
     delete move;
@@ -717,7 +725,7 @@ void Board::recalculation() {
         piece->recalculate();
 }
 
-void Board::recalculation(Move *move, bool undo) {
+void Board::recalculation(Move *move) {
     // recalculates which squares are attacked by which pieces after a move
     // not all pieces must be recalculated, only those that are affected by the move
     //     1. the moving piece, in case of promotion the new piece
@@ -729,11 +737,6 @@ void Board::recalculation(Move *move, bool undo) {
 
     auto piecesToRecalculate = std::set<Piece *>();
 
-    if (!move->is_promotion() || undo)
-        piecesToRecalculate.insert(move->get_piece());
-    else
-        piecesToRecalculate.insert(move->get_to_sqr()->get_piece());
-
     for (auto piece : move->get_from_sqr()->get_attacked_by(Color::WHITE))
         piecesToRecalculate.insert(piece);
     for (auto piece : move->get_from_sqr()->get_attacked_by(Color::BLACK))
@@ -743,18 +746,15 @@ void Board::recalculation(Move *move, bool undo) {
     for (auto piece : move->get_to_sqr()->get_attacked_by(Color::BLACK))
         piecesToRecalculate.insert(piece);
 
-    if (move->get_piece_taken() != nullptr && move->get_piece_taken()->_isActive)
-        piecesToRecalculate.insert(move->get_piece_taken());
-
     if (move->is_castling()){
         auto [rookFrom, rookTo] = get_castle_rook_squares(move);
         auto rookFromSqr = get_square(rookFrom);
         auto rookToSqr = get_square(rookTo);
 
-        if (!undo)
+//        if (!undo)
             piecesToRecalculate.insert(rookToSqr->get_piece());
-        else 
-            piecesToRecalculate.insert(rookFromSqr->get_piece());
+//        else 
+//            piecesToRecalculate.insert(rookFromSqr->get_piece());
 
         for (auto piece : rookFromSqr->get_attacked_by(Color::WHITE))
             piecesToRecalculate.insert(piece);
@@ -774,9 +774,22 @@ void Board::recalculation(Move *move, bool undo) {
             piecesToRecalculate.insert(piece);
     }
 
+    if (!move->is_promotion())
+        piecesToRecalculate.insert(move->get_piece()); 
+    
     for (auto piece : piecesToRecalculate)
         piece->recalculate();
 
+    if (move->get_piece_taken() != nullptr)
+        piecesToRecalculate.insert(move->get_piece_taken());
+
+    if (move->is_promotion()) {
+        // recalculate the queen now, insert the pawn to be recalculated when undoing the move
+        move->get_to_sqr()->get_piece()->recalculate();
+        piecesToRecalculate.insert(move->get_piece());
+    }
+
+    _piecesToRecalculate.push_back(piecesToRecalculate);
 }
 
 void Board::promote_pawn(Piece *pawn, PieceType newKind) {
@@ -787,18 +800,13 @@ void Board::promote_pawn(Piece *pawn, PieceType newKind) {
 
 void Board::remove_piece(Piece *piece) {
     for (auto sqr : piece->_attackedSquares) {
-        // QQQ
-        // auto& attackedBy = sqr->get_attacked_by(piece->_color);
-        // attackedBy.erase(std::find(attackedBy.begin(), attackedBy.end(), piece));    
-
-        auto attackedBy = &sqr->get_attacked_by(piece->_color);
-        attackedBy->erase(std::find(attackedBy->begin(), attackedBy->end(), piece));    
+        auto& attackedBy = sqr->get_attacked_by(piece->_color);
+        attackedBy.erase(std::find(attackedBy.begin(), attackedBy.end(), piece));      
     }
     piece->_attackedSquares.clear();
 
     // used when piece is captured, also removes pawn that is being promoted
     piece->_square->_piece = nullptr;
-    //piece->_square = nullptr;
     piece->_isActive = false;
 
     if (piece->_color == Color::WHITE){
@@ -823,7 +831,7 @@ void Board::update_en_passant_history(Move *move) {
 std::tuple<int, int> Board::get_castle_rook_squares(Move *move) {
     // get the from and to squares of the rook that is castling
     auto toSqrIdx = move->get_to_sqr()->get_idx();
-    ASSERT(toSqrIdx == 6 || toSqrIdx == 2 || toSqrIdx == 62 || toSqrIdx == 58, "invalid castling move");
+    ASSERT(toSqrIdx == 6 || toSqrIdx == 2 || toSqrIdx == 62 || toSqrIdx == 58, "invalid castling move " + move->str());
 
     if (toSqrIdx == 6)
         return {7, 5};
@@ -838,34 +846,44 @@ std::tuple<int, int> Board::get_castle_rook_squares(Move *move) {
 int Board::generate_successors(int depth) {
     int total = 0;
 
-    if (_history.size() > 0 && _history.back() != nullptr)
+    if (_history.size() > 0 && _history.back() != nullptr) {
+        // std::cout << std::string(10-depth*2, ' ') << "   recalcing move:   " << *_history.back() << std::endl;
         recalculation(_history.back());
-    else
+    }
+    else 
         recalculation();
 
     _legalMoves.push_back(calc_all_legal_moves());
     for (auto move : _legalMoves.back()) {
         // if (depth == 2) 
-        //     std::cout << "move " << *move;
-        perform_move(move);
+        //      std::cout << "move " << *move;
+        perform_move(move, false);
 
-        // std::cout << std::string(10-depth*2, ' ') << *move << std::endl;
+        std::cout << std::string(10-depth*2, ' ') << *move << std::endl;
 
         int n;
-        if (depth > 1)
+        if (depth > 1) {
             n = generate_successors(depth - 1);
-        else
+        }
+        else {
             n = 1;
+            // std::cout << std::string(10-depth*2, ' ') << "   undoing move (with R):   " << *move << std::endl;
+        
+        }
+
+        undo_move(n > 1);
 
         total += n;
 
         // if (depth == 2) 
-            // std::cout << ": " << n << std::endl;
-        undo_move();
+        //     std::cout << ": " << n << std::endl;
+        
     }
 
-    // for (auto move : _legalMoves.back())
-        // delete move;
+    // for (auto piece : _piecesToRecalculate.back())
+    //     piece->recalculate();
+    // _piecesToRecalculate.pop_back();
+    
     _legalMoves.pop_back();
 
     return total;

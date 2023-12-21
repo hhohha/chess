@@ -4,6 +4,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <set>
 
 #include "king.h"
 #include "piece.h"
@@ -29,8 +30,6 @@ public:
     Piece *place_piece(PieceType kind, Color color, int squareIdx);
     Piece *place_piece(PieceType kind, Color color, Square *sqr);
 
-    // void remove_piece(Piece *piece);
-
     std::vector<Move *> calc_all_legal_moves();
     bool is_in_check(Color color);
 
@@ -44,13 +43,13 @@ public:
 
     bool is_castle_possible(Color color, Direction dir);
 
-    void perform_move(Move *move, bool treeSearch = false);
-    void undo_move(bool treeSearch = false);
+    void perform_move(Move *move, bool shouldRecalculate = true);
+    void undo_move(bool shouldRecalculate = true);
 
     void remove_piece(Piece *piece);
 
     int generate_successors(int depth);
-//private:
+
     std::vector<Move *> _history;
 
     Square * get_en_passant_pawn_square();
@@ -58,13 +57,10 @@ public:
 
     Color _turn = Color::WHITE;
     std::vector<Square *>_enPassantPawnSquareHistory = {nullptr};  // this needs to be a vector to keep track of history
-    std::vector<unsigned int> _halfMoves = {0};
+    std::vector<unsigned int> _halfMoves = {0U}; // this needs to be a vector to keep track of history
     unsigned int _fullMoves = 1;
     
     std::vector <std::vector<Move *>> legalMoves;
-
-    // unsigned int _analysisDepth = 0;
-    // std::vector<std::vector<Piece *>> piecesRecalculated;
 
     std::vector<Piece *> _whitePieces;
     std::vector<Piece *> _blackPieces;
@@ -74,6 +70,8 @@ public:
     std::vector<std::vector<Move *>> _legalMoves;
 
 private:
+    std::vector<std::set<Piece *>> _piecesToRecalculate;
+
     std::vector<Move *> squares_to_moves(std::vector<Square *> squares, Piece *piece);
     void store_piece_in_vectors(Piece *piece);
 
@@ -81,7 +79,7 @@ private:
     std::tuple<int, int> get_castle_rook_squares(Move *move);
     void update_en_passant_history(Move *move);
     void promote_pawn(Piece *pawn, PieceType kind);
-    void recalculation(Move *move, bool undo = false);
+    void recalculation(Move *move);
     void recalculation();
 
     std::vector<Move *> calc_all_legal_moves_check();
@@ -93,5 +91,5 @@ private:
     std::vector<Move *> calc_legal_moves_check_blocks(Piece *attacker, std::map<Piece *, Direction> &pinnedPieces);
 
 
-    Square _squares[64];
+    std::array<Square, 64> _squares;
 };

@@ -150,13 +150,11 @@ std::vector<Square *> Pawn::get_forward_squares() {
 void Pawn::recalculate() {
     // pawn doesn't store potential moves, only attacked squares (possible todo)
 
-    for (auto sqr : _attackedSquares) {
-        // QQQ
-        // auto& attackedBy = sqr->get_attacked_by(_color);
-        // attackedBy.erase(std::find(attackedBy.begin(), attackedBy.end(), this));
-        auto attackedBy = &sqr->get_attacked_by(_color);
-        attackedBy->erase(std::find(attackedBy->begin(), attackedBy->end(), this));
+    ASSERT(_square->get_row() != 0 && _square->get_row() != 7, "pawn is on square " + _square->str());
 
+    for (auto sqr : _attackedSquares) {
+        auto& attackedBy = sqr->get_attacked_by(_color);
+        attackedBy.erase(std::find(attackedBy.begin(), attackedBy.end(), this));
     }
     _attackedSquares.clear();
 
