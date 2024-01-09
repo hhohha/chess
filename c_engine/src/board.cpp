@@ -1,6 +1,8 @@
+#include <climits>
 #include <optional>
 #include <regex>
 #include <set>
+#include <unordered_map>
 
 
 #include "bishop.h"
@@ -44,13 +46,13 @@ Square *Board::get_square(Coordinate c) {
     return nullptr;
 }
 
-Square *Board::get_square(unsigned int col, unsigned int row) {
+Square *Board::get_square(int col, int row) {
     if (0 <= col && col < 8 && 0 <= row && row < 8)
         return &_squares[col + row*8];
     return nullptr;
 }
 
-Square *Board::get_square(unsigned int idx) {
+Square *Board::get_square(int idx) {
     if (0 <= idx && idx < 64)
         return &_squares[idx];
     return nullptr;
@@ -239,6 +241,7 @@ void Board::load_fen(std::string fen) {
     _fullMoves = std::stoi(fulls);
 
     _legalMoves.clear();
+    recalculation();
     //_legalMoves.push_back(calc_all_legal_moves());
 }
 
@@ -836,7 +839,67 @@ std::tuple<int, int> Board::get_castle_rook_squares(Move *move) {
     }
 }
 
-int Board::generate_successors(int depth) {
+std::pair<Move, int> Board::get_best_move() {
+    std::vector<std::pair<Move, int>> scores;
+    int analysisDepth = 5;
+
+    auto legalMoves = calc_all_legal_moves();
+
+    for (auto move : legalMoves) {
+        perform_move(move, false);
+        scores.push_back({*move, calc_position_score(analysisDepth, false)});
+        undo_move(analysisDepth > 1);
+    }
+
+    for (auto [move, score] : scores)
+        std::cout << move << ": " << score << std::endl;
+
+    auto bestMove = std::ranges::max_element(scores, [](auto a, auto b) {return a.second < b.second;});
+    std::cout << "best move: " << bestMove->first << ": " << bestMove->second << std::endl;
+
+    return *bestMove;
+}
+
+int Board::calc_position_score(int depth, bool myTurn) {
+
+    if (_history.size() > 0 && _history.back() != nullptr)
+        recalculation(_history.back());
+    else 
+        recalculation();
+
+    std::vector<int> scores;
+
+    _legalMoves.push_back(calc_all_legal_moves());
+    for (auto move : _legalMoves.back()) {
+        perform_move(move, false);
+        scores.push_back(depth > 1 ? calc_position_score(depth - 1, !myTurn) : estimate_current_position());
+        undo_move(depth > 1);
+    }
+    
+    _legalMoves.pop_back();
+
+    if (scores.size() == 0) {
+        if (is_in_check(_turn))
+            return myTurn ? INT_MIN : INT_MAX;
+        else
+            return 0;
+    }
+    return myTurn ? *std::ranges::max_element(scores) : *std::ranges::min_element(scores);
+}
+
+int Board::estimate_current_position() {
+    int score = 0;
+
+    for (auto piece : _whitePieces)
+        score += piece->_value;
+    for (auto piece : _blackPieces)
+        score -= piece->_value;
+
+    return score;
+}
+
+
+int Board::test_move_generation(int depth) {
     int total = 0;
 
     if (_history.size() > 0 && _history.back() != nullptr)
@@ -851,7 +914,7 @@ int Board::generate_successors(int depth) {
 
         //std::cout << std::string(10-depth*2, ' ') << *move << std::endl;
 
-        total += depth > 1 ? generate_successors(depth - 1) : 1;
+        total += depth > 1 ? test_move_generation(depth - 1) : 1;
         undo_move(depth > 1);
 
         // if (depth == 2) std::cout << ": " << n << std::endl;   

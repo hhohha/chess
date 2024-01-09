@@ -20,8 +20,8 @@ public:
     void clear();
 
     Square *get_square(Coordinate c);
-    Square *get_square(unsigned int col, unsigned int row);
-    Square *get_square(unsigned int idx);
+    Square *get_square(int col, int row);
+    Square *get_square(int idx);
     Square *get_square(std::string name);
 
     std::vector<Move *> *get_current_legal_moves();
@@ -48,7 +48,7 @@ public:
 
     void remove_piece(Piece *piece);
 
-    int generate_successors(int depth);
+    int test_move_generation(int depth);
 
     std::vector<Move *> _history;
 
@@ -63,6 +63,8 @@ public:
     std::vector<Piece *> _blackSlidingPieces;
 
     std::vector<std::vector<Move *>> _legalMoves;
+
+    std::pair<Move, int> get_best_move();
 
 private:
     Color _turn = Color::WHITE;
@@ -81,6 +83,10 @@ private:
     void promote_pawn(Piece *pawn, PieceType kind);
     void recalculation(Move *move);
     void recalculation();
+
+    int calc_position_score(int depth, bool myTurn);
+    int estimate_current_position();
+
 
     std::vector<Move *> calc_all_legal_moves_check();
     std::vector<Move *> calc_all_legal_moves_no_check();

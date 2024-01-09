@@ -11,4 +11,5 @@ Bishop::Bishop(Color color, Square *square) :
     _potentialSquares.reserve(13);
     _isLight = true;
     _name = "B";
+    _value = 3;
 }

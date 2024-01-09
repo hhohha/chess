@@ -1,6 +1,7 @@
 #include "constants.h"
 #include "utest.h"
 #include "move.h"
+#include <climits>
 
 #define private public
 #include "board.h"
@@ -356,17 +357,66 @@ TestSuite create_test_suite_board() {
             delete move;
     });
 
-    testSuite.add_test("Perform move 3", []() {
-        Board b;
-        b.load_fen(FEN_TEST_D);
+    // testSuite.add_test("Perform move 3", []() {
+    //     Board b;
+    //     b.load_fen(FEN_TEST_D);
         
-        b.perform_move(new Move(b.get_square("f1")->_piece, b.get_square("f2")), false);
-        auto moves = b.calc_all_legal_moves();
+    //     b.perform_move(new Move(b.get_square("f1")->_piece, b.get_square("f2")), false);
+    //     auto moves = b.calc_all_legal_moves();
 
-        for (auto move : moves)
-            std::cout << *move << std::endl;
+    // });
+
+    testSuite.add_test("Best move", []() {
+        Board b;
+        b.load_fen("1k6/8/K7/8/8/8/8/7Q w - - 0 1");
+        
+        auto bestMove = b.get_best_move();
+        assert_equal("Qh1-b7", bestMove.first.str());
+        assert_equal(INT_MAX, bestMove.second);
 
     });
+
+    testSuite.add_test("Best move 2", []() {
+        Board b;
+        b.load_fen("q7/8/8/1K2k3/8/8/8/7Q w - - 0 1");
+        
+        auto bestMove = b.get_best_move();
+        assert_equal("Qh1-a8", bestMove.first.str());
+        assert_equal(9, bestMove.second);
+    });
+
+    testSuite.add_test("Best move 4", []() {
+        Board b;
+        b.load_fen("3r2rk/p4p1p/3p1Pp1/3R4/2p1B2Q/8/1q4PP/4R1K1 w - - 0 1");
+        
+        auto bestMove = b.get_best_move();
+    });
+
+    testSuite.add_test("Best move 4", []() {
+        Board b;
+        b.load_fen("N1bk3r/p5pp/3b1p2/8/2BnP2K/3Pn3/PPP4P/R1B1Q2R b - - 0 1");
+        
+        auto bestMove = b.get_best_move();
+    });
+
+    testSuite.add_test("Best move 5", []() {
+        Board b;
+        b.load_fen("8/1N2N3/2r5/3qp2R/QP2kp1K/5R2/6B1/6B1 w - - 0 1");
+        
+        auto bestMove = b.get_best_move();
+    });
+
+    testSuite.add_test("Mate in three 1", []() {
+        Board b;
+        b.load_fen("r2q1r1k/pbp1N1pp/1p1b4/5p2/2B5/P3PPn1/1P3P1P/2RQK2R w - - 0 1");
+        
+        auto bestMove = b.get_best_move();
+    });
+
+
+
+
+    
 
     return testSuite;
 }   

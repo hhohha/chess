@@ -21,7 +21,7 @@ TestSuite create_test_suite_tree_search() {
             std::cout << "Testing position " << id << " to depth " << depth << " -   ";
 
             auto start = std::chrono::high_resolution_clock::now();
-            long int result = b.generate_successors(depth);
+            long int result = b.test_move_generation(depth);
             auto end = std::chrono::high_resolution_clock::now(); // Stop measuring time
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 

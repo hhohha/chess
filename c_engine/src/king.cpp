@@ -11,6 +11,7 @@ King::King(Color color, Square *square)
     _isSliding = false;
     _isLight = false;
     _name = "K";
+    _value = 0;
     _attackedSquares.reserve(8);
     _potentialSquares.reserve(8);
 }

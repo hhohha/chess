@@ -9,6 +9,7 @@ Knight::Knight(Color color, Square *square)
     _isSliding = false;
     _isLight = true;
     _name = "N";
+    _value = 3;
     _attackedSquares.reserve(8);
     _potentialSquares.reserve(8);
 }

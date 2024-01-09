@@ -11,10 +11,11 @@ class Move;
 class Piece {
 protected:
     Piece(PieceType kind, Color color, Square *square);
-    virtual ~Piece() = default;
 
 public:
+    
     Square *get_square();
+    virtual ~Piece() = default;
 
     std::string str() const {return _name + _square->str();}
 
@@ -29,13 +30,11 @@ public:
     bool _isSliding;
     bool _isLight;
     bool _isActive = true;
+    unsigned int _value;
     unsigned _movesCnt = 0;
     std::string _name;
     std::vector<Square *> _attackedSquares;
     std::vector<Square *> _potentialSquares;
-
-    friend class Square;
-    friend class Board;
 };
 
 class SlidingPiece : public Piece {

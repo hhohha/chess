@@ -10,6 +10,7 @@ Rook::Rook(Color color, Square *square) :
 
     _isLight = false;
     _name = "R";
+    _value = 5;
     _attackedSquares.reserve(14);
     _potentialSquares.reserve(14);
 }
