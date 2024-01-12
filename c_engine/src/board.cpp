@@ -841,7 +841,7 @@ std::tuple<int, int> Board::get_castle_rook_squares(Move *move) {
 
 std::pair<Move, int> Board::get_best_move() {
     std::vector<std::pair<Move, int>> scores;
-    int analysisDepth = 5;
+    int analysisDepth = 4;
 
     auto legalMoves = calc_all_legal_moves();
 
@@ -891,9 +891,11 @@ int Board::estimate_current_position() {
     int score = 0;
 
     for (auto piece : _whitePieces)
-        score += piece->_value;
+        score += piece->get_score();
     for (auto piece : _blackPieces)
-        score -= piece->_value;
+        score -= piece->get_score();
+    if (_turn == Color::BLACK)
+        score *= -1;
 
     return score;
 }

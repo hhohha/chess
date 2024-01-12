@@ -2,6 +2,7 @@
 #include <stdexcept>
 
 
+#include "constants.h"
 #include "piece.h"
 #include "board.h"
 #include "utils.h"
@@ -16,6 +17,39 @@ Piece::Piece(PieceType kind, Color color, Square *square)
 
 Square *Piece::get_square() {
     return _square;
+}
+
+int Piece::get_score() {
+    if (_color == Color::WHITE) {
+        if (_kind == PieceType::PAWN) {
+            return WHITE_PAWN_MAP[_square->get_idx()] + _value;
+        } else if (_kind == PieceType::KNIGHT) {
+            return WHITE_KNIGHT_MAP[_square->get_idx()] + _value;
+        } else if (_kind == PieceType::BISHOP) {
+            return WHITE_BISHOP_MAP[_square->get_idx()] + _value;
+        } else if (_kind == PieceType::ROOK) {
+            return WHITE_ROOK_MAP[_square->get_idx()] + _value;
+        } else if (_kind == PieceType::QUEEN) {
+            return WHITE_QUEEN_MAP[_square->get_idx()] + _value;
+        } else {
+            return WHITE_KING_MAP[_square->get_idx()] + _value;
+        }
+    } else {
+        if (_kind == PieceType::PAWN) {
+            return BLACK_PAWN_MAP[_square->get_idx()] + _value;
+        } else if (_kind == PieceType::KNIGHT) {
+            return BLACK_KNIGHT_MAP[_square->get_idx()] + _value;
+        } else if (_kind == PieceType::BISHOP) {
+            return BLACK_BISHOP_MAP[_square->get_idx()] + _value;
+        } else if (_kind == PieceType::ROOK) {
+            return BLACK_ROOK_MAP[_square->get_idx()] + _value;
+        } else if (_kind == PieceType::QUEEN) {
+            return BLACK_QUEEN_MAP[_square->get_idx()] + _value;
+        } else {
+            return BLACK_KING_MAP[_square->get_idx()] + _value;
+        }
+    }
+         
 }
 
 SlidingPiece::SlidingPiece(PieceType kind, Color color, Square *square, const std::vector<Direction> slidingDirections) : 

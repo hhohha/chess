@@ -413,6 +413,14 @@ TestSuite create_test_suite_board() {
         auto bestMove = b.get_best_move();
     });
 
+    testSuite.add_test("Best move x", []() {
+        Board b;
+        b.load_fen(FEN_INIT);
+        
+        auto bestMove = b.get_best_move();
+        std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
+    });
+
 
 
 

@@ -11,7 +11,7 @@ Queen::Queen(Color color, Square *square) :
 
     _isLight = false;
     _name = "Q";
-    _value = 9;
+    _value = 9000;
     _attackedSquares.reserve(27);
     _potentialSquares.reserve(27);
 }

@@ -24,6 +24,8 @@ public:
     virtual void recalculate() = 0;
     virtual std::vector<Square *> calc_potential_squares_pinned(Direction directionFromKingToPinner) = 0;
 
+    int get_score();
+
     PieceType _kind;
     Color _color;
     Square *_square;

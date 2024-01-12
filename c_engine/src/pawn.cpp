@@ -13,7 +13,7 @@
     _name = "p";
     _isSliding = false;
     _isLight = false;
-    _value = 1;
+    _value = 1000;
     _attackedSquares.reserve(2);
 }
 
