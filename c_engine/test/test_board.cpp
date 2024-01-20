@@ -385,7 +385,7 @@ TestSuite create_test_suite_board() {
         assert_equal(9, bestMove.second);
     });
 
-    testSuite.add_test("Best move 4", []() {
+    testSuite.add_test("Best move 3", []() {
         Board b;
         b.load_fen("3r2rk/p4p1p/3p1Pp1/3R4/2p1B2Q/8/1q4PP/4R1K1 w - - 0 1");
         
