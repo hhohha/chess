@@ -842,6 +842,7 @@ std::tuple<int, int> Board::get_castle_rook_squares(Move *move) {
 std::pair<Move, int> Board::get_best_move() {
     std::vector<std::pair<Move, int>> scores;
     int analysisDepth = 4;
+    _positionsAnalysed = 0;
 
     auto legalMoves = calc_all_legal_moves();
 
@@ -856,6 +857,7 @@ std::pair<Move, int> Board::get_best_move() {
 
     auto bestMove = std::ranges::max_element(scores, [](auto a, auto b) {return a.second < b.second;});
     std::cout << "best move: " << bestMove->first << ": " << bestMove->second << std::endl;
+    std::cout << "positions analysed: " << _positionsAnalysed << std::endl;
 
     return *bestMove;
 }
@@ -872,6 +874,7 @@ int Board::calc_position_score(int depth, bool myTurn) {
     _legalMoves.push_back(calc_all_legal_moves());
     for (auto move : _legalMoves.back()) {
         perform_move(move, false);
+        ++_positionsAnalysed;
         scores.push_back(depth > 1 ? calc_position_score(depth - 1, !myTurn) : estimate_current_position());
         undo_move(depth > 1);
     }

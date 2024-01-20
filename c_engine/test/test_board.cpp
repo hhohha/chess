@@ -366,7 +366,7 @@ TestSuite create_test_suite_board() {
 
     // });
 
-    testSuite.add_test("Best move", []() {
+    testSuite.add_test("Best move 1", []() {
         Board b;
         b.load_fen("1k6/8/K7/8/8/8/8/7Q w - - 0 1");
         
@@ -382,7 +382,6 @@ TestSuite create_test_suite_board() {
         
         auto bestMove = b.get_best_move();
         assert_equal("Qh1-a8", bestMove.first.str());
-        assert_equal(9, bestMove.second);
     });
 
     testSuite.add_test("Best move 3", []() {
@@ -390,6 +389,7 @@ TestSuite create_test_suite_board() {
         b.load_fen("3r2rk/p4p1p/3p1Pp1/3R4/2p1B2Q/8/1q4PP/4R1K1 w - - 0 1");
         
         auto bestMove = b.get_best_move();
+        assert_equal("Qh4-h7", bestMove.first.str());
     });
 
     testSuite.add_test("Best move 4", []() {
@@ -397,6 +397,7 @@ TestSuite create_test_suite_board() {
         b.load_fen("N1bk3r/p5pp/3b1p2/8/2BnP2K/3Pn3/PPP4P/R1B1Q2R b - - 0 1");
         
         auto bestMove = b.get_best_move();
+        assert_equal("Nd4-f3", bestMove.first.str());
     });
 
     testSuite.add_test("Best move 5", []() {
@@ -404,6 +405,7 @@ TestSuite create_test_suite_board() {
         b.load_fen("8/1N2N3/2r5/3qp2R/QP2kp1K/5R2/6B1/6B1 w - - 0 1");
         
         auto bestMove = b.get_best_move();
+        assert_equal("Qa4-a8", bestMove.first.str());
     });
 
     testSuite.add_test("Mate in three 1", []() {

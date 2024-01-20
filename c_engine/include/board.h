@@ -67,6 +67,8 @@ public:
     std::pair<Move, int> get_best_move();
 
 private:
+    int _positionsAnalysed = 0;
+
     Color _turn = Color::WHITE;
 
     std::vector<Square *>_enPassantPawnSquareHistory = {nullptr};  // this needs to be a vector to keep track of history
