@@ -839,66 +839,86 @@ std::tuple<int, int> Board::get_castle_rook_squares(Move *move) {
     }
 }
 
-std::pair<Move, int> Board::get_best_move() {
+std::pair<Move, int> Board::get_best_move(int analysisDepth) {
     std::vector<std::pair<Move, int>> scores;
-    int analysisDepth = 4;
-    _positionsAnalysed = 0;
+    _nodesAnalysed = 0;
+    _leavesAnalysed = 0;
+    int alpha = INT_MIN;
+    int beta = INT_MAX;
+    _originalTurn = _turn;
 
     auto legalMoves = calc_all_legal_moves();
 
     for (auto move : legalMoves) {
         perform_move(move, false);
-        scores.push_back({*move, calc_position_score(analysisDepth, false)});
+        scores.push_back({*move, calc_position_score(analysisDepth, alpha, beta)});
         undo_move(analysisDepth > 1);
     }
 
     for (auto [move, score] : scores)
         std::cout << move << ": " << score << std::endl;
 
-    auto bestMove = std::ranges::max_element(scores, [](auto a, auto b) {return a.second < b.second;});
-    std::cout << "best move: " << bestMove->first << ": " << bestMove->second << std::endl;
-    std::cout << "positions analysed: " << _positionsAnalysed << std::endl;
+    std::cout << "nodes analysed: " << _nodesAnalysed << std::endl;
+    std::cout << "leaves analysed: " << _leavesAnalysed << std::endl;
 
-    return *bestMove;
+    return *std::ranges::max_element(scores, [](auto a, auto b) {return a.second < b.second;});
 }
 
-int Board::calc_position_score(int depth, bool myTurn) {
+int Board::calc_position_score(int depth, int alpha, int beta) {
+    ++_nodesAnalysed;
 
     if (_history.size() > 0 && _history.back() != nullptr)
         recalculation(_history.back());
     else 
         recalculation();
 
-    std::vector<int> scores;
-
     _legalMoves.push_back(calc_all_legal_moves());
-    for (auto move : _legalMoves.back()) {
-        perform_move(move, false);
-        ++_positionsAnalysed;
-        scores.push_back(depth > 1 ? calc_position_score(depth - 1, !myTurn) : estimate_current_position());
-        undo_move(depth > 1);
-    }
-    
-    _legalMoves.pop_back();
 
-    if (scores.size() == 0) {
+    if (_legalMoves.back().size() == 0) {
         if (is_in_check(_turn))
-            return myTurn ? INT_MIN : INT_MAX;
+            return _turn == _originalTurn ? INT_MIN : INT_MAX;
         else
             return 0;
     }
-    return myTurn ? *std::ranges::max_element(scores) : *std::ranges::min_element(scores);
+
+    int bestScore;
+    if (_turn == _originalTurn) {
+        bestScore = INT_MIN;
+        for (auto move : _legalMoves.back()) {
+            perform_move(move, false);
+            int score = depth > 1 ? calc_position_score(depth - 1, alpha, beta) : estimate_current_position();
+            bestScore = std::max(bestScore, score);
+            alpha = std::max(alpha, score);
+            undo_move(depth > 1);
+            if (beta <= alpha)
+                break;
+        }
+    } else {
+        bestScore = INT_MAX;
+        for (auto move : _legalMoves.back()) {
+            perform_move(move, false);
+            int score = depth > 1 ? calc_position_score(depth - 1, alpha, beta) : estimate_current_position();
+            bestScore = std::min(bestScore, score);
+            beta = std::min(beta, score);
+            undo_move(depth > 1);
+            if (beta <= alpha)
+                break;
+        }
+    }
+    _legalMoves.pop_back();
+    return bestScore;
 }
 
 int Board::estimate_current_position() {
     int score = 0;
+    ++_leavesAnalysed;
 
     for (auto piece : _whitePieces)
         score += piece->get_score();
     for (auto piece : _blackPieces)
         score -= piece->get_score();
-    if (_turn == Color::BLACK)
-        score *= -1;
+    if (_originalTurn == Color::BLACK)
+        score = -score;
 
     return score;
 }

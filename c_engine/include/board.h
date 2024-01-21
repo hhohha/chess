@@ -64,10 +64,12 @@ public:
 
     std::vector<std::vector<Move *>> _legalMoves;
 
-    std::pair<Move, int> get_best_move();
+    std::pair<Move, int> get_best_move(int analysisDepth = 4);
 
 private:
-    int _positionsAnalysed = 0;
+    int _leavesAnalysed = 0;
+    int _nodesAnalysed = 0;
+    Color _originalTurn;
 
     Color _turn = Color::WHITE;
 
@@ -86,7 +88,7 @@ private:
     void recalculation(Move *move);
     void recalculation();
 
-    int calc_position_score(int depth, bool myTurn);
+    int calc_position_score(int depth, int alpha, int beta);
     int estimate_current_position();
 
 
