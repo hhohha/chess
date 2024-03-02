@@ -453,5 +453,14 @@ TestSuite create_test_suite_board() {
         std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
     });
 
+    testSuite.add_test("Make move", []() {
+        Board b;
+        b.load_fen(FEN_INIT);
+        b.make_move("e2e4");
+        for (auto move : b.get_legal_moves())
+            std::cout << move->str() << std::endl;
+        assert_equal(b._turn, Color::BLACK);
+    });
+
     return testSuite;
 }   

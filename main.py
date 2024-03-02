@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from typing import Optional
+from typing import Optional, List
 
 import PySimpleGUI as sg
 import icons
@@ -8,8 +8,20 @@ from display_handler import DisplayHandler
 
 from game import Game
 from move import Move
+from square import Square
 from utils import letterToPiece
 
+
+# C++ methods of board functions to be callable:
+# - reset
+# - clear
+# - place_piece
+# - remove_piece
+# - load fen
+# - move
+# - undo move
+# - play move
+# - get possible target squares of a piece
 
 # TO FIX
 # - new game/clear board after selecting a piece
@@ -65,7 +77,8 @@ def main():
               [[sg.Button('New game', key='new_game'),
                 sg.Button('Clear board', key='clear_board'),
                 sg.Button('Exit', key='exit'),
-                sg.Button('UNDO', key='unmove')]]
+                sg.Button('Undo', key='unmove'),
+                sg.Button('Move', key='move')]]
               )
 
     displayHandler = DisplayHandler(boardLayout)
@@ -73,9 +86,9 @@ def main():
 
     window = sg.Window('Welcome to chessify', layout, default_element_size=(12,1), element_padding=(1,1), return_keyboard_events=True)
     
-    newPiece: Optional[str] = None
-    selectedButton = None
-    potentialSquares = []
+    newPieceName: Optional[str] = None
+    squareIdxWithPieceToMove: Optional[int] = None
+    potentialSquares: List[Square] = []
     while True:
         event, values = window.read()
 
@@ -84,56 +97,58 @@ def main():
         elif event == 'unmove':
             game.undo_move()
         elif event == 'new_game':
-            game.displayHandler.unlight_squares()
             game.reset()
         elif event == 'clear_board':
-            game.displayHandler.unlight_squares()
             game.clear()
         elif event[:4] == 'new_':
-            newPiece = event[4:]
+            newPieceName = event[4:]
         elif event[:3] == 'sqr': # click on a square
-            eventSqr = int(event[3:])
+            boardSquareClickedIdx = int(event[3:])
+            assert 0 <= boardSquareClickedIdx < 64, f"clicked invalid square with index = {boardSquareClickedIdx}"
 
             # we are not moving but placing a new piece on the board
-            if newPiece is not None:
-                color = Color.WHITE if newPiece[0] == 'w' else Color.BLACK
-                kind = letterToPiece[newPiece[1]]
-                game.place_piece(eventSqr, kind, color)
-                newPiece = None
-            
-            elif selectedButton is None:
-                # selected button is None - we are selecting a piece to be moved
-                if window.Element(event).ImageData != icons.empty:  # there must be a piece on the square...
-                    if game.board.get_square_by_idx_opt(eventSqr).piece.color == game.board.turn:  # ...of the color whose turn it is
-                        selectedButton = eventSqr
+            if newPieceName is not None:
+                color = Color.WHITE if newPieceName[0] == 'w' else Color.BLACK
+                kind = letterToPiece[newPieceName[1]]
+                game.place_piece(boardSquareClickedIdx, kind, color)
+                newPieceName = None
+
+            # no piece is selected to be moved - we are selecting one
+            elif squareIdxWithPieceToMove is None:
+
+                if window.Element(event).ImageData != icons.empty:  # there must actually be a piece on the square...
+                    if game.board.get_square_by_idx_opt(boardSquareClickedIdx).piece.color == game.board.turn:  # ...of the color whose turn it is
+                        squareIdxWithPieceToMove = boardSquareClickedIdx
 
                         #now light up the possible destination squares
-                        potentialMoves = game.board.get_square_by_idx_opt(selectedButton).piece.get_legal_moves()
+                        potentialMoves = game.board.get_square_by_idx_opt(squareIdxWithPieceToMove).piece.get_legal_moves()
                         potentialSquares = list(map(lambda mv: mv.toSqr, potentialMoves))
-                        game.displayHandler.light_squares([game.board.get_square_by_idx_opt(selectedButton)], 2)
+                        game.displayHandler.light_squares([game.board.get_square_by_idx_opt(squareIdxWithPieceToMove)], 2)
                         game.displayHandler.light_squares(potentialSquares, 1)
 
-            elif selectedButton == eventSqr:
-                # clicked the same button twice - just unselect the piece - unlight potential moves
+            # clicked the same button twice - just unselect the piece and unlight potential moves
+            elif squareIdxWithPieceToMove == boardSquareClickedIdx:
                 game.displayHandler.unlight_squares()
-                selectedButton = None
+                squareIdxWithPieceToMove = None
 
-            elif game.board.get_square_by_idx_opt(eventSqr).piece and game.board.get_square_by_idx_opt(selectedButton).piece.color == game.board.get_square_by_idx_opt(eventSqr).piece.color:
-                # we clicked on a different piece of the same color - select it instead
+            # we clicked on a different piece of the same color - select it instead
+            elif game.board.get_square_by_idx_opt(boardSquareClickedIdx).piece and game.board.get_square_by_idx_opt(squareIdxWithPieceToMove).piece.color == game.board.get_square_by_idx_opt(boardSquareClickedIdx).piece.color:
                 game.displayHandler.unlight_squares()
-                selectedButton = eventSqr
-                potentialMoves = game.board.get_square_by_idx_opt(selectedButton).piece.get_legal_moves()
+                squareIdxWithPieceToMove = boardSquareClickedIdx
+                potentialMoves = game.board.get_square_by_idx_opt(squareIdxWithPieceToMove).piece.get_legal_moves()
                 potentialSquares = list(map(lambda mv: mv.toSqr, potentialMoves))
-                game.displayHandler.light_squares([game.board.get_square_by_idx_opt(selectedButton)], 2)
+                game.displayHandler.light_squares([game.board.get_square_by_idx_opt(squareIdxWithPieceToMove)], 2)
                 game.displayHandler.light_squares(potentialSquares, 1)
-            elif game.board.get_square_by_idx_opt(eventSqr) in potentialSquares:
-                # clicked on a square where the selected piece can move - let's move the piece
+
+            # clicked on a square where the selected piece can move - let's move the piece
+            elif game.board.get_square_by_idx_opt(boardSquareClickedIdx) in potentialSquares:
                 game.displayHandler.unlight_squares()
-                move = Move(game.board.get_square_by_idx(selectedButton).piece, game.board.get_square_by_idx(eventSqr))
+                move = Move(game.board.get_square_by_idx(squareIdxWithPieceToMove).piece, game.board.get_square_by_idx(boardSquareClickedIdx))
                 game.perform_move(move)
-                selectedButton = None
+                squareIdxWithPieceToMove = None
+
+            # only other possibility - clicked on a square where the selected piece cannot move - do nothing
             else:
-                # only other possibility - clicked on a square where the selected piece cannot move - do nothing
                 pass
 
     window.close()

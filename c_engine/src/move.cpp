@@ -16,7 +16,7 @@ Move::Move(Piece *piece, Square *toSqr, std::optional<PieceType> newPiece)
         "a move must specify the new piece iff it's a promotion");
 }
 
-bool Move::operator==(const Move &other) const {
+bool Move::operator==(Move &other) const {
     return _piece == other._piece && _fromSqr == other._fromSqr && _toSqr == other._toSqr && _newPiece == other._newPiece;
 }
 
@@ -34,4 +34,8 @@ std::string Move::str() const {
 
 std::ostream& operator << (std::ostream &os, const Move &move) {
     return os << move.str();
+}
+
+bool operator==(Move &lhs, Move &rhs) {
+    return lhs._piece == rhs._piece && lhs._fromSqr == rhs._fromSqr && lhs._toSqr == rhs._toSqr && lhs._newPiece == rhs._newPiece;
 }

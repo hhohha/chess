@@ -10,3 +10,11 @@ compile_commands.json
 Makefile
 tmp*
 build
+c_engine/.cmake/
+c_engine/.ninja_deps
+c_engine/.ninja_log
+c_engine/Testing/
+c_engine/build.ninja
+c_engine/tests
+*.a
+*.so

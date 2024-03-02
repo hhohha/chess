@@ -2,7 +2,6 @@
 
 #include "utest.h"
 
-
 TestSuite create_test_suite_squares();
 TestSuite create_test_suite_moves();
 TestSuite create_test_suite_bishop();

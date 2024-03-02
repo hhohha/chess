@@ -12,7 +12,7 @@ class Move {
 public:
     Move(Piece *piece, Square *toSqr, std::optional<PieceType> newPiece = std::nullopt);
 
-    bool operator==(const Move &other) const;
+    bool operator==(Move &other) const;
 
     bool is_promotion() const;
     bool is_castling() const;
@@ -30,6 +30,8 @@ public:
     std::optional<PieceType> get_new_piece() const {return _newPiece;}
 
     void mark_as_en_passant() {_isEnPassant = true;}
+
+    friend bool operator==(Move &lhs, Move &rhs);
 
 private:
     Piece *_piece;

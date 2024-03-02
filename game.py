@@ -26,10 +26,12 @@ class Game:
             self.displayHandler.draw_square(piece.square, None)
         
     def reset(self) -> None:
+        self.displayHandler.unlight_squares()
         self.board.load_FEN(FEN_INIT)
         self.displayHandler.load(self.board)
         
     def clear(self) -> None:
+        self.displayHandler.unlight_squares()
         self.board.clear()
         self.displayHandler.load(self.board)
 

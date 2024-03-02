@@ -30,6 +30,39 @@ Board::~Board() {
         delete piece;
 }
 
+// moveStr must be in form of g1f3 or e7e8q
+void Board::make_move(std::string moveStr) {
+    if (moveStr.size() < 4 || moveStr.size() > 5)
+        throw std::invalid_argument("invalid moveStr");
+    if (moveStr[0] < 'a' || moveStr[0] > 'h' || moveStr[1] < '1' || moveStr[1] > '8' || moveStr[2] < 'a' || moveStr[2] > 'h' || moveStr[3] < '1' || moveStr[3] > '8')
+        throw std::invalid_argument("invalid moveStr");
+    if (moveStr.size() == 5 && (moveStr[4] != 'q' && moveStr[4] != 'r' && moveStr[4] != 'b' && moveStr[4] != 'n'))
+        throw std::invalid_argument("invalid moveStr");
+
+    auto fromSqr = get_square(moveStr.substr(0, 2));
+    auto toSqr = get_square(moveStr.substr(2, 2));
+    auto movingPiece = fromSqr->get_piece();
+
+    auto move = new Move(movingPiece, toSqr);
+
+    // is move in legal moves?
+    for (auto legalMove : get_legal_moves()) {
+        if (*legalMove == *move) {
+            perform_move(move);
+            _legalMoves.push_back(calc_all_legal_moves());
+            return;
+        }
+    }
+
+    throw std::invalid_argument("invalid move");
+}
+
+std::vector<Move *> Board::get_legal_moves() {
+    ASSERT(!_legalMoves.empty(), "legal moves not calculated");
+    std::cout << "legal moves length: " << _legalMoves.size() << std::endl;
+    return _legalMoves[_legalMoves.size() - 1];
+}
+
 void Board::clear() {
     for (auto &sqr : _squares) {
         sqr._piece = nullptr;
@@ -242,7 +275,7 @@ void Board::load_fen(std::string fen) {
 
     _legalMoves.clear();
     recalculation();
-    //_legalMoves.push_back(calc_all_legal_moves());
+    _legalMoves.push_back(calc_all_legal_moves());
 }
 
 std::vector<Square *> Board::get_squares_in_dir(Square *sqr, Direction dir){
@@ -588,7 +621,7 @@ void Board::perform_move(Move *move, bool shouldRecalculate) {
     if (move->get_piece_taken() != nullptr || movingPiece->_kind == PieceType::PAWN)
         _halfMoves.push_back(0U);
     else {
-        ASSERT(_halfMoves.size() > 0U, "half moves history is empty");
+        ASSERT(!_halfMoves.empty(), "half moves history is empty");
         _halfMoves.push_back(_halfMoves.back() + 1);
     }
 
@@ -642,7 +675,7 @@ void Board::store_piece_in_vectors(Piece *piece) {
 }
 
 void Board::undo_move(bool shouldRecalculate) {
-    ASSERT(_history.size() > 0, "no moves to undo");
+    ASSERT(!_history.empty(), "no moves to undo");
 
     auto move = _history.back();
     _history.pop_back();
@@ -927,7 +960,7 @@ int Board::estimate_current_position() {
 int Board::test_move_generation(int depth) {
     int total = 0;
 
-    if (_history.size() > 0 && _history.back() != nullptr)
+    if (!_history.empty() && _history.back() != nullptr)
         recalculation(_history.back());
     else 
         recalculation();
@@ -947,4 +980,12 @@ int Board::test_move_generation(int depth) {
     
     _legalMoves.pop_back();
     return total;
+}
+
+std::string Board::get_legal_moves_str() {
+    std::string str;
+    for (auto move : _legalMoves.back())
+        str += move->str() + " ";
+    str += "legal moves: " + std::to_string(_legalMoves.size()) + "\n";
+    return str;
 }

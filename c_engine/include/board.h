@@ -14,22 +14,49 @@ class Square;
 
 class Board {
 public:
+
+    // python callable methods
+    // 1. default constructor void -> void
+    // 2. load_fen            string -> void
+    // 3. make_move           string -> void
+    // 4. undo_move           void -> void
+    // 5. get_legal_moves     void -> list of string
+    // 6. place_piece         string -> void
+    // 7. clear board         void -> void
+    // 8. get best move       void -> string
+    // setting some configs...
+    // get best x moves
+    // get move evaluation
+
+
+
     Board();
     ~Board();
 
     void clear();
+    void tprint(){
+        for (int i = 0; i < 64; i++) {
+            if (i % 8 == 0) {
+                std::cout << std::endl;
+            }
+            std::cout << _squares[i].str() << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    void make_move(std::string moveStr);
+    std::string get_legal_moves_str();
 
     Square *get_square(Coordinate c);
     Square *get_square(int col, int row);
     Square *get_square(int idx);
     Square *get_square(std::string name);
 
-    std::vector<Move *> *get_current_legal_moves();
-
     Piece *place_piece(PieceType kind, Color color, std::string squareName);
     Piece *place_piece(PieceType kind, Color color, int squareIdx);
     Piece *place_piece(PieceType kind, Color color, Square *sqr);
 
+    std::vector<Move *> get_legal_moves();
     std::vector<Move *> calc_all_legal_moves();
     bool is_in_check(Color color);
 
