@@ -13,15 +13,13 @@ set(CMAKE_CXX_FLAGS "-O3")
 file(GLOB_RECURSE SOURCES src/*.cpp)
 file(GLOB_RECURSE TESTS test/*.cpp)
 
-add_library(dboard SHARED python_wrapper.cpp ${SOURCES})
-add_library(board STATIC ${SOURCES})
-
-target_include_directories(board PUBLIC include)
-target_include_directories(dboard PUBLIC include)
-target_include_directories(dboard PUBLIC "$pybind11_INCLUDE_DIR")
-target_include_directories(dboard PUBLIC "/usr/local/lib/python3.10/dist-packages/pybind11/include")
-target_include_directories(dboard PUBLIC "/usr/include/python3.10")
-
+add_library(board SHARED ${SOURCES})
 add_executable(tests ${TESTS})
+add_executable(engine main.cpp)
+
+target_include_directories(engine PUBLIC include)
+target_include_directories(tests PUBLIC include)
+target_include_directories(board PUBLIC include)
 
 target_link_libraries(tests PUBLIC board)
+target_link_libraries(engine PUBLIC board)

@@ -1,6 +1,6 @@
 import sys
 sys.path.append('../c_engine')
-from libboard import Board
+from libdboard import Board
 
 b = Board()
 b.load_fen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')

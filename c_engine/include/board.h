@@ -14,38 +14,10 @@ class Square;
 
 class Board {
 public:
-
-    // python callable methods
-    // 1. default constructor void -> void
-    // 2. load_fen            string -> void
-    // 3. make_move           string -> void
-    // 4. undo_move           void -> void
-    // 5. get_legal_moves     void -> list of string
-    // 6. place_piece         string -> void
-    // 7. clear board         void -> void
-    // 8. get best move       void -> string
-    // setting some configs...
-    // get best x moves
-    // get move evaluation
-
-
-
     Board();
     ~Board();
 
     void clear();
-    void tprint(){
-        for (int i = 0; i < 64; i++) {
-            if (i % 8 == 0) {
-                std::cout << std::endl;
-            }
-            std::cout << _squares[i].str() << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    void make_move(std::string moveStr);
-    std::string get_legal_moves_str();
 
     Square *get_square(Coordinate c);
     Square *get_square(int col, int row);

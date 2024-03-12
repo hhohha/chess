@@ -3,6 +3,7 @@
 #include <regex>
 #include <set>
 #include <unordered_map>
+#include <utility>
 
 
 #include "bishop.h"
@@ -30,36 +31,8 @@ Board::~Board() {
         delete piece;
 }
 
-// moveStr must be in form of g1f3 or e7e8q
-void Board::make_move(std::string moveStr) {
-    if (moveStr.size() < 4 || moveStr.size() > 5)
-        throw std::invalid_argument("invalid moveStr");
-    if (moveStr[0] < 'a' || moveStr[0] > 'h' || moveStr[1] < '1' || moveStr[1] > '8' || moveStr[2] < 'a' || moveStr[2] > 'h' || moveStr[3] < '1' || moveStr[3] > '8')
-        throw std::invalid_argument("invalid moveStr");
-    if (moveStr.size() == 5 && (moveStr[4] != 'q' && moveStr[4] != 'r' && moveStr[4] != 'b' && moveStr[4] != 'n'))
-        throw std::invalid_argument("invalid moveStr");
-
-    auto fromSqr = get_square(moveStr.substr(0, 2));
-    auto toSqr = get_square(moveStr.substr(2, 2));
-    auto movingPiece = fromSqr->get_piece();
-
-    auto move = new Move(movingPiece, toSqr);
-
-    // is move in legal moves?
-    for (auto legalMove : get_legal_moves()) {
-        if (*legalMove == *move) {
-            perform_move(move);
-            _legalMoves.push_back(calc_all_legal_moves());
-            return;
-        }
-    }
-
-    throw std::invalid_argument("invalid move");
-}
-
 std::vector<Move *> Board::get_legal_moves() {
     ASSERT(!_legalMoves.empty(), "legal moves not calculated");
-    std::cout << "legal moves length: " << _legalMoves.size() << std::endl;
     return _legalMoves[_legalMoves.size() - 1];
 }
 
@@ -980,12 +953,4 @@ int Board::test_move_generation(int depth) {
     
     _legalMoves.pop_back();
     return total;
-}
-
-std::string Board::get_legal_moves_str() {
-    std::string str;
-    for (auto move : _legalMoves.back())
-        str += move->str() + " ";
-    str += "legal moves: " + std::to_string(_legalMoves.size()) + "\n";
-    return str;
 }

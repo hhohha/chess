@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Iterable
 
 from constants import *
 import icons
@@ -8,8 +8,6 @@ import PySimpleGUI as sg
 if TYPE_CHECKING:
     from piece import Piece
     from square import Square
-    from board import Board
-
 
 class DisplayHandler:
     def __init__(self, display: List[List[sg.Button]]):
@@ -23,8 +21,8 @@ class DisplayHandler:
                     self.display[i][j].Update(image_data=icons.empty)
                     self.display[i][j].ImageData=icons.empty
 
-    def load(self, board: Board) -> None:
-        for sqr in board.squares:
+    def load(self, squares: List[Square]) -> None:
+        for sqr in squares:
             icon = self._get_icon(sqr.piece)
             if icon != self.display[7-sqr.rowIdx][sqr.colIdx].ImageData:
                 self.display[7-sqr.rowIdx][sqr.colIdx].Update(image_data=icon)
@@ -35,7 +33,7 @@ class DisplayHandler:
         self.display[7-sqr.rowIdx][sqr.colIdx].Update(image_data=icon)
         self.display[7-sqr.rowIdx][sqr.colIdx].ImageData = icon
     
-    def light_squares(self, squares: List[Square], intensity: int=1) -> None:
+    def light_squares(self, squares: Iterable[Square], intensity: int=1) -> None:
         self.lightedSquares += squares
         for sqr in squares:
             color = self._get_color(sqr, intensity)
@@ -45,7 +43,8 @@ class DisplayHandler:
         self.light_squares(self.lightedSquares, 0)
         self.lightedSquares = []
     
-    def _get_icon(self, piece: Optional[Piece]) -> bytes:
+    @staticmethod
+    def _get_icon(piece: Optional[Piece]) -> bytes:
         if piece is None:
             return icons.empty
         elif piece.color == Color.WHITE:
@@ -75,7 +74,8 @@ class DisplayHandler:
             else:
                 return icons.blackKing
 
-    def _get_color(self, sqr: Square, intensity: int) -> str:
+    @staticmethod
+    def _get_color(sqr: Square, intensity: int) -> str:
         if (sqr.rowIdx + sqr.colIdx) % 2 == 0:
             #dark square
             if intensity == 0:
@@ -93,7 +93,8 @@ class DisplayHandler:
             elif intensity == 2:
                 return COLOR_BG_LIGHT_HLIGHTED_2
 
-    def get_promoted_piece_from_dialog(self) -> PieceType:
+    @staticmethod
+    def get_promoted_piece_from_dialog() -> PieceType:
         promote_window = sg.Window('what piece do you want', [[sg.Button('Queen'), sg.Button('Rook'), sg.Button('Bishop'), sg.Button('Knight')]])
         piece, _  = promote_window.read()
         promote_window.close()
@@ -106,5 +107,6 @@ class DisplayHandler:
         else:
             return PieceType.KNIGHT
         
-    def inform(self, msg: str) -> None:
+    @staticmethod
+    def inform(msg: str) -> None:
         sg.popup(msg)
