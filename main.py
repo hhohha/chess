@@ -78,13 +78,12 @@ def main():
                 sg.Button('Clear board', key='clear_board'),
                 sg.Button('Exit', key='exit'),
                 sg.Button('Undo', key='unmove'),
-                sg.Button('Move', key='move')]]
+                sg.Button('Play', key='play')]]
               )
 
     game = Game(DisplayHandler(boardLayout), EngineProtocol())
 
     window = sg.Window('Welcome to chessify', layout, default_element_size=(12,1), element_padding=(1,1), return_keyboard_events=True)
-
 
     newPieceName: Optional[str] = None
     squareIdxWithPieceToMove: Optional[int] = None
@@ -102,6 +101,11 @@ def main():
             game.clear()
         elif event[:4] == 'new_':
             newPieceName = event[4:]
+        elif event[:4] == 'play':
+            strMove = game.engine.get_best_move()
+            move = game.create_move_from_str(strMove)
+            game.perform_move(move)
+
         elif event[:3] == 'sqr': # click on a square
             boardSquareClickedIdx = int(event[3:])
             assert 0 <= boardSquareClickedIdx < 64, f"clicked invalid square with index = {boardSquareClickedIdx}"
@@ -140,7 +144,7 @@ def main():
             # clicked on a square where the selected piece can move - let's move the piece
             elif sqrClicked in game.get_possible_target_squares(game.squares[squareIdxWithPieceToMove]):
                 game.displayHandler.unlight_squares()
-                game.perform_move(game.make_move(squareIdxWithPieceToMove, boardSquareClickedIdx))
+                game.perform_move(game.create_move(squareIdxWithPieceToMove, boardSquareClickedIdx))
                 squareIdxWithPieceToMove = None
 
             # only other possibility - clicked on a square where the selected piece cannot move - do nothing

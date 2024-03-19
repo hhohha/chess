@@ -49,6 +49,8 @@ public:
 
     int test_move_generation(int depth);
 
+    Move *create_move(const std::string& moveStr);
+
     std::vector<Move *> _history;
 
     Square * get_en_passant_pawn_square();

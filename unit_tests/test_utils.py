@@ -1,5 +1,4 @@
 import unittest
-from board import Board
 from constants import Direction
 from utils import move_in_direction, reverse_dir, is_same_col_or_row, is_same_diag, square_idx_to_coord, coord_to_square_idx, get_direction
 

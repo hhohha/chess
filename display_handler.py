@@ -34,13 +34,15 @@ class DisplayHandler:
         self.display[7-sqr.rowIdx][sqr.colIdx].ImageData = icon
     
     def light_squares(self, squares: Iterable[Square], intensity: int=1) -> None:
-        self.lightedSquares += squares
         for sqr in squares:
+            self.lightedSquares.append(sqr)
             color = self._get_color(sqr, intensity)
             self.display[7-sqr.rowIdx][sqr.colIdx].Update(button_color=color)
             
     def unlight_squares(self) -> None:
-        self.light_squares(self.lightedSquares, 0)
+        for sqr in self.lightedSquares:
+            color = self._get_color(sqr, 0)
+            self.display[7-sqr.rowIdx][sqr.colIdx].Update(button_color=color)
         self.lightedSquares = []
     
     @staticmethod
@@ -58,7 +60,7 @@ class DisplayHandler:
                 return icons.whiteRook
             elif piece.kind == PieceType.QUEEN:
                 return icons.whiteQueen
-            else:
+            elif piece.kind == PieceType.KING:
                 return icons.whiteKing
         else:
             if piece.kind == PieceType.PAWN:
@@ -71,8 +73,9 @@ class DisplayHandler:
                 return icons.blackRook
             elif piece.kind == PieceType.QUEEN:
                 return icons.blackQueen
-            else:
+            elif piece.kind == PieceType.KING:
                 return icons.blackKing
+        raise ValueError(f'invalid piece kind {piece.kind} or color {piece.color}')
 
     @staticmethod
     def _get_color(sqr: Square, intensity: int) -> str:
@@ -92,6 +95,7 @@ class DisplayHandler:
                 return COLOR_BG_LIGHT_HLIGHTED_1
             elif intensity == 2:
                 return COLOR_BG_LIGHT_HLIGHTED_2
+        raise ValueError(f'invalid intensity value {intensity}')
 
     @staticmethod
     def get_promoted_piece_from_dialog() -> PieceType:

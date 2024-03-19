@@ -453,6 +453,25 @@ TestSuite create_test_suite_board() {
         std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
     });
 
+    testSuite.add_test("Double fen load", []() {
+        Board b;
+        b.load_fen(FEN_INIT);
+        b.load_fen(FEN_INIT);
+
+        auto bestMove = b.get_best_move();
+        std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
+    });
+
+    testSuite.add_test("promotion", []() {
+        Board b;
+        b.load_fen(FEN_TEST_B);
+
+        auto move = b.create_move(std::string("Pd7-c8Q"));
+        b.perform_move(move);
+        b._legalMoves.push_back(b.calc_all_legal_moves());
+        for (auto mv : b._legalMoves.back())
+            std::cout << mv->str() << std::endl;
+    });
 
     return testSuite;
 }   

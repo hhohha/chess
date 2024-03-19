@@ -3,6 +3,7 @@
 #include "square.h"
 #include "utils.h"
 
+
 Move::Move(Piece *piece, Square *toSqr, std::optional<PieceType> newPiece)
 : _piece(piece),
   _toSqr(toSqr),
@@ -10,7 +11,7 @@ Move::Move(Piece *piece, Square *toSqr, std::optional<PieceType> newPiece)
 
     ASSERT(piece->get_square() != nullptr, "piece has no square");
     _fromSqr = piece->get_square();
-    
+
     // if the piece is a pawn and it's being promoted, the newPiece must be specified
     ASSERT(newPiece.has_value() || (piece->_kind != PieceType::PAWN || toSqr->get_coordinate().row != (piece->_color == Color::WHITE ? 7 : 0)),
         "a move must specify the new piece iff it's a promotion");

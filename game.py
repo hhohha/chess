@@ -1,13 +1,18 @@
 from __future__ import annotations
+
+import logging
 from typing import TYPE_CHECKING, List, Optional, Iterable
-from constants import FEN_INIT, Color, PieceType
+import re
+
+from constants import FEN_INIT, Color, PieceType, FEN_B
 from engine_protocol import EngineProtocol
+from square import Square
+from utils import letterToPiece
+from piece import Piece
+from move import Move
 
 if TYPE_CHECKING:
     from display_handler import DisplayHandler
-    from square import Square
-    from piece import Piece
-    from move import Move
 
 class CastlingRights:
     def __init__(self):
@@ -66,36 +71,96 @@ class Game:
             sqr.piece = None
         self.displayHandler.load(self.squares)
 
+    def load_moves_from_str(self, moves: str) -> None:
+        if moves == '':
+            self.legalMoves = []
+        else:
+            self.legalMoves = list(map(lambda mv: self.create_move_from_str(mv), moves.strip().split(' ')))
+
     def load_fen(self, fen: str) -> None:
-        pass
+        """load a position from a FEN string"""
+        logging.info(f'Loading FEN: {fen}')
 
-    def generate_fen(self) -> str:
-        fenLst: List[str] = []
+        self.clear()
+        if not re.match(r'^([rnbqkpRNBQKP1-8]*/){7}[rnbqkpRNBQKP1-8]* [wb] (-|[KQkq]{1,4}) (-|[a-h][36]) [0-9]+ [0-9]+$', fen):
+            # doesn't catch all invalid FENs, but it's a good sanity check
+            raise ValueError('Invalid FEN position given')
 
-        for row in range(8):
-            emptySquares = 0
+        pieces, turn, castling, enPassantSqr, halves, fulls = fen.split()
 
-            for col in range(8):
-                sqr = self.squares[row * 8 + col]
-                if sqr.piece is not None:
-                    emptySquares += 1
-                else:
-                    if emptySquares > 0:
-                        fenLst.append(str(emptySquares))
-                        emptySquares = 0
-                    fenLst.append(str(sqr.piece))
-            if emptySquares > 0:
-                fenLst.append(str(emptySquares))
+        col, row = 0, 7  # for some reason, FEN starts with a8
+        for c in pieces:
+            if c.isdigit():  # number of empty squares to skip
+                col += int(c)
+                continue
 
-            if row < 7:
-                fenLst.append('/')
+            if c == '/':  # new row
+                assert col == 8, 'Invalid FEN position given'
+                col, row = 0, row - 1
+                continue
 
-        fenLst.append(' ')
-        fenLst.append('w' if self.turn == Color.WHITE else 'b')
-        fenLst.append(' ')
+            # place a new piece
+            piece: PieceType = letterToPiece[c.lower()]
+            color: Color = Color.WHITE if c.isupper() else Color.BLACK
+            self.place_piece(col + 8 * row, piece, color)
+
+            col += 1
+
+        self.turn = Color.WHITE if turn == 'w' else Color.BLACK
+
+        castlingRights = CastlingRights()
+        if 'K' not in castling: castlingRights.whiteRight = False
+        if 'Q' not in castling: castlingRights.whiteLeft = False
+        if 'k' not in castling: castlingRights.blackRight = False
+        if 'q' not in castling: castlingRights.blackLeft = False
+        self.castlingRights = [castlingRights]
+
+        if enPassantSqr != '-':
+            self.enPassantSquares = [self.get_square(enPassantSqr)]
+        else:
+            self.enPassantSquares = [None]
+
+        self.halfMoves = [int(halves)]
+        self.moves = int(fulls)
+
+        movesFromEngine = self.engine.load_fen(fen)
+        self.load_moves_from_str(movesFromEngine)
+
+        self.displayHandler.load(self.squares)
+
+    def get_square(self, coord: str) -> Square:
+        """get a square by its coordinate"""
+        col, row = ord(coord[0]) - ord('a'), int(coord[1]) - 1
+        return self.squares[col + 8 * row]
+
+
+    # def generate_fen(self) -> str:
+    #     fenLst: List[str] = []
+    #
+    #     for row in range(8):
+    #         emptySquares = 0
+    #
+    #         for col in range(8):
+    #             sqr = self.squares[row * 8 + col]
+    #             if sqr.piece is not None:
+    #                 emptySquares += 1
+    #             else:
+    #                 if emptySquares > 0:
+    #                     fenLst.append(str(emptySquares))
+    #                     emptySquares = 0
+    #                 fenLst.append(str(sqr.piece))
+    #         if emptySquares > 0:
+    #             fenLst.append(str(emptySquares))
+    #
+    #         if row < 7:
+    #             fenLst.append('/')
+    #
+    #     fenLst.append(' ')
+    #     fenLst.append('w' if self.turn == Color.WHITE else 'b')
+    #     fenLst.append(' ')
 
     def get_possible_target_squares(self, fromSqr: Square) -> Iterable[Square]:
-        legalMoves = filter(lambda move: move.fromSqr == fromSqr, self.legalMoves)
+        legalMoves: Iterable[Move] = filter(lambda move: move.fromSqr == fromSqr, self.legalMoves)
         return map(lambda move: move.toSqr, legalMoves)
 
 
@@ -127,29 +192,43 @@ class Game:
         self.turn = Color.WHITE if self.turn == Color.BLACK else Color.BLACK
         self.moves -= 1
 
-        if move.isPromotion():
+        if move.isPromotion:
             move.piece.kind = PieceType.PAWN
         self.squares[move.toSqr.idx].piece = None
         self.squares[move.fromSqr.idx].piece = move.piece
-        if move.isCastling():
+        if move.isCastling:
             rookSquareFrom = self.squares[move.toSqr.idx + 1] if move.toSqr.idx > move.fromSqr.idx else self.squares[move.toSqr.idx - 2]
             rookSquareTo = self.squares[move.toSqr.idx - 1] if move.toSqr.idx > move.fromSqr.idx else self.squares[move.toSqr.idx + 1]
             rookSquareFrom.piece = rookSquareTo.piece
             rookSquareTo.piece = None
 
-        if move.isEnPassant():
+        if move.isEnPassant:
             sqrCol = move.toSqr.colIdx
             sqrRow = move.fromSqr.rowIdx
             capturedPieceSqr = self.squares[sqrRow * 8 + sqrCol]
             capturedPieceSqr.piece = move.capturedPiece
 
         self.displayHandler.load(self.squares)
-        self.engine.undo_move()# TODO - remove 2nd call, undo move returns new possible moves
-        self.legalMoves = self.engine.get_moves()
+        movesFromEngine = self.engine.undo_move()
+        self.legalMoves = list(map(lambda mv: self.create_move_from_str(mv), movesFromEngine.strip().split(' ')))
 
-    def make_move(self, fromSqrIdx: int, toSqrIdx: int) -> Move:
+    def create_move_from_str(self, moveStr: str) -> Move:
+        print(f'creating move from string: {moveStr}')
+        assert len(moveStr) == 6 or (len(moveStr) == 7 and moveStr[6] in 'NBQR'), f"invalid move string: {moveStr}"
+        assert moveStr[1] in 'abcdefgh' and moveStr[4] in 'abcdefgh', f"invalid move string: {moveStr}"
+        assert moveStr[2] in '12345678' and moveStr[5] in '12345678', f"invalid move string: {moveStr}"
+
+        fromSqrIdx = (int(moveStr[2]) - 1) * 8 + ord(moveStr[1]) - ord('a')
+        toSqrIdx = (int(moveStr[5]) - 1) * 8 + ord(moveStr[4]) - ord('a')
+
         move = Move(self.squares[fromSqrIdx], self.squares[toSqrIdx])
-        if move.isPromotion():
+        if len(moveStr) == 5:
+            move.newPiece = letterToPiece[moveStr[4]]
+        return move
+
+    def create_move(self, fromSqrIdx: int, toSqrIdx: int) -> Move:
+        move = Move(self.squares[fromSqrIdx], self.squares[toSqrIdx])
+        if move.isPromotion:
             move.newPiece = self.displayHandler.get_promoted_piece_from_dialog()
         return move
 
@@ -167,25 +246,27 @@ class Game:
 
         self.squares[move.fromSqr.idx].piece = None
         self.squares[move.toSqr.idx].piece = move.piece
-        if move.isCastling():
+        if move.isCastling:
             rookSquareFrom = self.squares[move.toSqr.idx + 1] if move.toSqr.idx > move.fromSqr.idx else self.squares[move.toSqr.idx - 2]
             rookSquareTo = self.squares[move.toSqr.idx - 1] if move.toSqr.idx > move.fromSqr.idx else self.squares[move.toSqr.idx + 1]
             rookSquareTo.piece = rookSquareFrom.piece
             rookSquareFrom.piece = None
 
-        if move.isEnPassant():
+        if move.isEnPassant:
             sqrCol = move.toSqr.colIdx
             sqrRow = move.fromSqr.rowIdx
             capturedPieceSqr = self.squares[sqrRow * 8 + sqrCol]
             capturedPieceSqr.piece = None
 
-        if move.isPromotion():
+        moveStr = str(move)
+        if move.isPromotion:
+            assert move.newPiece is not None, f"Invalid move: promotion move {move}"
             move.piece.kind = move.newPiece
 
         self.displayHandler.load(self.squares)
 
-        self.engine.perform_move(move) # TODO - remove 2nd call, perform move returns new possible moves
-        self.legalMoves = self.engine.get_moves()
+        movesFromEngine = self.engine.perform_move(moveStr)
+        self.load_moves_from_str(movesFromEngine)
 
         # self.check_game_end()
 

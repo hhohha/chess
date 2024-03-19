@@ -2,12 +2,12 @@
 #include "square.h"
 
 #ifdef DEBUG
-void ASSERT(bool condition, std::string message) {
+void ASSERT(bool condition, const std::string &message) {
     if (!condition)
         throw std::runtime_error("Assertion failed: " + message);
 }
 #else
-void ASSERT(bool condition, std::string message) {}
+void ASSERT(bool condition, const std::string& message) {}
 #endif
 
 bool operator!=(Coordinate &c1, Coordinate &c2) {
@@ -15,7 +15,7 @@ bool operator!=(Coordinate &c1, Coordinate &c2) {
 }
 
 Coordinate operator+(const Coordinate& c1, const Coordinate& c2) {
-    Coordinate result;
+    Coordinate result{};
     result.col = c1.col + c2.col;
     result.row = c1.row + c2.row;
     return result;

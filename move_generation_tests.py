@@ -27,7 +27,7 @@ positions.append(Position(7, 'r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP
 def test_position(position: Position, depth: int) -> None:
     for dpt in range(1  , depth + 1):
         board = Board()
-        board.load_FEN(position.position)
+        board.load_fen(position.position)
         print ('TESTING position ' + str(position.id) + ' to depth ' + str(dpt), ':    ', end='')
 
         start_time = time()

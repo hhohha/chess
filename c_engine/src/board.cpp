@@ -39,11 +39,14 @@ std::vector<Move *> Board::get_legal_moves() {
 void Board::clear() {
     for (auto &sqr : _squares) {
         sqr._piece = nullptr;
+        sqr.get_attacked_by(Color::WHITE).clear();
+        sqr.get_attacked_by(Color::BLACK).clear();
     }
     _whitePieces.clear();
     _blackPieces.clear();
     _whiteSlidingPieces.clear();
     _blackSlidingPieces.clear();
+    _piecesToRecalculate.clear();
 }
 
 Square *Board::get_square(Coordinate c) {
@@ -71,7 +74,7 @@ Square *Board::get_square(std::string name) {
 }
 
 Piece *Board::place_piece(PieceType kind, Color color, std::string squareName) {
-    return place_piece(kind, color, get_square(squareName));
+    return place_piece(kind, color, get_square(std::move(squareName)));
 }
 
 Piece *Board::place_piece(PieceType kind, Color color, int squareIdx) {
@@ -80,7 +83,6 @@ Piece *Board::place_piece(PieceType kind, Color color, int squareIdx) {
 
 Piece *Board::place_piece(PieceType kind, Color color, Square *sqr) {
     ASSERT(sqr->is_free(), sqr->_name + " square is not free");
-    ASSERT(sqr != nullptr, "invalid square name");
     
     Piece *piece;
     switch (kind) {
@@ -131,12 +133,12 @@ Piece *Board::place_piece(PieceType kind, Color color, Square *sqr) {
 }
 
 Square * Board::get_en_passant_pawn_square(){
-    ASSERT(_enPassantPawnSquareHistory.size() > 0, "en passant pawn square history is empty");
+    ASSERT(!_enPassantPawnSquareHistory.empty(), "en passant pawn square history is empty");
     return _enPassantPawnSquareHistory.back();
 }
 
 void Board::update_en_passant_pawn_square(Square *sqr){
-    ASSERT(_enPassantPawnSquareHistory.size() > 0, "en passant pawn square history is empty");
+    ASSERT(!_enPassantPawnSquareHistory.empty(), "en passant pawn square history is empty");
     _enPassantPawnSquareHistory.back() = sqr;
 }
 
@@ -857,7 +859,8 @@ std::pair<Move, int> Board::get_best_move(int analysisDepth) {
 
     for (auto move : legalMoves) {
         perform_move(move, false);
-        scores.push_back({*move, calc_position_score(analysisDepth, alpha, beta)});
+        //scores.push_back({*move, calc_position_score(analysisDepth, alpha, beta)});
+        scores.emplace_back(*move, calc_position_score(analysisDepth, alpha, beta));
         undo_move(analysisDepth > 1);
     }
 
@@ -873,14 +876,14 @@ std::pair<Move, int> Board::get_best_move(int analysisDepth) {
 int Board::calc_position_score(int depth, int alpha, int beta) {
     ++_nodesAnalysed;
 
-    if (_history.size() > 0 && _history.back() != nullptr)
+    if (!_history.empty() && _history.back() != nullptr)
         recalculation(_history.back());
     else 
         recalculation();
 
     _legalMoves.push_back(calc_all_legal_moves());
 
-    if (_legalMoves.back().size() == 0) {
+    if (_legalMoves.back().empty()) {
         if (is_in_check(_turn))
             return _turn == _originalTurn ? INT_MIN : INT_MAX;
         else
@@ -953,4 +956,54 @@ int Board::test_move_generation(int depth) {
     
     _legalMoves.pop_back();
     return total;
+}
+
+Move *Board::create_move(const std::string &moveStr) {
+    // string form: e2-e4, ng1-f3, e7-e8q
+
+    std::regex pattern("[PNBRQKpnbrqk]?[a-h][1-8]-[a-h][1-8][NBRQnbrq]?");
+    if (!std::regex_match(moveStr, pattern)) {
+        throw std::invalid_argument("Invalid move string (regex): \"" + moveStr + "\"");
+    }
+
+    size_t pos = moveStr.find('-');
+    if (pos == std::string::npos) {
+        throw std::invalid_argument("Invalid move string: " + moveStr);
+    }
+    std::string from = moveStr.substr(0, pos);
+    std::string to = moveStr.substr(pos + 1, 2);
+
+    if (from.length() == 3)
+        from = from.substr(1);
+    auto piece = get_square(from)->get_piece();
+    if (piece == nullptr) {
+        throw std::invalid_argument("No piece found on the square " + from);
+    }
+
+    std::optional<PieceType> newPiece = std::nullopt;
+    if (moveStr.length() >= 6) {
+        switch (moveStr.back()) {
+            case 'N':
+            case 'n':
+                newPiece = PieceType::KNIGHT;
+                break;
+            case 'B':
+            case 'b':
+                newPiece = PieceType::BISHOP;
+                break;
+            case 'R':
+            case 'r':
+                newPiece = PieceType::ROOK;
+                break;
+            case 'Q':
+            case 'q':
+                newPiece = PieceType::QUEEN;
+                break;
+        }
+    }
+    auto move = new Move(piece, get_square(to), newPiece);
+    if (piece->_kind == PieceType::PAWN && get_square(to)->get_col() != get_square(from)->get_col() && get_square(to)->is_free())
+        move->mark_as_en_passant();
+
+    return move;
 }

@@ -26,4 +26,4 @@ Direction get_direction(Square * sqr1, Square * sqr2);
 
 Color invert_color(Color color);
 
-void ASSERT(bool condition, std::string message);
+void ASSERT(bool condition, const std::string& message);
