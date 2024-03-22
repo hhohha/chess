@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import time
 from typing import Optional, List, Iterable
 
 import PySimpleGUI as sg
@@ -65,21 +66,33 @@ def main():
                   key='sqr'+str(i+(7-j)*8))
                   for i in range(8)
             ] for j in range(8)]
-    
+    frameBoard = sg.Frame('Board', boardLayout, element_justification='center')
+
     white_icons = [icons.whitePawn, icons.whiteKnight, icons.whiteBishop, icons.whiteRook, icons.whiteQueen, icons.whiteKing, icons.empty]
     white_keys = ['new_wp', 'new_wn', 'new_wb', 'new_wr', 'new_wq', 'new_wk', 'new_empty']
     black_icons = [icons.blackPawn, icons.blackKnight, icons.blackBishop, icons.blackRook, icons.blackQueen, icons.blackKing]
     black_keys = ['new_bp', 'new_bn', 'new_bb', 'new_br', 'new_bq', 'new_bk']
 
-    layout = (boardLayout +
-              [[sg.Button(image_data=icon, key=key) for key, icon in zip(white_keys, white_icons)]] +
-              [[sg.Button(image_data=icon, key=key) for key, icon in zip(black_keys, black_icons)]] +
-              [[sg.Button('New game', key='new_game'),
-                sg.Button('Clear board', key='clear_board'),
-                sg.Button('Exit', key='exit'),
-                sg.Button('Undo', key='unmove'),
-                sg.Button('Play', key='play')]]
-              )
+    newPieces = [[sg.Button(image_data=icon, key=key) for key, icon in zip(white_keys, white_icons)]] + \
+                [[sg.Button(image_data=icon, key=key) for key, icon in zip(black_keys, black_icons)]] + \
+                [[sg.Button('OK', key='place_done')]]
+
+    frameNewPieces = sg.Frame('New pieces', newPieces, element_justification='left', key='frameNewPieces', visible=False)
+
+    buttonFont = ("Helvetica", 14)
+    controls = [[sg.Button('Start a game', key='start_game', size=(15, 2), pad=((20, 20), (3, 35)), font=buttonFont)],
+                [sg.Button('Make move', key='move', size=(15, 2), pad=((20, 20), (3, 3)), font=buttonFont)],
+                [sg.Button('Undo move', key='unmove', size=(15, 2), pad=((20, 20), (3, 35)), font=buttonFont)],
+                [sg.Button('Reset board', key='reset_board', size=(15, 2), pad=((20, 20), (3, 3)), font=buttonFont)],
+                [sg.Button('Clear board', key='clear_board', size=(15, 2), pad=((20, 20), (3, 3)), font=buttonFont)],
+                [sg.Button('Place pieces', key='place_pieces', size=(15, 2), pad=((20, 20), (3, 3)), font=buttonFont)]]
+
+    frameControls = sg.Frame('Controls', controls, element_justification='center')
+    controlsColumn = sg.Column([[frameControls]], vertical_alignment='top', pad=((20, 0), (0, 0)))
+
+
+
+    layout = [[frameBoard, controlsColumn], [frameNewPieces]]
 
     game = Game(DisplayHandler(boardLayout), EngineProtocol())
 
@@ -88,24 +101,36 @@ def main():
     newPieceName: Optional[str] = None
     squareIdxWithPieceToMove: Optional[int] = None
     possibleSquares: Iterable[Square] = []
+    gameInProgress = False
     while True:
         event, values = window.read()
 
         if event in (None, 'exit'): 
             break
         elif event == 'unmove':
+            gameInProgress = False
             game.undo_move()
-        elif event == 'new_game':
+        elif event == 'reset_board':
+            gameInProgress = False
             game.reset()
         elif event == 'clear_board':
+            gameInProgress = False
             game.clear()
         elif event[:4] == 'new_':
             newPieceName = event[4:]
-        elif event[:4] == 'play':
-            strMove = game.engine.get_best_move()
-            move = game.create_move_from_str(strMove)
-            game.perform_move(move)
-
+        elif event[:4] == 'move':
+            gameInProgress = False
+            game.make_engine_move()
+        elif event == 'place_pieces':
+            frameNewPiecesVisible = window.Element('frameNewPieces').visible
+            window.Element('frameNewPieces').Update(visible=not frameNewPiecesVisible)
+        elif event == 'start_game':
+            gameInProgress = True
+            userPlayingAs = game.displayHandler.get_playing_as_from_dialog()
+            if userPlayingAs != game.turn:
+                game.make_engine_move()
+        elif event == 'place_done':
+            pass
         elif event[:3] == 'sqr': # click on a square
             boardSquareClickedIdx = int(event[3:])
             assert 0 <= boardSquareClickedIdx < 64, f"clicked invalid square with index = {boardSquareClickedIdx}"
@@ -142,10 +167,15 @@ def main():
                 game.displayHandler.light_squares(possibleSquares, 1)
 
             # clicked on a square where the selected piece can move - let's move the piece
-            elif sqrClicked in game.get_possible_target_squares(game.squares[squareIdxWithPieceToMove]):
+            elif squareIdxWithPieceToMove and sqrClicked in game.get_possible_target_squares(game.squares[squareIdxWithPieceToMove]):
                 game.displayHandler.unlight_squares()
                 game.perform_move(game.create_move(squareIdxWithPieceToMove, boardSquareClickedIdx))
                 squareIdxWithPieceToMove = None
+
+                window.refresh()
+
+                if gameInProgress:
+                    game.make_engine_move()
 
             # only other possibility - clicked on a square where the selected piece cannot move - do nothing
             else:

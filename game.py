@@ -71,6 +71,11 @@ class Game:
             sqr.piece = None
         self.displayHandler.load(self.squares)
 
+    def make_engine_move(self) -> None:
+        strMove = self.engine.get_best_move()
+        move = self.create_move_from_str(strMove)
+        self.perform_move(move)
+
     def load_moves_from_str(self, moves: str) -> None:
         if moves == '':
             self.legalMoves = []
@@ -132,32 +137,6 @@ class Game:
         """get a square by its coordinate"""
         col, row = ord(coord[0]) - ord('a'), int(coord[1]) - 1
         return self.squares[col + 8 * row]
-
-
-    # def generate_fen(self) -> str:
-    #     fenLst: List[str] = []
-    #
-    #     for row in range(8):
-    #         emptySquares = 0
-    #
-    #         for col in range(8):
-    #             sqr = self.squares[row * 8 + col]
-    #             if sqr.piece is not None:
-    #                 emptySquares += 1
-    #             else:
-    #                 if emptySquares > 0:
-    #                     fenLst.append(str(emptySquares))
-    #                     emptySquares = 0
-    #                 fenLst.append(str(sqr.piece))
-    #         if emptySquares > 0:
-    #             fenLst.append(str(emptySquares))
-    #
-    #         if row < 7:
-    #             fenLst.append('/')
-    #
-    #     fenLst.append(' ')
-    #     fenLst.append('w' if self.turn == Color.WHITE else 'b')
-    #     fenLst.append(' ')
 
     def get_possible_target_squares(self, fromSqr: Square) -> Iterable[Square]:
         legalMoves: Iterable[Move] = filter(lambda move: move.fromSqr == fromSqr, self.legalMoves)

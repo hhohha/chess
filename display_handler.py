@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import random
 from typing import TYPE_CHECKING, List, Optional, Iterable
 
 from constants import *
@@ -96,6 +98,18 @@ class DisplayHandler:
             elif intensity == 2:
                 return COLOR_BG_LIGHT_HLIGHTED_2
         raise ValueError(f'invalid intensity value {intensity}')
+
+    @staticmethod
+    def get_playing_as_from_dialog() -> Color:
+        playing_as_window = sg.Window('What color do you want to play as?', [[sg.Button('White'), sg.Button('Black'), sg.Button('Random')]])
+        color, _ = playing_as_window.read()
+        playing_as_window.close()
+        if color == 'White':
+            return Color.WHITE
+        elif color == 'Black':
+            return Color.BLACK
+        else:
+            return Color.WHITE if random.randint(0, 1) == 0 else Color.BLACK
 
     @staticmethod
     def get_promoted_piece_from_dialog() -> PieceType:
