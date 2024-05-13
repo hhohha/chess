@@ -60,17 +60,16 @@ from utils import letterToPiece
 # - ...
 
 def main():
-    portNo = 40003
-    # if len(sys.argv) < 2:
-    #     print('missing port number')
-    #     return
-    # try:
-    #     portNo = int(sys.argv[1])
-    #     if portNo < 1 or portNo > 65535:
-    #         raise ValueError
-    # except ValueError:
-    #     print('bad port number')
-    #     return
+    if len(sys.argv) < 2:
+        print('missing port number')
+        return
+    try:
+        portNo = int(sys.argv[1])
+        if portNo < 1 or portNo > 65535:
+            raise ValueError
+    except ValueError:
+        print('bad port number')
+        return
 
     boardLayout = [[
         sg.Button(image_data=icons.empty,
