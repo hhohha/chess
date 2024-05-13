@@ -192,7 +192,6 @@ class Game:
         self.legalMoves = list(map(lambda mv: self.create_move_from_str(mv), movesFromEngine.strip().split(' ')))
 
     def create_move_from_str(self, moveStr: str) -> Move:
-        print(f'creating move from string: {moveStr}')
         assert len(moveStr) == 6 or (len(moveStr) == 7 and moveStr[6] in 'NBQR'), f"invalid move string: {moveStr}"
         assert moveStr[1] in 'abcdefgh' and moveStr[4] in 'abcdefgh', f"invalid move string: {moveStr}"
         assert moveStr[2] in '12345678' and moveStr[5] in '12345678', f"invalid move string: {moveStr}"

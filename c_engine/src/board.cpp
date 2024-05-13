@@ -864,11 +864,11 @@ std::pair<Move, int> Board::get_best_move(int analysisDepth) {
         undo_move(analysisDepth > 1);
     }
 
-    for (auto [move, score] : scores)
-        std::cout << move << ": " << score << std::endl;
+//    for (auto [move, score] : scores)
+//        std::cout << move << ": " << score << std::endl;
 
-    std::cout << "nodes analysed: " << _nodesAnalysed << std::endl;
-    std::cout << "leaves analysed: " << _leavesAnalysed << std::endl;
+    // std::cout << "nodes analysed: " << _nodesAnalysed << std::endl;
+    // std::cout << "leaves analysed: " << _leavesAnalysed << std::endl;
 
     return *std::ranges::max_element(scores, [](auto a, auto b) {return a.second < b.second;});
 }

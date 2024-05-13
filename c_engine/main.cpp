@@ -29,7 +29,7 @@ std::string handle_message(const std::string &message, Board &board) {
         arg = message.substr(space + 1);
     }
 
-    std::cout << "Command: " << command << " Arg: " << arg << std::endl;
+//    std::cout << "Command: " << command << " Arg: " << arg << std::endl;
 
     if (command == "clear") {
         board.clear();
@@ -66,6 +66,7 @@ int main(int argc, char **argv) {
             std::cout << "Invalid port number. Using default port 20002." << std::endl;
         } else {
             port = temp;
+            std::cout << "Using port " << port << std::endl;
         }
     }
 
@@ -104,14 +105,14 @@ int main(int argc, char **argv) {
 
     while (true) {
         int len = sizeof(client_addr);
-        std::cout << "Waiting for connection" << std::endl;
+//        std::cout << "Waiting for connection" << std::endl;
         if ((client_fd = accept(server_fd, (struct sockaddr *) &server_addr, (socklen_t *) &len)) < 0) {
             std::cout << "Error accepting connection" << std::endl;
             return 1;
         }
 
         char *client_ip = inet_ntoa(client_addr.sin_addr);
-        std::cout << "Connection from " << client_ip << ", " << ntohs(client_addr.sin_port) << std::endl;
+//        std::cout << "Connection from " << client_ip << ", " << ntohs(client_addr.sin_port) << std::endl;
 
         memset(buffer, 0, sizeof(buffer));
 
@@ -127,7 +128,7 @@ int main(int argc, char **argv) {
             message = message.substr(0, endOfMsg + 1);
         }
 
-        std::cout << "Received message: " << message << "\n" << std::endl;
+//        std::cout << "Received message: " << message << "\n" << std::endl;
 
         response = handle_message(message, board);
 

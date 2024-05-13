@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import time
+import sys
 from typing import Optional, List, Iterable
 
 import PySimpleGUI as sg
@@ -59,6 +60,18 @@ from utils import letterToPiece
 # - ...
 
 def main():
+    portNo = 40003
+    # if len(sys.argv) < 2:
+    #     print('missing port number')
+    #     return
+    # try:
+    #     portNo = int(sys.argv[1])
+    #     if portNo < 1 or portNo > 65535:
+    #         raise ValueError
+    # except ValueError:
+    #     print('bad port number')
+    #     return
+
     boardLayout = [[
         sg.Button(image_data=icons.empty,
                   button_color=(COLOR_BG_LIGHT_BASIC, COLOR_BG_LIGHT_BASIC) if (i+j) % 2 == 0 else (COLOR_BG_DARK_BASIC, COLOR_BG_DARK_BASIC),
@@ -94,7 +107,7 @@ def main():
 
     layout = [[frameBoard, controlsColumn], [frameNewPieces]]
 
-    game = Game(DisplayHandler(boardLayout), EngineProtocol())
+    game = Game(DisplayHandler(boardLayout), EngineProtocol(portNo))
 
     window = sg.Window('Welcome to chessify', layout, default_element_size=(12,1), element_padding=(1,1), return_keyboard_events=True)
 
@@ -104,82 +117,85 @@ def main():
     gameInProgress = False
     while True:
         event, values = window.read()
-
-        if event in (None, 'exit'): 
-            break
-        elif event == 'unmove':
-            gameInProgress = False
-            game.undo_move()
-        elif event == 'reset_board':
-            gameInProgress = False
-            game.reset()
-        elif event == 'clear_board':
-            gameInProgress = False
-            game.clear()
-        elif event[:4] == 'new_':
-            newPieceName = event[4:]
-        elif event[:4] == 'move':
-            gameInProgress = False
-            game.make_engine_move()
-        elif event == 'place_pieces':
-            frameNewPiecesVisible = window.Element('frameNewPieces').visible
-            window.Element('frameNewPieces').Update(visible=not frameNewPiecesVisible)
-        elif event == 'start_game':
-            gameInProgress = True
-            userPlayingAs = game.displayHandler.get_playing_as_from_dialog()
-            if userPlayingAs != game.turn:
+        try:
+            if event in (None, 'exit'):
+                break
+            elif event == 'unmove':
+                gameInProgress = False
+                game.undo_move()
+            elif event == 'reset_board':
+                gameInProgress = False
+                game.reset()
+            elif event == 'clear_board':
+                gameInProgress = False
+                game.clear()
+            elif event[:4] == 'new_':
+                newPieceName = event[4:]
+            elif event[:4] == 'move':
+                gameInProgress = False
                 game.make_engine_move()
-        elif event == 'place_done':
-            pass
-        elif event[:3] == 'sqr': # click on a square
-            boardSquareClickedIdx = int(event[3:])
-            assert 0 <= boardSquareClickedIdx < 64, f"clicked invalid square with index = {boardSquareClickedIdx}"
-            sqrClicked = game.squares[boardSquareClickedIdx]
-
-            # we are not moving but placing a new piece on the board
-            if newPieceName is not None:
-                color = Color.WHITE if newPieceName[0] == 'w' else Color.BLACK
-                kind = letterToPiece[newPieceName[1]]
-                game.place_piece(boardSquareClickedIdx, kind, color)
-                newPieceName = None
-
-            # no piece is selected to be moved - we are selecting one
-            elif squareIdxWithPieceToMove is None and sqrClicked.piece and sqrClicked.piece.color == game.turn:
-                squareIdxWithPieceToMove = boardSquareClickedIdx
-
-                #now light up the possible destination squares
-                possibleSquares = game.get_possible_target_squares(sqrClicked)
-                game.displayHandler.light_squares([sqrClicked], 2)
-                game.displayHandler.light_squares(possibleSquares, 1)
-
-            # clicked the same button twice - just unselect the piece and unlight potential moves
-            elif squareIdxWithPieceToMove == boardSquareClickedIdx:
-                game.displayHandler.unlight_squares()
-                squareIdxWithPieceToMove = None
-
-            # we clicked on a different piece of the same color - select it instead
-            elif sqrClicked.piece and sqrClicked.piece.color == game.turn:
-                game.displayHandler.unlight_squares()
-                squareIdxWithPieceToMove = boardSquareClickedIdx
-
-                possibleSquares = game.get_possible_target_squares(sqrClicked)
-                game.displayHandler.light_squares([sqrClicked], 2)
-                game.displayHandler.light_squares(possibleSquares, 1)
-
-            # clicked on a square where the selected piece can move - let's move the piece
-            elif squareIdxWithPieceToMove and sqrClicked in game.get_possible_target_squares(game.squares[squareIdxWithPieceToMove]):
-                game.displayHandler.unlight_squares()
-                game.perform_move(game.create_move(squareIdxWithPieceToMove, boardSquareClickedIdx))
-                squareIdxWithPieceToMove = None
-
-                window.refresh()
-
-                if gameInProgress:
+            elif event == 'place_pieces':
+                frameNewPiecesVisible = window.Element('frameNewPieces').visible
+                window.Element('frameNewPieces').Update(visible=not frameNewPiecesVisible)
+            elif event == 'start_game':
+                game.reset()
+                gameInProgress = True
+                userPlayingAs = game.displayHandler.get_playing_as_from_dialog()
+                if userPlayingAs != game.turn:
                     game.make_engine_move()
-
-            # only other possibility - clicked on a square where the selected piece cannot move - do nothing
-            else:
+            elif event == 'place_done':
                 pass
+            elif event[:3] == 'sqr': # click on a square
+                boardSquareClickedIdx = int(event[3:])
+                assert 0 <= boardSquareClickedIdx < 64, f"clicked invalid square with index = {boardSquareClickedIdx}"
+                sqrClicked = game.squares[boardSquareClickedIdx]
+
+                # we are not moving but placing a new piece on the board
+                if newPieceName is not None:
+                    color = Color.WHITE if newPieceName[0] == 'w' else Color.BLACK
+                    kind = letterToPiece[newPieceName[1]]
+                    game.place_piece(boardSquareClickedIdx, kind, color)
+                    newPieceName = None
+
+                # no piece is selected to be moved - we are selecting one
+                elif squareIdxWithPieceToMove is None and sqrClicked.piece and sqrClicked.piece.color == game.turn:
+                    squareIdxWithPieceToMove = boardSquareClickedIdx
+
+                    #now light up the possible destination squares
+                    possibleSquares = game.get_possible_target_squares(sqrClicked)
+                    game.displayHandler.light_squares([sqrClicked], 2)
+                    game.displayHandler.light_squares(possibleSquares, 1)
+
+                # clicked the same button twice - just unselect the piece and unlight potential moves
+                elif squareIdxWithPieceToMove == boardSquareClickedIdx:
+                    game.displayHandler.unlight_squares()
+                    squareIdxWithPieceToMove = None
+
+                # we clicked on a different piece of the same color - select it instead
+                elif sqrClicked.piece and sqrClicked.piece.color == game.turn:
+                    game.displayHandler.unlight_squares()
+                    squareIdxWithPieceToMove = boardSquareClickedIdx
+
+                    possibleSquares = game.get_possible_target_squares(sqrClicked)
+                    game.displayHandler.light_squares([sqrClicked], 2)
+                    game.displayHandler.light_squares(possibleSquares, 1)
+
+                # clicked on a square where the selected piece can move - let's move the piece
+                elif squareIdxWithPieceToMove and sqrClicked in game.get_possible_target_squares(game.squares[squareIdxWithPieceToMove]):
+                    game.displayHandler.unlight_squares()
+                    game.perform_move(game.create_move(squareIdxWithPieceToMove, boardSquareClickedIdx))
+                    squareIdxWithPieceToMove = None
+
+                    window.refresh()
+
+                    if gameInProgress:
+                        game.make_engine_move()
+
+                # only other possibility - clicked on a square where the selected piece cannot move - do nothing
+                else:
+                    pass
+        except ConnectionRefusedError as e:
+            sg.popup_error(f'Cannot connect to the engine on port {portNo}: {e}')
 
     window.close()
 

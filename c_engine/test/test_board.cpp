@@ -371,7 +371,6 @@ TestSuite create_test_suite_board() {
         b.load_fen("1k6/8/K7/8/8/8/8/7Q w - - 0 1");
         
         auto bestMove = b.get_best_move();
-        std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
 
         assert_equal("Qh1-b7", bestMove.first.str());
         assert_equal(INT_MAX, bestMove.second);
@@ -383,11 +382,9 @@ TestSuite create_test_suite_board() {
         b.load_fen("1K6/8/k7/8/8/8/8/7q b - - 0 1");
         
         auto bestMove = b.get_best_move();
-        std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
 
         assert_equal("Qh1-b7", bestMove.first.str());
         assert_equal(INT_MAX, bestMove.second);
-
     });
 
     testSuite.add_test("Best move 2", []() {
@@ -395,8 +392,6 @@ TestSuite create_test_suite_board() {
         b.load_fen("q7/8/8/1K2k3/8/8/8/7Q w - - 0 1");
         
         auto bestMove = b.get_best_move();
-        std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
-
         assert_equal("Qh1-a8", bestMove.first.str());
     });
     
@@ -405,7 +400,6 @@ TestSuite create_test_suite_board() {
         b.load_fen("Q7/8/8/1k2K3/8/8/8/7q b - - 0 1");
         
         auto bestMove = b.get_best_move();
-        std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
         assert_equal("Qh1-a8", bestMove.first.str());
     });
 
@@ -414,7 +408,6 @@ TestSuite create_test_suite_board() {
         b.load_fen("3r2rk/p4p1p/3p1Pp1/3R4/2p1B2Q/8/1q4PP/4R1K1 w - - 0 1");
         
         auto bestMove = b.get_best_move();
-        std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
         assert_equal("Qh4-h7", bestMove.first.str());
     });
 
@@ -423,7 +416,6 @@ TestSuite create_test_suite_board() {
         b.load_fen("N1bk3r/p5pp/3b1p2/8/2BnP2K/3Pn3/PPP4P/R1B1Q2R b - - 0 1");
         
         auto bestMove = b.get_best_move();
-        std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
         assert_equal("Nd4-f3", bestMove.first.str());
     });
 
@@ -432,7 +424,6 @@ TestSuite create_test_suite_board() {
         b.load_fen("8/1N2N3/2r5/3qp2R/QP2kp1K/5R2/6B1/6B1 w - - 0 1");
         
         auto bestMove = b.get_best_move();
-        std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
         assert_equal("Qa4-a8", bestMove.first.str());
     });
 
@@ -441,36 +432,7 @@ TestSuite create_test_suite_board() {
         b.load_fen("r2q1r1k/pbp1N1pp/1p1b4/5p2/2B5/P3PPn1/1P3P1P/2RQK2R w - - 0 1");
         
         auto bestMove = b.get_best_move();
-        std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
         assert_equal("Ne7-g6", bestMove.first.str());
-    });
-
-    testSuite.add_test("Best move x", []() {
-        Board b;
-        b.load_fen(FEN_INIT);
-        
-        auto bestMove = b.get_best_move();
-        std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
-    });
-
-    testSuite.add_test("Double fen load", []() {
-        Board b;
-        b.load_fen(FEN_INIT);
-        b.load_fen(FEN_INIT);
-
-        auto bestMove = b.get_best_move();
-        std::cout << "best move: " << bestMove.first.str() << " score: " << bestMove.second << std::endl;
-    });
-
-    testSuite.add_test("promotion", []() {
-        Board b;
-        b.load_fen(FEN_TEST_B);
-
-        auto move = b.create_move(std::string("Pd7-c8Q"));
-        b.perform_move(move);
-        b._legalMoves.push_back(b.calc_all_legal_moves());
-        for (auto mv : b._legalMoves.back())
-            std::cout << mv->str() << std::endl;
     });
 
     return testSuite;

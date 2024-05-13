@@ -3,11 +3,11 @@ import random
 import socket
 
 class EngineProtocol:
-    def __init__(self):
+    def __init__(self, portNo: int):
         self.pathToBinary = "./c_engine/engine"
         self.config = ""
         self.host = "127.0.0.1"
-        self.port = 20004
+        self.port = portNo
         # self.start_engine()
 
     def start_engine(self) -> None:
@@ -36,11 +36,11 @@ class EngineProtocol:
 
     def send_req(self, req: str) -> str:
         req += " " * (1023 - len(req))
-        print(f'trying to send req: {req}')
+        # print(f'trying to send req: {req}')
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((self.host, self.port))
             s.sendall(req.encode())
             data = s.recv(1024)
-            print(f'response: {data.decode()}')
+            # print(f'response: {data.decode()}')
         return data.decode()
 
