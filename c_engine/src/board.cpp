@@ -649,7 +649,7 @@ void Board::store_piece_in_vectors(Piece *piece) {
 
 }
 
-void Board::undo_move(bool shouldRecalculate) {
+void Board::undo_last_move(bool shouldRecalculate) {
     ASSERT(!_history.empty(), "no moves to undo");
 
     auto move = _history.back();
@@ -859,9 +859,9 @@ std::pair<Move, int> Board::get_best_move(int analysisDepth) {
 
     for (auto move : legalMoves) {
         perform_move(move, false);
-        //scores.push_back({*move, calc_position_score(analysisDepth, alpha, beta)});
+        recalculation(move);
         scores.emplace_back(*move, calc_position_score(analysisDepth, alpha, beta));
-        undo_move(analysisDepth > 1);
+        undo_last_move(analysisDepth > 1);
     }
 
 //    for (auto [move, score] : scores)
@@ -876,40 +876,39 @@ std::pair<Move, int> Board::get_best_move(int analysisDepth) {
 int Board::calc_position_score(int depth, int alpha, int beta) {
     ++_nodesAnalysed;
 
-    if (!_history.empty() && _history.back() != nullptr)
-        recalculation(_history.back());
-    else 
-        recalculation();
-
     _legalMoves.push_back(calc_all_legal_moves());
 
     if (_legalMoves.back().empty()) {
+        // there are no possible moves - if player is in check, it's mate
         if (is_in_check(_turn))
             return _turn == _originalTurn ? INT_MIN : INT_MAX;
         else
+            // otherwise it's draw by stalemate
             return 0;
     }
 
-    int bestScore;
+    bool maxDepthReached = depth == 1;
+    int bestScore = _turn == _originalTurn ? INT_MIN : INT_MAX;
+
     if (_turn == _originalTurn) {
-        bestScore = INT_MIN;
         for (auto move : _legalMoves.back()) {
-            perform_move(move, false);
-            int score = depth > 1 ? calc_position_score(depth - 1, alpha, beta) : estimate_current_position();
+            perform_move(move, !maxDepthReached);
+            int score = maxDepthReached ? estimate_current_position() : calc_position_score(depth - 1, alpha, beta);
+
             bestScore = std::max(bestScore, score);
             alpha = std::max(alpha, score);
-            undo_move(depth > 1);
+            undo_last_move(!maxDepthReached);
             if (beta <= alpha)
                 break;
         }
     } else {
-        bestScore = INT_MAX;
         for (auto move : _legalMoves.back()) {
-            perform_move(move, false);
-            int score = depth > 1 ? calc_position_score(depth - 1, alpha, beta) : estimate_current_position();
+            perform_move(move, !maxDepthReached);
+            int score = maxDepthReached ? estimate_current_position() : calc_position_score(depth - 1, alpha, beta);
+
             bestScore = std::min(bestScore, score);
             beta = std::min(beta, score);
-            undo_move(depth > 1);
+            undo_last_move(!maxDepthReached);
             if (beta <= alpha)
                 break;
         }
@@ -949,7 +948,7 @@ int Board::test_move_generation(int depth) {
         //std::cout << std::string(10-depth*2, ' ') << *move << std::endl;
 
         total += depth > 1 ? test_move_generation(depth - 1) : 1;
-        undo_move(depth > 1);
+        undo_last_move(depth > 1);
 
         // if (depth == 2) std::cout << ": " << n << std::endl;   
     }

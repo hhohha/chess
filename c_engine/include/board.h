@@ -43,7 +43,7 @@ public:
     bool is_castle_possible(Color color, Direction dir);
 
     void perform_move(Move *move, bool shouldRecalculate = true);
-    void undo_move(bool shouldRecalculate = true);
+    void undo_last_move(bool shouldRecalculate = true);
 
     void remove_piece(Piece *piece);
 

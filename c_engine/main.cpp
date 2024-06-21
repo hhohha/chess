@@ -44,8 +44,8 @@ std::string handle_message(const std::string &message, Board &board) {
         board.perform_move(move);
         board._legalMoves.push_back(board.calc_all_legal_moves());
         return get_moves_str(board);
-    } else if (command == "undo_move") {
-        board.undo_move();
+    } else if (command == "undo_last_move") {
+        board.undo_last_move();
         board._legalMoves.push_back(board.calc_all_legal_moves());
         return get_moves_str(board);
     } else if (command == "get_best_move") {

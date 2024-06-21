@@ -97,12 +97,12 @@ def main():
                 [sg.Button('Undo move', key='unmove', size=(15, 2), pad=((20, 20), (3, 35)), font=buttonFont)],
                 [sg.Button('Reset board', key='reset_board', size=(15, 2), pad=((20, 20), (3, 3)), font=buttonFont)],
                 [sg.Button('Clear board', key='clear_board', size=(15, 2), pad=((20, 20), (3, 3)), font=buttonFont)],
-                [sg.Button('Place pieces', key='place_pieces', size=(15, 2), pad=((20, 20), (3, 3)), font=buttonFont)]]
+                [sg.Button('Place pieces', key='place_pieces', size=(15, 2), pad=((20, 20), (3, 3)), font=buttonFont)],
+                [sg.Button('Solve puzzle', key='solve', size=(15, 2), pad=((20, 20), (3, 3)), font=buttonFont)]
+    ]
 
     frameControls = sg.Frame('Controls', controls, element_justification='center')
     controlsColumn = sg.Column([[frameControls]], vertical_alignment='top', pad=((20, 0), (0, 0)))
-
-
 
     layout = [[frameBoard, controlsColumn], [frameNewPieces]]
 
@@ -144,6 +144,9 @@ def main():
                     game.make_engine_move()
             elif event == 'place_done':
                 pass
+            elif event == 'solve':
+                gameInProgress = False
+                game.solve_puzzle()
             elif event[:3] == 'sqr': # click on a square
                 boardSquareClickedIdx = int(event[3:])
                 assert 0 <= boardSquareClickedIdx < 64, f"clicked invalid square with index = {boardSquareClickedIdx}"

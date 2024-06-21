@@ -211,9 +211,9 @@ TestSuite create_test_suite_board() {
 
         // check the piece
         assert_equal(b.get_square("h2"), whiteKing->_square);
-        
 
-        b.undo_move(false);
+
+        b.undo_last_move(false);
 
         // details...
         assert_equal(0U, b._history.size());
@@ -261,7 +261,7 @@ TestSuite create_test_suite_board() {
         assert_equal(b.get_square("h2"), pawnTaken->_square); // we preserve the last square of inactive pieces
         assert_true(b._blackPieces.end() == std::find(b._blackPieces.begin(), b._blackPieces.end(), pawnTaken), "Pawn should not be in black pieces");
 
-        b.undo_move(false);
+        b.undo_last_move(false);
 
         // board
         assert_equal(b.get_square("h1")->get_piece(), whiteKing);
@@ -317,7 +317,7 @@ TestSuite create_test_suite_board() {
             delete move;
 
         // step 3. back to initial position
-        b.undo_move();
+        b.undo_last_move();
         assert_equal(b.get_square("e2"), whitePawn->_square);
         assert_equal(b.get_square("e2")->get_piece(), whitePawn);
         assert_is_null(b.get_square("e3")->get_piece());
@@ -343,7 +343,7 @@ TestSuite create_test_suite_board() {
             delete move;
 
         // step 5. - back to initial position
-        b.undo_move();
+        b.undo_last_move();
         assert_equal(b.get_square("e2"), whitePawn->_square);
         assert_equal(b.get_square("e2")->get_piece(), whitePawn);
         assert_is_null(b.get_square("e3")->get_piece());

@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING, List, Optional, Iterable
 import re
 
-from constants import FEN_INIT, Color, PieceType, FEN_B
+from constants import FEN_INIT, Color, PieceType
 from engine_protocol import EngineProtocol
 from square import Square
 from utils import letterToPiece
@@ -81,6 +81,9 @@ class Game:
             self.legalMoves = []
         else:
             self.legalMoves = list(map(lambda mv: self.create_move_from_str(mv), moves.strip().split(' ')))
+
+    def solve_puzzle(self) -> None:
+        pass
 
     def load_fen(self, fen: str) -> None:
         """load a position from a FEN string"""
