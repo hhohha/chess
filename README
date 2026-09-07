@@ -3,5 +3,5 @@ Currently it is possible to play a game against engine.
 
 Building engine:   cd c_engine && cmake ./ && cmake --build ./
 Running engine test suite:  ./tests
-Running engine: ./engine PORT - (port is used for communication with client, must be the same as in client)
+Running engine: ./engine PORT (port is used for communication with client, must be the same as in client)
 Running client: python3 main.py PORT
